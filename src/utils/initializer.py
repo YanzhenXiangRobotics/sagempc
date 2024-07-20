@@ -6,7 +6,7 @@ def get_players_initialized(train, params, grid_V):
     init_safe = train["Cx_X"]
     for i in range(params["env"]["n_players"]):
         # instantiate players object
-         players.append(Agent(i, train["Cx_X"][i], train["Cx_Y"][i], train["Fx_Y"][i],
+        players.append(Agent(i, train["Cx_X"][i], train["Cx_Y"][i], train["Fx_Y"][i],
                              params, grid_V))
         # player i will get to know about the samples collected by other agents using communicate function
         players[i].communicate_constraint(
