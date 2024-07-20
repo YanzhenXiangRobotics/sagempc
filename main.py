@@ -32,8 +32,11 @@ parser.add_argument('-env', type=int, default=0)
 parser.add_argument('-i', type=int, default=8)  # initialized at origin
 args = parser.parse_args()
 
+import sys, os
+dir_project = os.path.abspath(os.path.dirname(__file__))
+
 # 1) Load the config file
-with open(workspace + "/params/" + args.param + ".yaml") as file:
+with open(dir_project + "/params/" + args.param + ".yaml") as file:
     params = yaml.load(file, Loader=yaml.FullLoader)
 params["env"]["i"] = args.i
 params["env"]["name"] = args.env
@@ -42,7 +45,7 @@ print(params)
 # 2) Set the path and copy params from file
 exp_name = params["experiment"]["name"]
 env_load_path = (
-    workspace
+    dir_project
     + "/experiments/"
     + params["experiment"]["folder"]
     + "/env_"
@@ -60,7 +63,7 @@ if not os.path.exists(save_path):
             raise
 
 # set start and the goal location
-with open(env_load_path + "params_env.yaml") as file:
+with open(env_load_path + "/params_env.yaml") as file:
     env_st_goal_pos = yaml.load(file, Loader=yaml.FullLoader)
 params["env"]["start_loc"] = env_st_goal_pos["start_loc"]
 params["env"]["goal_loc"] = env_st_goal_pos["goal_loc"]
