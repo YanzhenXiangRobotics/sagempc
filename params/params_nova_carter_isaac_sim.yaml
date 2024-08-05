@@ -3,7 +3,7 @@ env:                                                # Env parameters mainly used
   # shape:
   #   x :  120                                        # Number of grid points
   #   y :  120
-  start_state: [-8.3, 4.0, 3.1415]                             # Agent start location, overwritten by params_env.yaml
+  start_loc: [-8.3, 4.0, 3.1415]                             # Agent start location, overwritten by params_env.yaml
   goal_loc: [-7.3, 4.0, 0.0]                             # Agent goal location, overwritten by params_env.yaml
   n_players : 1         
   Cx_lengthscale : 0.3                              # Lenghtscale to generate the constraint for the environment 

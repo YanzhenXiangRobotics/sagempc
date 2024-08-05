@@ -16,7 +16,7 @@ from src.solver import GoalOPT
 
 
 class Agent(object):
-    def __init__(self, my_key, X_train, Cx_Y_train, Fx_Y_train, params, grid_V) -> None:
+    def __init__(self, my_key, X_train, Cx_Y_train, Fx_Y_train, params) -> None:
         self.my_key = my_key
         self.max_density_sigma = 10
         self.params = params
@@ -27,9 +27,6 @@ class Agent(object):
         self.Cx_Y_train = Cx_Y_train.reshape(-1, 1)
         self.mean_shift_val = params["agent"]["mean_shift_val"]
         self.converged = False
-        self.opti = grid_V
-        self.grid_V = grid_V
-        self.grid_V_prev = grid_V
         self.origin = X_train
         self.x_dim = params["optimizer"]["x_dim"]
         self.Cx_beta = params["agent"]["Cx_beta"]

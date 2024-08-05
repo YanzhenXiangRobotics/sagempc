@@ -50,6 +50,7 @@ class SEMPCNovaCarter(Node):
         self.u_dim = params["optimizer"]["u_dim"]
         self.eps = params["common"]["epsilon"]
         self.q_th = params["common"]["constraint"]
+        self.x_goal = params["env"]["goal_loc"]
         self.prev_goal_dist = 100
         self.goal_in_pessi = False
         if params["agent"]["dynamics"] == "robot":
@@ -60,7 +61,7 @@ class SEMPCNovaCarter(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM):
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((HOST, PORT))
 
     def get_optimistic_path(self, node, goal_node, init_node):
@@ -278,21 +279,30 @@ class SEMPCNovaCarter(Node):
     #             self.goal_reached_or_prob_infeasible()
     #     print("Max density uncertainity",
     #           self.max_density_sigma, " iter: ", self.iter)
+    
+    def get_safe_init(self):
+        x_curr = self.get_current_state()
+        init_xy = {}
+        init_xy["Cx_X"] = [torch.from_numpy(x_curr)]
+        init_xy["Fx_X"] = init_xy["Cx_X"].copy()
+        init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.s.recv(1024)))
+        init_xy["Fx_Y"] = torch.atleast_2d(torch.norm(x_curr - self.x_goal, p=2))
+        return init_xy
 
     def sempc_initialization(self):
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
-        print("initialized location", self.env.get_safe_init())
+        print("initialized location", self.get_safe_init())
         # TODO: Remove dependence of player on visu grid
         self.players = get_players_initialized(
-            self.env.get_safe_init(), self.params, self.env.VisuGrid
+            self.get_safe_init(), self.params
         )
 
         for it, player in enumerate(self.players):
             player.update_Cx_gp_with_current_data()
             player.update_Fx_gp_with_current_data()
             player.save_posterior_normalization_const()
-            init = self.env.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
+            init = self.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
             player.update_current_state(state)
@@ -494,7 +504,7 @@ class SEMPCNovaCarter(Node):
             while time.time() - start < U[-1, i]:
                 self.publisher.publish(U[: self.u_dim, i])
 
-    def update_current_state(self):
+    def get_current_state(self):
         state_obtained = False
         while not state_obtained:
             try:
@@ -537,7 +547,7 @@ class SEMPCNovaCarter(Node):
                 state_obtained = True
             except:
                 pass
-        self.players[self.pl_idx].update_current_state(x_curr)
+        return x_curr
 
     def one_step_planner(self):
         """_summary_: Plans going and coming back all in one trajectory plan
@@ -670,7 +680,8 @@ class SEMPCNovaCarter(Node):
                 # if np.linalg.norm(self.visu.utility_minimizer-self.players[self.pl_idx].safe_meas_loc) < 0.025:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         else:
-            self.update_current_state()
+            x_curr = self.get_current_state()
+            self.players[self.pl_idx].update_current_state(x_curr)
 
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)

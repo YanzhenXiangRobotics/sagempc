@@ -13,7 +13,7 @@ from gpytorch.kernels import (LinearKernel, MaternKernel,
                               RBFKernel, ScaleKernel)
 import numpy as np
 # from src.utils.ocp import export_sim
-
+import math
 
 class ContiWorld():
     """[summary] ls_Fx: lengthscale of
