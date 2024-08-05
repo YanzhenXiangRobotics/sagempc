@@ -17,7 +17,7 @@ from src.utils.termcolor import bcolors
 class SEMPC():
     def __init__(self, params, env, visu) -> None:
         # self.oracle_solver = Oracle_solver(params)
-        self.sempc_solver = SEMPC_solver(params)
+        self.sempc_solver = SEMPC_solver(params, env.VisuGrid, env.ax, visu)
         self.env = env
         self.visu = visu
         self.params = params
@@ -39,6 +39,7 @@ class SEMPC():
         else:
             self.state_dim = self.n_order*self.x_dim
         self.sempc_initialization()
+        self.iter_plot = 0
     
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -510,6 +511,12 @@ class SEMPC():
             # self.visu.f_handle["dyn"].savefig("temp1D.png")
             # self.visu.f_handle["gp"].savefig(
             #     str(self.iter) + 'temp in prog2.png')
+        self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
+        self.env.fig_2D.savefig(self.env.env_dir + f"test_{self.iter_plot}.png")
+        self.sempc_solver.fig_3D.savefig(self.env.env_dir + f"test_3D_{self.iter_plot}.png")
+        len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
+        for _ in range(len_scatter_tmps):
+            self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
         print(bcolors.green + "Reached:", x_curr ,  bcolors.ENDC)
         # set current location as the location to be measured
         
@@ -522,6 +529,7 @@ class SEMPC():
         #     self.players[self.pl_idx].infeasible = True
         # self.prev_goal_dist = goal_dist
         # apply this input to your environment
+        self.iter_plot += 1
 
     def not_reached_and_prob_feasible(self):
         """_summary_ The agent safely explores and either reach goal or remove it from safe set

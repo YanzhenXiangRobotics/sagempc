@@ -139,16 +139,17 @@ class ContiWorld():
         return self.__Fx
     
     def plot2D(self):
-        f, ax = plt.subplots()
-        ax.set_aspect('equal','box')
+        f, self.ax = plt.subplots()
+        self.fig_2D = f
+        self.ax.set_aspect('equal','box')
         x = self.VisuGrid
         posterior_mean = self.Cx_model_cont.posterior(x).mean.detach().numpy().reshape(
             self.Nx, self.Ny)
         self.x = self.VisuGrid.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[0]
         self.y = self.VisuGrid.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[1]
-        CS = ax.contour(self.x.numpy(), self.y.numpy(), posterior_mean,np.array([self.constraint , self.constraint  + self.epsilon]))
-        ax.plot(self.params["env"]["start_loc"][0], self.params["env"]["start_loc"][1], "*", color="tab:red", mew=2)
-        ax.plot(self.params["env"]["goal_loc"][0], self.params["env"]["goal_loc"][1], "*", color="tab:green", mew=2)
+        CS = self.ax.contour(self.x.numpy(), self.y.numpy(), posterior_mean,np.array([self.constraint , self.constraint  + self.epsilon]))
+        self.ax.plot(self.params["env"]["start_loc"][0], self.params["env"]["start_loc"][1], "*", color="tab:red", mew=2)
+        self.ax.plot(self.params["env"]["goal_loc"][0], self.params["env"]["goal_loc"][1], "*", color="tab:green", mew=2)
         # plt.plot(observed_pred.mean.detach().numpy())
         # lower, upper = observed_posterior.mvn.confidence_region()
         # lower = lower*(1+self.Cx_beta)/2 + upper*(1-self.Cx_beta)/2
