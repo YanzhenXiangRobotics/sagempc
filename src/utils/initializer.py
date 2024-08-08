@@ -1,12 +1,12 @@
 from src.agent import Agent
 
 
-def get_players_initialized(train, params):
+def get_players_initialized(train, origin, params):
     players = []
     init_safe = train["Cx_X"]
     for i in range(params["env"]["n_players"]):
         # instantiate players object
-        players.append(Agent(i, train["Cx_X"][i], train["Cx_Y"][i], train["Fx_Y"][i],
+        players.append(Agent(i, train["Cx_X"][i], origin, train["Cx_Y"][i], train["Fx_Y"][i],
                              params))
         # player i will get to know about the samples collected by other agents using communicate function
         players[i].communicate_constraint(

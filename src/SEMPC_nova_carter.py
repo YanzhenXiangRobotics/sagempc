@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import time
-from src.solver import Oracle_solver, SEMPC_solver
+from src.solver import SEMPC_solver
 from src.utils.helper import (
     TrainAndUpdateConstraint,
     TrainAndUpdateDensity,
@@ -24,12 +24,6 @@ from mlsocket import MLSocket
 
 HOST = "127.0.0.1"
 PORT = 65432
-
-import matplotlib.pyplot as plt
-
-class Plotter():
-    def __init__(self):
-        self.fig, self.ax = 
 
 
 class SEMPCNovaCarter(Node):
@@ -57,9 +51,12 @@ class SEMPCNovaCarter(Node):
             self.state_dim = self.n_order * self.x_dim + 1
         else:
             self.state_dim = self.n_order * self.x_dim
+
         self.obtained_init_state = False
         self.sempc_initialization()
+
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.sample_iter = 0
 
     def sempc_main(self):
         """_summary_ Responsible for initialization, logic for when to collect sample vs explore"""
@@ -70,6 +67,7 @@ class SEMPCNovaCarter(Node):
         self.players[self.pl_idx].feasible = True
         while running_condition_true:
             self.not_reached_and_prob_feasible()
+            self.sempc_solver.plotter.plot_sim(self.sample_iter, self.x_curr)
 
             if w < self.params["common"]["epsilon"]:
                 self.players[self.pl_idx].feasible = False
@@ -78,7 +76,7 @@ class SEMPCNovaCarter(Node):
                 running_condition_true = (
                     not np.linalg.norm(
                         self.x_goal
-                        - self.players[self.pl_idx].current_location
+                        - self.players[self.pl_idx].current_location[: self.x_dim - 1]
                     )
                     < 0.025
                 )
@@ -86,15 +84,20 @@ class SEMPCNovaCarter(Node):
                 running_condition_true = self.players[self.pl_idx].feasible
             else:
                 raise NameError("Objective is not clear")
+
+            self.sample_iter += 1
+
         print("Number of samples", self.players[self.pl_idx].Cx_X_train.shape)
-        
+
     def get_safe_init(self):
         init_xy = {}
-        init_xy["Cx_X"] = [torch.from_numpy(self.x_curr)]
+        init_xy["Cx_X"] = [torch.from_numpy(self.x_curr[:-1])]
         init_xy["Fx_X"] = init_xy["Cx_X"].copy()
         init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.min_dist))
         init_xy["Fx_Y"] = torch.atleast_2d(
-            torch.tensor([np.linalg.norm(self.x_curr - np.array(self.x_goal), ord=2)])
+            torch.tensor(
+                [np.linalg.norm(self.x_curr[:-1] - np.array(self.x_goal), ord=2)]
+            )
         )
         return init_xy
 
@@ -106,7 +109,9 @@ class SEMPCNovaCarter(Node):
             print("waiting...")
         print("initialized location", self.get_safe_init())
         # TODO: Remove dependence of player on visu grid
-        self.players = get_players_initialized(self.get_safe_init(), self.params)
+        self.players = get_players_initialized(
+            self.get_safe_init(), torch.tensor(self.x_curr), self.params
+        )
 
         for it, player in enumerate(self.players):
             player.update_Cx_gp_with_current_data()
@@ -122,7 +127,7 @@ class SEMPCNovaCarter(Node):
         val = -100
         while val <= self.q_th:
             TrainAndUpdateConstraint(
-                self.players[self.pl_idx].current_location,
+                self.players[self.pl_idx].current_location[: self.x_dim - 1],
                 self.min_dist,
                 self.pl_idx,
                 self.players,
@@ -144,8 +149,10 @@ class SEMPCNovaCarter(Node):
             self.get_current_state()
             start = self.t_curr
             while self.t_curr - start < U[i, -1]:
-                self.publisher.publish(U[i, :self.u_dim])
-                print(f"Starting from {start}, at {self.t_curr}, applied {U[i, :self.u_dim]}")
+                self.publisher.publish(U[i, : self.u_dim])
+                print(
+                    f"Starting from {start}, at {self.t_curr}, applied {U[i, :self.u_dim]}"
+                )
                 self.get_current_state()
 
     def get_current_state(self):
@@ -187,7 +194,7 @@ class SEMPCNovaCarter(Node):
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
-       
+
         st_origin = np.zeros(self.state_dim + 1)
         st_origin[: self.x_dim] = np.ones(self.x_dim) * x_origin
         st_origin[-1] = 1.0
@@ -196,7 +203,7 @@ class SEMPCNovaCarter(Node):
 
         # set objective as per desired goal
         start_time = time.time()
-        self.sempc_solver.solve(self.players[self.pl_idx])
+        self.sempc_solver.solve(self.players[self.pl_idx], self.sample_iter)
         end_time = time.time()
         X, U, Sl = self.sempc_solver.get_solution()
         self.apply_control(U)
@@ -224,6 +231,7 @@ class SEMPCNovaCarter(Node):
         # this while loops ensures we collect measurement only at constraint and not all along
         # the path
         # self.receding_horizon(self.players[self.pl_idx])
+        self.sempc_solver.plotter.plot_gp(self.players[self.pl_idx].Cx_model)
         self.one_step_planner()
         if not self.goal_in_pessi:
             print(
@@ -231,7 +239,7 @@ class SEMPCNovaCarter(Node):
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
             TrainAndUpdateConstraint(
-                self.players[self.pl_idx].current_location,
+                self.players[self.pl_idx].current_location[: self.x_dim - 1],
                 self.min_dist,
                 self.pl_idx,
                 self.players,
@@ -241,5 +249,3 @@ class SEMPCNovaCarter(Node):
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
-            # self.visu.f_handle["dyn"].savefig("temp1D.png")
-            # self.visu.f_handle["gp"].savefig('temp in prog2.png')

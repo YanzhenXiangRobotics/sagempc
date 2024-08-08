@@ -54,7 +54,7 @@ def TrainAndUpdateConstraint(query_pt, query_meas, agent_key, players, params):
         query_pt = torch.from_numpy(query_pt).float()
     # 1) Fit a model on the available data based
     train = {}
-    train["Cx_X"] = query_pt.reshape(-1, params["common"]["dim"])
+    train["Cx_X"] = query_pt.reshape(-1, params["common"]["dim"] - 1)
     if not isinstance(query_meas, np.ndarray):
         query_meas = np.array([query_meas])
     train["Cx_Y"] = torch.from_numpy(query_meas).reshape(-1, 1)

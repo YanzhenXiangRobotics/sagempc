@@ -10,6 +10,20 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "simulation_node.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/simulation_node.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "measurement_node.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/measurement_node.py",
+            "console": "integratedTerminal"
+        },
     ]
 }

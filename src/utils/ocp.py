@@ -11,17 +11,9 @@ dir_project = os.path.join(dir_here, "..", "..")
 sys.path.append(dir_project)
 
 from src.utils.model import (
-    export_integrator_model,
-    export_n_integrator_model,
-    export_pendulum_ode_model_with_discrete_rk4,
-    export_pendulum_ode_model_with_discrete_rk4_Lc,
-    export_NH_integrator_ode_model_with_discrete_rk4,
-    export_robot_model_with_discrete_rk4,
-    export_bicycle_model_with_discrete_rk4,
-    export_unicycle_model_with_discrete_rk4,
-    export_unicycle_model_with_discrete_rk4_LC,
     export_nova_carter_discrete,
 )
+
 
 def concat_const_val(ocp, params):
     x_dim = params["optimizer"]["x_dim"]
@@ -64,172 +56,60 @@ def concat_const_val(ocp, params):
     return ocp
 
 
-def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
+def sempc_const_expr(model, x_dim, n_order, params, model_x_trans):
     lb_cx_lin = ca.SX.sym("lb_cx_lin")
     lb_cx_grad = ca.SX.sym("lb_cx_grad", x_dim - 1, 1)
     ub_cx_lin = ca.SX.sym("ub_cx_lin")
     ub_cx_grad = ca.SX.sym("ub_cx_grad", x_dim - 1, 1)
-    if (
-        params["agent"]["dynamics"] == "robot"
-    ):  # this is misleading, it is actually the number of states
-        x_lin = ca.SX.sym("x_lin", n_order * x_dim + 1)
-        x_terminal = ca.SX.sym("x_terminal", n_order * x_dim + 1)
-    else:
-        x_lin = ca.SX.sym("x_lin", n_order * (x_dim - 1))
-        x_terminal = ca.SX.sym("x_terminal", n_order * x_dim)
-    xg = ca.SX.sym("xg", x_dim)
+
+    x_lin = ca.SX.sym("x_lin", n_order * (x_dim - 1))
+    x_terminal = ca.SX.sym("x_terminal", n_order * x_dim)
+
+    xg = ca.SX.sym("xg", x_dim - 1)
     w = ca.SX.sym("w", 1, 1)
-    we = ca.SX.sym("we", 1, 1)
     cw = ca.SX.sym("cw", 1, 1)
 
     q_th = params["common"]["constraint"]
     var = (
         ub_cx_lin
-        + ub_cx_grad.T @ (model_x - x_lin)[:x_dim]
-        - (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim])
+        + ub_cx_grad.T @ (model_x_trans - x_lin)
+        - (lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin))
     )
-    if (
-        params["algo"]["type"] == "ret_expander"
-        or params["algo"]["type"] == "MPC_expander"
-    ):
-        lb_cz_lin = ca.SX.sym("lb_cz_lin")
-        lb_cz_grad = ca.SX.sym("lb_cz_grad", x_dim, 1)
-        z_lin = ca.SX.sym("z_lin", x_dim)
-        p_lin = ca.vertcat(
-            lb_cx_lin,
-            lb_cx_grad,
-            x_lin,
-            xg,
-            w,
-            x_terminal,
-            ub_cx_lin,
-            ub_cx_grad,
-            cw,
-            z_lin,
-            lb_cz_lin,
-            lb_cz_grad,
-        )
-        Lc = params["common"]["Lc"]
+    p_lin = ca.vertcat(
+        lb_cx_lin, lb_cx_grad, x_lin, xg, w, x_terminal, ub_cx_lin, ub_cx_grad, cw
+    )
+    model.con_h_expr = ca.vertcat(
+        lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th, cw * var
+    )
+    model.con_h_expr_e = ca.vertcat(
+        lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th
+    )
 
-        # expanders
-        # l_n(z) \leq 0 -lb_cz_lin - lb_cz_grad.T @ (model_z-z_lin), # lets remove this constraint for easiness
-        # u_n(x) - Lc (x-z)^2 \geq 0
-        # ub_cx_lin + ub_cx_grad.T @ (model_x-x_lin) - 2*Lc*(x_lin[:x_dim] - z_lin).T@(model_x-x_lin)[:x_dim] - 2*Lc*(z_lin-x_lin[:x_dim]).T@(model_z-z_lin) - Lc*(x_lin[:x_dim] - z_lin)**2
-
-        # pessimistic set and uncertainity
-        # l_n(z) - Lc sqrt((x1-z1)^2 + (x1-z1)^2) \leq 0, w(x) \geq \epsilon
-        tol = 1.0e-3
-        model.con_h_expr = ca.vertcat(
-            lb_cz_lin
-            + lb_cz_grad.T @ (model_z - z_lin)
-            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-            * ((x_lin[:x_dim] - z_lin).T @ (model_x - x_lin)[:x_dim])
-            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-            * ((z_lin - x_lin[:x_dim]).T @ (model_z - z_lin))
-            - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
-            - q_th,
-            cw * var,
-            w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
-        )
-        # model.con_h_expr = ca.vertcat(lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin).T@(model_x-x_lin)[:x_dim])
-        #                         - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin))
-        #                         - Lc*ca.norm_1(x_lin[:x_dim] - z_lin) - q_th, cw*var, w*(lb_cx_lin + lb_cx_grad.T @ (model_x-x_lin)[:x_dim]))
-        # model.con_h_expr = ca.vertcat(lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin + tol).T@(model_x-x_lin)[:x_dim])
-        #                 - Lc*(ca.sign(z_lin-x_lin[:x_dim] + tol).T@(model_z-z_lin)) - Lc*ca.norm_1(x_lin[:x_dim] - z_lin + tol) - q_th,  cw*var)
-        # model.con_h_expr = ca.vertcat(lb_cx_lin +
-        #                                 lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th,cw*var,1)
-        # model.con_h_expr = ca.vertcat(lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin).T@(model_x-x_lin)[:x_dim])
-        #                 - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin)) - Lc*ca.norm_1(x_lin[:x_dim] - z_lin) - q_th,
-        #                   lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin),
-        #                   ub_cx_lin + ub_cx_grad.T @ (model_x-x_lin)[:x_dim] - Lc*ca.norm_1(x_lin[:x_dim] - z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin).T@(model_x-x_lin)[:x_dim])
-        #                 - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin)), cw*var)
-        # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
-        model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        )
-    elif params["algo"]["type"] == "MPC_Xn":
-        p_lin = ca.vertcat(
-            lb_cx_lin,
-            lb_cx_grad,
-            x_lin,
-            xg,
-            w,
-            x_terminal,
-            ub_cx_lin,
-            ub_cx_grad,
-            cw,
-            we,
-        )
-        model.con_h_expr = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th,
-            cw * var,
-            we * (model_x - model.f_expl_expr[:-1]),
-        )
-        model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        )
-    else:
-        p_lin = ca.vertcat(
-            lb_cx_lin, lb_cx_grad, x_lin, xg, w, x_terminal, ub_cx_lin, ub_cx_grad, cw
-        )
-        model.con_h_expr = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th, cw * var
-        )
-        model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        )
-        # model.con_h_expr_e = ca.vertcat(model_x - model.disc_dyn_expr[:-1])
-        # model.con_h_expr_e = ca.vertcat(model_x - model.f_expl_expr[:-1])
-    # model.con_h_expr = ca.vertcat(lb_cx_lin +
-    #                               lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
-    # model.con_h_expr_e = ca.vertcat(lb_cx_lin +
-    #                                 lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
     model.p = p_lin
     return model, w, xg, var
 
 
-def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
-    q = 1e-3 * np.diag(np.ones(x_dim))
-    qx = np.diag(np.ones(x_dim))
+def sempc_cost_expr(ocp, model_x_trans, model_u, x_dim, w, xg, var, params):
+    q = 1e-3 * np.diag(np.ones(model_u.shape[0]))
+    qx = np.diag(np.ones(x_dim - 1))
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
     ocp.model.cost_expr_ext_cost = (
-        w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
+        w * (model_x_trans - xg).T @ qx @ (model_x_trans - xg)
         + model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
     )
     ocp.model.cost_expr_ext_cost_e = (
-        w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
+        w * (model_x_trans - xg).T @ qx @ (model_x_trans - xg)
     )
 
-    if (
-        params["algo"]["type"] == "ret_expander"
-        or params["algo"]["type"] == "MPC_expander"
-    ):
-        ocp.constraints.idxsh = np.array([1, 2])
-        ocp.cost.zl = 1e2 * np.array([1, 1])
-        ocp.cost.zu = 1e1 * np.array([1, 0.1])
-        ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1]])
-        ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1]])
-    else:
-        ocp.constraints.idxsh = np.array([1])
-        ocp.cost.zl = 1e2 * np.array([1])
-        ocp.cost.zu = 1e1 * np.array([1])
-        ocp.cost.Zl = 1e1 * np.array([1])
-        ocp.cost.Zu = 1e1 * np.array([1])
+    ocp.constraints.idxsh = np.array([1])
+    ocp.cost.zl = 1e2 * np.array([1])
+    ocp.cost.zu = 1e1 * np.array([1])
+    ocp.cost.Zl = 1e1 * np.array([1])
+    ocp.cost.Zu = 1e1 * np.array([1])
 
-    # ocp.cost.cost_type = 'NONLINEAR_LS'
-    # ocp.cost.cost_type_e = 'NONLINEAR_LS'
-    # ocp.cost.W_e = np.diag(1*np.ones(x_dim))
-    # ocp.cost.W = np.diag(
-    #     np.hstack([1*np.ide(x_dim), 1e-3*np.ones(x_dim), 1e-4]))
-    # ocp.model.cost_y_expr = ca.vertcat(
-    #     w*(model_x[:x_dim] - xg), model_u, w*var)
-    # ocp.model.cost_y_expr_e = w*(model_x[:x_dim] - xg)
-    # yref = np.zeros(2*x_dim+1)
-    # ocp.cost.yref = yref
-    # ocp.cost.yref_e = np.zeros(1*x_dim)
     return ocp
 
 
@@ -341,29 +221,16 @@ def export_sempc_ocp(params):
     u_dim = params["optimizer"]["u_dim"]
     # model = export_integrator_model('sempc')
     # model = export_n_integrator_model('sempc', n_order, x_dim)
-    if (
-        params["algo"]["type"] == "ret_expander"
-        or params["algo"]["type"] == "MPC_expander"
-    ):
-        if params["agent"]["dynamics"] == "unicycle":
-            model = export_unicycle_model_with_discrete_rk4_LC(name_prefix + "sempc")
-        else:
-            model = export_pendulum_ode_model_with_discrete_rk4_Lc(
-                name_prefix + "sempc", n_order, x_dim
-            )
-    else:
-        model = export_nova_carter_discrete(x_dim, u_dim)
-    model_u = model.u[:x_dim]
-    model_x = model.x[:-2]
-    model_z = model.u[-x_dim:]
 
-    model, w, xg, var = sempc_const_expr(
-        model, x_dim, n_order, params, model_x, model_z
-    )
+    model = export_nova_carter_discrete(x_dim, u_dim)
+    model_u = model.u[:-1]
+    model_x_trans = model.x[:-2]
+
+    model, w, xg, var = sempc_const_expr(model, x_dim, n_order, params, model_x_trans)
 
     ocp.model = model
 
-    ocp = sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params)
+    ocp = sempc_cost_expr(ocp, model_x_trans, model_u, x_dim, w, xg, var, params)
 
     ocp = sempc_const_val(ocp, params, x_dim, u_dim)
 
