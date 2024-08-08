@@ -14,7 +14,7 @@ import numpy as np
 
 from src.environement import ContiWorld
 from src.ground_truth import GroundTruth
-from src.SEMPC import SEMPC
+from src.SEMPC_nova_carter import SEMPCNovaCarter 
 from src.utils.helper import (TrainAndUpdateConstraint, TrainAndUpdateDensity,
                               get_frame_writer, oracle)
 from src.utils.initializer import get_players_initialized
@@ -32,7 +32,7 @@ parser.add_argument('-env', type=int, default=0)
 parser.add_argument('-i', type=int, default=8)  # initialized at origin
 args = parser.parse_args()
 
-import sys, os
+import os
 dir_project = os.path.abspath(os.path.dirname(__file__))
 
 # 1) Load the config file
@@ -42,54 +42,7 @@ params["env"]["i"] = args.i
 params["env"]["name"] = args.env
 print(params)
 
-# 2) Set the path and copy params from file
-exp_name = params["experiment"]["name"]
-env_load_path = (
-    dir_project
-    + "/experiments/"
-    + params["experiment"]["folder"]
-    + "/env_"
-    + str(args.env)
-    + "/"
-)
-
-save_path = env_load_path + "/" + args.param + "/"
-
-if not os.path.exists(save_path):
-    try:
-        os.makedirs(save_path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-# set start and the goal location
-with open(env_load_path + "/params_env.yaml") as file:
-    env_st_goal_pos = yaml.load(file, Loader=yaml.FullLoader)
-params["env"]["start_loc"] = env_st_goal_pos["start_loc"]
-params["env"]["goal_loc"] = env_st_goal_pos["goal_loc"]
-
-# 3) Setup the environment. This class defines different environments eg: wall, forest, or a sample from GP.
-env = ContiWorld(
-    env_params=params["env"], common_params=params["common"], visu_params=params["visu"], env_dir=env_load_path, params=params)
-
-opt = GroundTruth(env, params)
-
-if params["env"]["compute_true_Lipschitz"]:
-    print(env.get_true_lipschitz())
-    exit()
-
-print(args)
-if args.i != -1:
-    traj_iter = args.i
-
-if not os.path.exists(save_path + str(traj_iter)):
-    os.makedirs(save_path + str(traj_iter))
-
-visu = Visu(grid_V=env.VisuGrid, safe_boundary=env.get_safe_init()["Cx_X"], true_constraint_function=opt.true_constraint_function, true_objective_func=opt.true_density,
-            opt_goal=opt.opt_goal, optimal_feasible_boundary=opt.optimal_feasible_boundary, params=params, path=save_path + str(traj_iter))
-
-
-se_mpc = SEMPC(params, env, visu)
+import rclpy
+rclpy.init()
+se_mpc = SEMPCNovaCarter(params)
 se_mpc.sempc_main()
-print("avg time", np.mean(visu.iteration_time))
-visu.save_data()

@@ -37,8 +37,6 @@ class Agent(object):
         self.Cx_noise = params["agent"]["Cx_noise"]
         self.constraint = params["common"]["constraint"]
         self.epsilon = params["common"]["epsilon"]
-        self.Nx = params["env"]["shape"]["x"]
-        self.Ny = params["env"]["shape"]["y"]
         self.counter=11
         self.goal_in_pessi = False
         self.param = params
@@ -58,16 +56,9 @@ class Agent(object):
             self.Fx_covar_module = ScaleKernel(
                 base_kernel=PiecewisePolynomialKernel())  # ard_num_dims=self.env_dim
 
-        self.base_graph = diag_grid_world_graph((self.Nx, self.Ny))
-        self.diag_graph = diag_grid_world_graph((self.Nx, self.Ny))
-        self.optimistic_graph = diag_grid_world_graph((self.Nx, self.Ny))
-        self.pessimistic_graph = nx.empty_graph(n=0, create_using=nx.DiGraph())
-        self.centralized_safe_graph = diag_grid_world_graph((self.Nx, self.Ny))
-
         self.Fx_model = self.__update_Fx()
         self.Cx_model = self.__update_Cx()
         self.planned_disk_center = self.Fx_X_train
-        self.all_safe_nodes = self.base_graph.nodes
         self.all_unsafe_nodes = []
         self.max_constraint_sigma_goal = None
         self.set_greedy_lcb_pessi_goal = None
@@ -87,7 +78,7 @@ class Agent(object):
         a = 1
         self.infeasible = False
         self.info_pt_z = None
-        self.safe_meas_loc = self.origin.reshape(-1, 2)
+        self.safe_meas_loc = self.origin.reshape(-1, params["common"]["dim"])
         self.planned_measure_loc =  self.origin
         self.get_utility_minimizer = np.array(params["env"]["goal_loc"])
 
@@ -123,14 +114,14 @@ class Agent(object):
     def get_lb_at_curr_loc(self):
         self.st_bound = "LB"
         self.st_gp = "Cx"
-        return self.funct(torch.Tensor(self.current_location).reshape(-1,2)).detach().numpy()
+        return self.funct(torch.Tensor(self.current_location).reshape(-1,self.params["common"]["dim"])).detach().numpy()
 
     def get_width_at_curr_loc(self):
         self.st_bound = "LB"
         self.st_gp = "Cx"
-        lb = self.funct(torch.Tensor(self.current_location).reshape(-1,2)).detach().numpy()
+        lb = self.funct(torch.Tensor(self.current_location).reshape(-1,self.params["common"]["dim"])).detach().numpy()
         self.st_bound = "UB"
-        ub = self.funct(torch.Tensor(self.current_location).reshape(-1,2)).detach().numpy()
+        ub = self.funct(torch.Tensor(self.current_location).reshape(-1,self.params["common"]["dim"])).detach().numpy()
         return ub - lb
 
     def model_dynamics(self, u):
@@ -216,9 +207,9 @@ class Agent(object):
     def update_current_location(self, loc):
         self.current_location = loc
     
-    def update_current_state(self, state):
-        self.current_state = state
-        self.update_current_location(state[:self.x_dim])
+    def update_current_state(self, x_curr, t_curr):
+        self.current_state = np.append(x_curr, t_curr)
+        self.update_current_location(x_curr)
 
     def get_recommendation_pt(self):
         if not self.params["agent"]["Two_stage"]:

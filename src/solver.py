@@ -144,7 +144,9 @@ class SEMPC_solver(object):
         cw = 1e3 * np.ones(self.H + 1)
         if not player.goal_in_pessi:
             cw[int(self.Hm)] = 1
-        xg = np.ones((self.H + 1, self.x_dim)) * player.get_next_to_go_loc()
+        xg = np.ones((self.H + 1, self.x_dim)) * np.array(
+            self.params["env"]["goal_loc"]
+        )
         x_origin = player.origin[: self.x_dim].numpy()
         x_terminal = np.zeros(self.state_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin

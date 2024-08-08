@@ -57,7 +57,7 @@ def TrainAndUpdateConstraint(query_pt, query_meas, agent_key, players, params):
     train["Cx_X"] = query_pt.reshape(-1, params["common"]["dim"])
     if not isinstance(query_meas, np.ndarray):
         query_meas = np.array([query_meas])
-    train["Cx_Y"] = query_meas.reshape(-1, 1)
+    train["Cx_Y"] = torch.from_numpy(query_meas).reshape(-1, 1)
 
     players[agent_key].update_Cx_gp(train["Cx_X"], train["Cx_Y"])
     for i in range(params["env"]["n_players"]):
