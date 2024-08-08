@@ -138,3 +138,4 @@ MPC_V0*
 *.o
 *.h
 settings.json
+*.png
