@@ -10,16 +10,11 @@
         "constr_type_0": "BGH",
         "constr_type_e": "BGH",
         "has_x0": true,
-        "idxbu": [
-            0,
-            1,
-            2
-        ],
+        "idxbu": [],
         "idxbx": [
             0,
             1,
-            2,
-            3
+            2
         ],
         "idxbx_0": [
             0,
@@ -27,12 +22,7 @@
             2,
             3
         ],
-        "idxbx_e": [
-            0,
-            1,
-            2,
-            3
-        ],
+        "idxbx_e": [],
         "idxbxe_0": [
             0,
             1,
@@ -44,24 +34,17 @@
         "idxsbx_e": [],
         "idxsg": [],
         "idxsg_e": [],
-        "idxsh": [
-            1
-        ],
+        "idxsh": [],
         "idxsh_0": [],
         "idxsh_e": [],
         "idxsphi": [],
         "idxsphi_0": [],
         "idxsphi_e": [],
-        "lbu": [
-            -60.0,
-            -60.0,
-            0.035
-        ],
+        "lbu": [],
         "lbx": [
             -20.0,
             -20.0,
-            -3.14159,
-            0.0
+            -3.14159
         ],
         "lbx_0": [
             -8.3,
@@ -69,22 +52,12 @@
             3.1415,
             0.0
         ],
-        "lbx_e": [
-            -20.0,
-            -20.0,
-            -3.14159,
-            1.0
-        ],
+        "lbx_e": [],
         "lg": [],
         "lg_e": [],
-        "lh": [
-            0.0,
-            0.2
-        ],
+        "lh": [],
         "lh_0": [],
-        "lh_e": [
-            0.0
-        ],
+        "lh_e": [],
         "lphi": [],
         "lphi_0": [],
         "lphi_e": [],
@@ -93,24 +66,17 @@
         "lsbx_e": [],
         "lsg": [],
         "lsg_e": [],
-        "lsh": [
-            0.0
-        ],
+        "lsh": [],
         "lsh_0": [],
         "lsh_e": [],
         "lsphi": [],
         "lsphi_0": [],
         "lsphi_e": [],
-        "ubu": [
-            60.0,
-            60.0,
-            1.0
-        ],
+        "ubu": [],
         "ubx": [
             20.0,
             20.0,
-            3.14159,
-            2.0
+            3.14159
         ],
         "ubx_0": [
             -8.3,
@@ -118,22 +84,12 @@
             3.1415,
             0.0
         ],
-        "ubx_e": [
-            20.0,
-            20.0,
-            3.14159,
-            1.0
-        ],
+        "ubx_e": [],
         "ug": [],
         "ug_e": [],
-        "uh": [
-            10.0,
-            100000000.0
-        ],
+        "uh": [],
         "uh_0": [],
-        "uh_e": [
-            10.0
-        ],
+        "uh_e": [],
         "uphi": [],
         "uphi_0": [],
         "uphi_e": [],
@@ -142,9 +98,7 @@
         "usbx_e": [],
         "usg": [],
         "usg_e": [],
-        "ush": [
-            0.0
-        ],
+        "ush": [],
         "ush_0": [],
         "ush_e": [],
         "usphi": [],
@@ -162,14 +116,10 @@
         "W": [],
         "W_0": [],
         "W_e": [],
-        "Zl": [
-            10.0
-        ],
+        "Zl": [],
         "Zl_0": [],
         "Zl_e": [],
-        "Zu": [
-            10.0
-        ],
+        "Zu": [],
         "Zu_0": [],
         "Zu_e": [],
         "cost_ext_fun_type": "casadi",
@@ -181,14 +131,10 @@
         "yref": [],
         "yref_0": [],
         "yref_e": [],
-        "zl": [
-            100.0
-        ],
+        "zl": [],
         "zl_0": [],
         "zl_e": [],
-        "zu": [
-            10.0
-        ],
+        "zu": [],
         "zu_0": [],
         "zu_e": []
     },
@@ -198,16 +144,16 @@
     ],
     "dims": {
         "N": 25,
-        "nbu": 3,
-        "nbx": 4,
+        "nbu": 0,
+        "nbx": 3,
         "nbx_0": 4,
-        "nbx_e": 4,
+        "nbx_e": 0,
         "nbxe_0": 4,
         "ng": 0,
         "ng_e": 0,
-        "nh": 2,
+        "nh": 0,
         "nh_0": 0,
-        "nh_e": 1,
+        "nh_e": 0,
         "np": 15,
         "nphi": 0,
         "nphi_0": 0,
@@ -215,7 +161,7 @@
         "nr": 0,
         "nr_0": 0,
         "nr_e": 0,
-        "ns": 1,
+        "ns": 0,
         "ns_0": 0,
         "ns_e": 0,
         "nsbu": 0,
@@ -223,7 +169,7 @@
         "nsbx_e": 0,
         "nsg": 0,
         "nsg_e": 0,
-        "nsh": 1,
+        "nsh": 0,
         "nsh_0": 0,
         "nsh_e": 0,
         "nsphi": 0,
@@ -238,9 +184,9 @@
     },
     "json_file": "MPC_V0_env_0_i_8_acados_ocp_sempc.json",
     "model": {
-        "con_h_expr": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaeggaaaaaaaaaaaaaaacaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaacaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaacaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaajaaaaaaamgcgpfdgihpfmgjgogegbaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaamgcgpfdgihpfhgchbgegpfadegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfmgjgogpfadegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaamgcgpfdgihpfhgchbgegpfbdegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfmgjgogpfbdegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaacaaaaaaadghhegcaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaajaaaaaaafhcgpfdgihpfmgjgogegbaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaafhcgpfdgihpfhgchbgegpfadegcaaaaaaaaaaaaaaachdaaaaaaaaaaaaaaacheaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaafhcgpfdgihpfhgchbgegpfbdegcaaaaaaaaaaaaaaachiaaaaaaaaaaaaaaachjaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaachbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaachcaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaachdaaaaaaaaaaaaaaacheaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaachhaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaachiaaaaaaaaaaaaaaachjaaaaaaaaaaaaaaa",
+        "con_h_expr": null,
         "con_h_expr_0": null,
-        "con_h_expr_e": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaajaaaaaaamgcgpfdgihpfmgjgogegbaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaamgcgpfdgihpfhgchbgegpfadegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfmgjgogpfadegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaamaaaaaaamgcgpfdgihpfhgchbgegpfbdegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfmgjgogpfbd",
+        "con_h_expr_e": null,
         "con_phi_expr": null,
         "con_phi_expr_0": null,
         "con_phi_expr_e": null,

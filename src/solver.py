@@ -32,6 +32,8 @@ class Plotter:
 
         self.create_grids()
 
+        self.model_X_sim = []
+
     def create_grids(self):
         self.global_bbox = [-14.45293, 9.54707, -16.74178, 22.0763]
         self.resolution = 0.3
@@ -86,9 +88,14 @@ class Plotter:
     def plot_safe_set(self, X_sol, lb, dlb_dx):
         safe = torch.full((self.grids_list.shape[0],), True)
         for k in range(self.ocp.dims.N):
+            lb_lin = np.zeros(self.grids_list.shape[0],)
             for i, x in enumerate(self.grids_list):
-                if lb[k] + dlb_dx[k].T @ (x - X_sol[k, : self.nx - 1]) < 0:
+                lb_lin[i] = lb[k] + dlb_dx[k].T @ (x - X_sol[k, : self.nx - 1])
+                if lb_lin[i] < 0:
                     safe[i] = False
+            # lb_lin_2D = lb_lin.reshape(len(self.X2_1D), len(self.X1_1D))
+            # self.ax_3D.plot_surface(self.X1, self.X2, lb_lin_2D)
+        # plt.savefig("test_3D.png")
 
         self.scatters_tmp.append(
             self.ax.scatter(
@@ -114,6 +121,7 @@ class Plotter:
     def plot_sqp(self, i, j, X_sol, lb, dlb_dx, X_sol_next):
         self.plot_safe_set(X_sol, lb, dlb_dx)
         self.plot_sqp_sol(X_sol_next)
+        self.ax.axis("equal")
         self.ax.set_xlim([self.global_bbox[0], self.global_bbox[1]])
         self.ax.set_ylim([self.global_bbox[2], self.global_bbox[3]])
         self.fig.savefig(f"sqp_{i}_{j}.png")
@@ -121,13 +129,16 @@ class Plotter:
         if j != (self.sqp_iters - 1):
             self.remove_plots()
 
-    def plot_sim(self, i, model_X_sim):
+    def plot_sim(self, i, x_curr):
+        self.model_X_sim.append(x_curr[:-1])
+        model_X_sim = np.array(self.model_X_sim)
         self.ax.scatter(
-            model_X_sim[: i + 2, 0],
-            model_X_sim[: i + 2, 1],
+            model_X_sim[:, 0],
+            model_X_sim[:, 1],
             s=15,
             c="red",
         )
+        self.ax.axis("equal")
         self.ax.set_xlim([self.global_bbox[0], self.global_bbox[1]])
         self.ax.set_ylim([self.global_bbox[2], self.global_bbox[3]])
         plt.savefig(f"sagempc_{i}.png")

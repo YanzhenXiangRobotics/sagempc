@@ -17,30 +17,16 @@ from src.utils.model import (
 
 def concat_const_val(ocp, params):
     x_dim = params["optimizer"]["x_dim"]
-    if (
-        params["algo"]["type"] == "ret_expander"
-        or params["algo"]["type"] == "MPC_expander"
-    ):
-        lbx = np.array(params["optimizer"]["x_min"])[:x_dim]
-        ubx = np.array(params["optimizer"]["x_max"])[:x_dim]
-        ocp.constraints.lbu = np.concatenate(
-            [ocp.constraints.lbu, np.array([params["optimizer"]["dt"]]), lbx]
-        )
-        ocp.constraints.ubu = np.concatenate(
-            [ocp.constraints.ubu, np.array([1.0]), ubx]
-        )
-        ocp.constraints.idxbu = np.arange(ocp.constraints.idxbu.shape[0] + 1 + x_dim)
-    else:
-        ocp.constraints.lbu = np.concatenate(
-            [ocp.constraints.lbu, np.array([params["optimizer"]["dt"]])]
-        )
-        ocp.constraints.ubu = np.concatenate([ocp.constraints.ubu, np.array([1.0])])
-        ocp.constraints.idxbu = np.concatenate(
-            [ocp.constraints.idxbu, np.array([ocp.model.u.shape[0] - 1])]
-        )
+    # ocp.constraints.lbu = np.concatenate(
+    #     [ocp.constraints.lbu, np.array([params["optimizer"]["dt"]])]
+    # )
+    # ocp.constraints.ubu = np.concatenate([ocp.constraints.ubu, np.array([1.0])])
+    # ocp.constraints.idxbu = np.concatenate(
+    #     [ocp.constraints.idxbu, np.array([ocp.model.u.shape[0] - 1])]
+    # )
 
-    # ocp.constraints.x0 = np.concatenate(
-    #     [ocp.constraints.x0, np.array([0.0])])
+    ocp.constraints.x0 = np.concatenate(
+        [ocp.constraints.x0, np.array([0.0])])
 
     ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([1.0])])
     ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([1.0])])
@@ -78,12 +64,12 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x_trans):
     p_lin = ca.vertcat(
         lb_cx_lin, lb_cx_grad, x_lin, xg, w, x_terminal, ub_cx_lin, ub_cx_grad, cw
     )
-    model.con_h_expr = ca.vertcat(
-        lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th, cw * var
-    )
-    model.con_h_expr_e = ca.vertcat(
-        lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th
-    )
+    # model.con_h_expr = ca.vertcat(
+    #     lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th, cw * var
+    # )
+    # model.con_h_expr_e = ca.vertcat(
+    #     lb_cx_lin + lb_cx_grad.T @ (model_x_trans - x_lin) - q_th
+    # )
 
     model.p = p_lin
     return model, w, xg, var
@@ -104,67 +90,38 @@ def sempc_cost_expr(ocp, model_x_trans, model_u, x_dim, w, xg, var, params):
         w * (model_x_trans - xg).T @ qx @ (model_x_trans - xg)
     )
 
-    ocp.constraints.idxsh = np.array([1])
-    ocp.cost.zl = 1e2 * np.array([1])
-    ocp.cost.zu = 1e1 * np.array([1])
-    ocp.cost.Zl = 1e1 * np.array([1])
-    ocp.cost.Zu = 1e1 * np.array([1])
+    # ocp.constraints.idxsh = np.array([1])
+    # ocp.cost.zl = 1e2 * np.array([1])
+    # ocp.cost.zu = 1e1 * np.array([1])
+    # ocp.cost.Zl = 1e1 * np.array([1])
+    # ocp.cost.Zu = 1e1 * np.array([1])
 
     return ocp
 
 
 def sempc_const_val(ocp, params, x_dim, u_dim):
-    # constraints
-    eps = params["common"]["epsilon"]  # - 0.05
+    eps = params["common"]["epsilon"]
 
-    ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
-    ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
-    ocp.constraints.idxbu = np.arange(u_dim)
+    # ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
+    # ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
+    # ocp.constraints.idxbu = np.arange(u_dim)
 
-    lbx = np.array(params["optimizer"]["x_min"])
-    ubx = np.array(params["optimizer"]["x_max"])
+    ocp.constraints.lbx = np.array(params["optimizer"]["x_min"])
+    ocp.constraints.ubx = np.array(params["optimizer"]["x_max"])
+    ocp.constraints.idxbx = np.arange(x_dim)
 
-    # lbx = params["optimizer"]["u_min"][0]*np.ones(n_order*x_dim)
-    # lbx[:x_dim] = params["optimizer"]["x_min"]*np.ones(x_dim)
-
-    # ubx = params["optimizer"]["u_max"][0]*np.ones(n_order*x_dim)
-    # ubx[:x_dim] = params["optimizer"]["x_max"]*np.ones(x_dim)
-
-    x0 = np.zeros(ocp.model.x.shape[0])
-    x0[:x_dim] = np.array(params["env"]["start_loc"])  # np.ones(x_dim)*0.72
-    ocp.constraints.x0 = x0.copy()
-
-    ocp.constraints.lbx_e = lbx.copy()
-    ocp.constraints.ubx_e = ubx.copy()
-    ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
-
-    ocp.constraints.lbx = lbx.copy()
-    ocp.constraints.ubx = ubx.copy()
-    ocp.constraints.idxbx = np.arange(lbx.shape[0])
-    if params["algo"]["type"] == "MPC_Xn":
-        wee = 1.0e-5
-        ocp.constraints.lh = np.array([0, eps, -1 * wee, -1 * wee, -1 * wee, -1 * wee])
-        ocp.constraints.uh = np.array([10.0, 1e8, wee, wee, wee, wee])
-    elif (
-        params["algo"]["type"] == "ret_expander"
-        or params["algo"]["type"] == "MPC_expander"
-    ):
-        ocp.constraints.lh = np.array([0, eps, -1e8])
-        ocp.constraints.uh = np.array([10.0, 1e8, 0.2])
-    else:
-        ocp.constraints.lh = np.array([0, eps])
-        ocp.constraints.uh = np.array([10.0, 1e8])
-    ocp.constraints.lh_e = np.array([0.0])
-    ocp.constraints.uh_e = np.array([10.0])
+    # ocp.constraints.lbx_e = ocp.constraints.lbx.copy()
+    # ocp.constraints.ubx_e = ocp.constraints.ubx.copy()
+    # ocp.constraints.idxbx_e = ocp.constraints.idxbx.copy()
 
     # ocp.constraints.lh = np.array([0, eps])
-    # ocp.constraints.uh = np.array([10.0, 1.0e9])
-    # lh_e = np.zeros(n_order*x_dim+1)
-    # lh_e[0] = 0
-    # ocp.constraints.lh_e = lh_e
-    # uh_e = np.zeros(n_order*x_dim+1)
-    # uh_e[0] = 10
-    # ocp.constraints.uh_e = uh_e
+    # ocp.constraints.uh = np.array([10.0, 1e8])
+    # ocp.constraints.lh_e = np.array([0.0])
+    # ocp.constraints.uh_e = np.array([10.0])
+
+    x0 = np.zeros(ocp.model.x.shape[0])
+    x0[:x_dim] = np.array(params["env"]["start_loc"])
+    ocp.constraints.x0 = x0.copy()
 
     ocp.parameter_values = np.zeros((ocp.model.p.shape[0],))
     return ocp
