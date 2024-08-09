@@ -15,6 +15,7 @@ from acados_template import AcadosOcp
 
 class Plotter:
     def __init__(self, ocp: AcadosOcp, sqp_iters, Hm):
+        self.plot = True
         self.plots_tmp = []
         self.scatters_tmp = []
         self.three_D_tmp = []
@@ -63,6 +64,7 @@ class Plotter:
         self.three_D_tmp.append(
             self.ax_3D.plot_surface(self.X1, self.X2, y_plot, color="orange", alpha=0.5)
         )
+        self.fig.savefig("test.png")
 
     def plot_sqp_sol(self, X_sol):
         for i in range(X_sol.shape[0] - 1):
@@ -282,6 +284,7 @@ class SEMPC_solver(object):
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim - 1], "LB", "Cx"
             )  # pessimitic safe location
+            print(x_h, gp_val, "\n\n\n")
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim - 1], "UB", "Cx"
             )  # optimistic safe location
@@ -298,8 +301,6 @@ class SEMPC_solver(object):
             #     UB_cx_grad[stage],
             #     cw[stage],
             # ]
-            # print(t)
-            # print("\n\n\n\n\n\n\n")
             for stage in range(self.H + 1):
                 self.ocp_solver.set(
                     stage,
@@ -333,7 +334,8 @@ class SEMPC_solver(object):
             else:
                 X_old = X.copy()
             X, U, Sl = self.get_solution()
-            self.plotter.plot_sqp(sample_iter, sqp_iter, X_old, gp_val, gp_grad, X)
+            if self.plotter.plot:
+                self.plotter.plot_sqp(sample_iter, sqp_iter, X_old, gp_val, gp_grad, X)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))

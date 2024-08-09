@@ -25,6 +25,7 @@ from mlsocket import MLSocket
 HOST = "127.0.0.1"
 PORT = 65432
 
+plot = False
 
 class SEMPCNovaCarter(Node):
     def __init__(self, params) -> None:
@@ -67,7 +68,8 @@ class SEMPCNovaCarter(Node):
         self.players[self.pl_idx].feasible = True
         while running_condition_true:
             self.not_reached_and_prob_feasible()
-            self.sempc_solver.plotter.plot_sim(self.sample_iter, self.x_curr)
+            if self.sempc_solver.plotter.plot:
+                self.sempc_solver.plotter.plot_sim(self.sample_iter, self.x_curr)
 
             if w < self.params["common"]["epsilon"]:
                 self.players[self.pl_idx].feasible = False
@@ -149,10 +151,16 @@ class SEMPCNovaCarter(Node):
             self.get_current_state()
             start = self.t_curr
             while self.t_curr - start < U[i, -1]:
-                self.publisher.publish(U[i, : self.u_dim])
+                msg = Twist()
+                msg.linear.x = U[i, 0]
+                msg.linear.y = U[i, 1]
+                msg.angular.z = U[i, 2]
+                self.publisher.publish(msg)
+
                 print(
-                    f"Starting from {start}, at {self.t_curr}, applied {U[i, :self.u_dim]}"
+                    f"Starting from {start} until {start + U[i, -1]} at {self.t_curr}, applied {U[i, :self.u_dim]}"
                 )
+
                 self.get_current_state()
 
     def get_current_state(self):
@@ -192,6 +200,9 @@ class SEMPCNovaCarter(Node):
             x_curr = x_curr.numpy()
         st_curr = np.zeros(self.state_dim + 1)
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
+        # print(self.sempc_solver.ocp_solver.acados_ocp.constraints.lbx)
+        # print(self.sempc_solver.ocp_solver.acados_ocp.constraints.ubx)
+        # print(self.sempc_solver.ocp_solver.acados_ocp.constraints.idxbx)
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
 
@@ -231,6 +242,7 @@ class SEMPCNovaCarter(Node):
         # this while loops ensures we collect measurement only at constraint and not all along
         # the path
         # self.receding_horizon(self.players[self.pl_idx])
+        # if self.sempc_solver.plotter.plot:
         self.sempc_solver.plotter.plot_gp(self.players[self.pl_idx].Cx_model)
         self.one_step_planner()
         if not self.goal_in_pessi:
