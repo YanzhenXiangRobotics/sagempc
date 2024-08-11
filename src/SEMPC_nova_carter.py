@@ -27,6 +27,7 @@ PORT = 65432
 
 plot = False
 
+
 class SEMPCNovaCarter(Node):
     def __init__(self, params) -> None:
         super().__init__("sempc_nova_carter")
@@ -73,19 +74,16 @@ class SEMPCNovaCarter(Node):
 
             if w < self.params["common"]["epsilon"]:
                 self.players[self.pl_idx].feasible = False
-
-            if self.params["algo"]["objective"] == "GO":
-                running_condition_true = (
-                    not np.linalg.norm(
-                        self.x_goal
-                        - self.players[self.pl_idx].current_location[: self.x_dim - 1]
-                    )
-                    < 0.025
-                )
-            elif self.params["algo"]["objective"] == "SE":
-                running_condition_true = self.players[self.pl_idx].feasible
             else:
-                raise NameError("Objective is not clear")
+                w = self.set_next_goal()
+
+            running_condition_true = (
+                not np.linalg.norm(
+                    self.x_goal
+                    - self.players[self.pl_idx].current_location[: self.x_dim - 1]
+                )
+                < 0.025
+            )
 
             self.sample_iter += 1
 
@@ -112,7 +110,10 @@ class SEMPCNovaCarter(Node):
         print("initialized location", self.get_safe_init())
         # TODO: Remove dependence of player on visu grid
         self.players = get_players_initialized(
-            self.get_safe_init(), torch.tensor(self.x_curr), self.params
+            self.get_safe_init(),
+            torch.tensor(self.x_curr),
+            self.params,
+            torch.from_numpy(self.sempc_solver.plotter.grids_list),
         )
 
         for it, player in enumerate(self.players):
@@ -153,8 +154,7 @@ class SEMPCNovaCarter(Node):
             while self.t_curr - start < U[i, -1]:
                 msg = Twist()
                 msg.linear.x = U[i, 0]
-                msg.linear.y = U[i, 1]
-                msg.angular.z = U[i, 2]
+                msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)
 
                 print(
@@ -261,3 +261,82 @@ class SEMPCNovaCarter(Node):
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
+
+    def set_next_goal(self):
+        V_lower_Cx, V_upper_Cx = self.players[self.pl_idx].get_Cx_bounds(
+            self.players[self.pl_idx].grid_V
+        )
+        init_node = self.players[self.pl_idx].get_idx_from_grid(
+            self.players[self.pl_idx].origin[:self.x_dim - 1]
+        )
+        curr_node = self.players[self.pl_idx].get_idx_from_grid(
+            torch.from_numpy(self.players[self.pl_idx].current_location)
+        )
+        # self.players[self.pl_idx].update_pessimistic_graph(V_lower_Cx, init_node, self.q_th, Lc=0)
+        # curr_node = self.players[self.pl_idx].get_nearest_pessi_idx(torch.from_numpy(self.players[self.pl_idx].current_location))
+        # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
+        intersect_pessi_opti = V_upper_Cx - self.eps - 0.1
+        self.players[self.pl_idx].update_optimistic_graph(
+            intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
+        )
+        curr_node = self.players[self.pl_idx].get_nearest_opti_idx(
+            torch.from_numpy(self.players[self.pl_idx].current_location)
+        )
+        goal_node = self.players[self.pl_idx].get_idx_from_grid(
+            torch.from_numpy(self.players[self.pl_idx].get_utility_minimizer)
+        )
+        opti_path, goal_node = self.get_optimistic_path(init_node, goal_node, init_node)
+        if V_lower_Cx[goal_node] >= 0:
+            xi_star = self.players[self.pl_idx].grid_V[goal_node.item()].numpy()
+            self.goal_in_pessi = True
+            self.players[self.pl_idx].goal_in_pessi = True
+        else:
+            pessi_value = V_lower_Cx[opti_path]
+            idx_out_pessi = np.where(pessi_value < self.q_th)[0][0].item()
+            xi_star = self.players[self.pl_idx].grid_V[opti_path[idx_out_pessi]].numpy()
+        self.players[self.pl_idx].set_maximizer_goal(xi_star)
+        w = 100
+
+        print(bcolors.green + "Goal:", xi_star, " uncertainity:", w, bcolors.ENDC)
+        return w
+
+    def get_optimistic_path(self, node, goal_node, init_node):
+        # If there doesn't exists a safe path then re-evaluate the goal
+        try:
+            print("init_node", init_node.item(), "goal_node", goal_node.item())
+            t1 = self.players[self.pl_idx].get_optimistic_path(
+                node.item(), goal_node.item()
+            )
+            t2 = self.players[self.pl_idx].get_optimistic_path(
+                goal_node.item(), init_node.item()
+            )
+            opti_path = t1 + t2
+        except:  # change of utility minimizer location
+            list_opti_node = list(self.players[self.pl_idx].optimistic_graph.nodes())
+            val_optimistic_graph = self.players[self.pl_idx].get_true_objective_func()[
+                list_opti_node
+            ]
+            self.players[self.pl_idx].get_utility_minimizer = (
+                self.players[self.pl_idx]
+                .grid_V[list_opti_node[val_optimistic_graph.argmin().item()]]
+                .numpy()
+            )
+            goal_node = self.players[self.pl_idx].get_idx_from_grid(
+                torch.from_numpy(self.players[self.pl_idx].get_utility_minimizer)
+            )
+            print(
+                "init_node",
+                init_node.item(),
+                "curr_node",
+                node.item(),
+                "goal_node",
+                goal_node.item(),
+            )
+            t1 = self.players[self.pl_idx].get_optimistic_path(
+                node.item(), goal_node.item()
+            )
+            t2 = self.players[self.pl_idx].get_optimistic_path(
+                goal_node.item(), init_node.item()
+            )
+            opti_path = t1 + t2
+        return opti_path, goal_node

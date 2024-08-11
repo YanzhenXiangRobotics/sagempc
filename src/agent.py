@@ -24,7 +24,11 @@ from src.central_graph import (
 
 
 class Agent(object):
-    def __init__(self, my_key, X_train, origin, Cx_Y_train, Fx_Y_train, params) -> None:
+    def __init__(
+        self, my_key, X_train, origin, Cx_Y_train, Fx_Y_train, params, grid_V
+    ) -> None:
+        self.grid_V = grid_V
+
         self.my_key = my_key
         self.max_density_sigma = 10
         self.params = params
@@ -93,6 +97,9 @@ class Agent(object):
         self.safe_meas_loc = self.origin.reshape(-1, params["common"]["dim"])
         self.planned_measure_loc = self.origin
         self.get_utility_minimizer = np.array(params["env"]["goal_loc"])
+
+    def get_true_objective_func(self):
+        return torch.norm(self.grid_V - self.get_utility_minimizer)
 
     def get_gp_sensitivities(self, x_hat, bound, gp):
         self.st_bound = bound
@@ -170,111 +177,6 @@ class Agent(object):
             .numpy()
         )
         return ub - lb
-
-    def model_dynamics(self, u):
-        x = x + u
-        return x
-
-    def policy(self, state):
-        K = 1
-        u = K * state
-        return u
-
-    def opti_UCB(self):
-        self.Cx_model.eval()
-        X = self.grid_V
-        Cx_ucb = self.Cx_model(X.float()).mean + self.Cx_beta * 2 * torch.sqrt(
-            self.Cx_model(X.float()).variance
-        )
-        opti_safe = self.grid_V[Cx_ucb > 0]
-        self.Fx_model.eval()
-        Fx_ucb = self.Fx_model(opti_safe.float()).mean + self.Fx_beta * 2 * torch.sqrt(
-            self.Fx_model(opti_safe.float()).variance
-        )
-        return opti_safe[Fx_ucb.argmax().item()].numpy()
-
-    def uncertainity_sampling(self, const_set="pessi"):
-        """_summary_: The function will return the point with the highest uncertainty in the pessimistic set
-
-        Returns:
-            _type_: a numpy array of shape (2, ) representing the point with highest uncertainty in the pessimistic set
-        """
-        # self.counter+=1
-        # if self.counter>10:
-        # self.counter=0
-        self.Cx_model.eval()
-        V_lower_Cx, V_upper_Cx = self.get_Cx_bounds(self.grid_V)
-        self.num_safe_nodes = len(V_lower_Cx[V_lower_Cx > 0])
-        # X = self.grid_V
-        # if set == "pessi":
-        #     Cx_cb = self.Cx_model(X.float()).mean - self.Cx_beta*2*torch.sqrt(self.Cx_model(X.float()).variance)
-        # else:
-        #     Cx_cb = self.Cx_model(X.float()).mean + self.Cx_beta*2*torch.sqrt(self.Cx_model(X.float()).variance)
-        intersect_pessi_opti = V_upper_Cx - self.params["common"]["epsilon"]
-        init_node = self.get_idx_from_grid(self.origin)
-        curr_node = self.get_idx_from_grid(torch.from_numpy(self.current_location))
-        self.update_optimistic_graph(
-            intersect_pessi_opti,
-            init_node,
-            self.params["common"]["constraint"],
-            curr_node,
-            Lc=0,
-        )
-        Cx_width = V_upper_Cx - V_lower_Cx
-        if (
-            self.params["algo"]["type"] == "ret_expander"
-            or self.params["algo"]["type"] == "MPC_expander"
-        ):
-            V_lower_Cx_old = V_lower_Cx.clone()
-            V_lower_Cx = self.get_Lc_lb(V_lower_Cx)
-            sampling_set = np.arange(self.grid_V.shape[0])[
-                torch.logical_and(V_lower_Cx > 0, V_lower_Cx_old <= 0)
-            ]
-        else:
-            sampling_set = np.arange(self.grid_V.shape[0])[V_lower_Cx >= 0]
-        if sampling_set.size == 0:
-            return 0, self.current_location
-        global_idx = sampling_set[Cx_width[sampling_set].argmax().item()]
-        uncertainity_val = Cx_width[global_idx]
-        self.update_pessimistic_graph(
-            V_lower_Cx, init_node, self.params["common"]["constraint"], Lc=0
-        )
-        rem_nodes = list(
-            set(self.optimistic_graph.nodes) - set(self.pessimistic_graph.nodes)
-        )
-        print(len(rem_nodes))
-        # if self.params["algo"]["type"]=="ret_expander" or self.params["algo"]["type"]=="MPC_expander":
-        #     pass
-        # # Find the uncertainity sampling location directly doing argmax in a set
-        # Cx_cb = V_lower_Cx.clone()
-        # sampling_set = self.grid_V[Cx_cb>0]
-        # Cx_width = V_upper_Cx - V_lower_Cx
-        # idx = Cx_width[Cx_cb>0].argmax().item()
-        # self.prev_uncertainity_sampling = Cx_width[Cx_cb>0][idx].item(), sampling_set[idx].numpy()
-        if self.params["algo"]["init"] == "discrete":
-            curr_global_idx = self.get_nearest_pessi_idx(
-                torch.from_numpy(self.current_location)
-            ).item()
-            self.solver_init_path = self.grid_V[
-                self.get_pessimistic_path(curr_global_idx, global_idx)
-            ]
-        if len(rem_nodes) == 0:
-            return 0, self.grid_V[global_idx].numpy()
-        else:
-            return uncertainity_val.item(), self.grid_V[global_idx].numpy()
-
-    def get_Lc_lb(self, V_lower_Cx):
-        dist_matrix = torch.cdist(self.grid_V, self.grid_V, p=2)
-        V_lower_Cx_mat = torch.vstack([V_lower_Cx] * V_lower_Cx.shape[0])
-        V_lower_Cx_Lc = torch.max(
-            V_lower_Cx_mat - self.params["common"]["Lc"] * dist_matrix, 1
-        )[0]
-        return V_lower_Cx_Lc
-        # V_mod = V_lower_Cx.clone()
-        # for idx in range(len(self.grid_V)):
-        #     dist_norm = torch.norm(self.grid_V-self.grid_V[idx],1,dim=1)
-        #     V_mod[idx] = (V_lower_Cx - self.params["common"]["Lc"]*dist_norm).max()
-        # return V_mod
 
     def update_current_location(self, loc):
         self.current_location = loc
