@@ -11,7 +11,7 @@ import warnings
 from src.utils.helper import get_frame_writer
 from src.visu import Visu
 import yaml
-from src.environement import ContiWorld
+from environment import ContiWorld
 from src.ground_truth import GroundTruth
 from src.utils.initializer import get_players_initialized
 warnings.filterwarnings('ignore')

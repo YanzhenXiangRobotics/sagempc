@@ -640,7 +640,7 @@ void MPC_V0_env_0_i_8_sempc_acados_create_5_set_nlp_in(MPC_V0_env_0_i_8_sempc_so
     double* uh = luh + NH;
 
     
-    lh[1] = 0.2;
+    lh[1] = 0.05;
 
     
     uh[0] = 10;

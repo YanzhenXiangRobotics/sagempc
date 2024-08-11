@@ -12,7 +12,11 @@ import torch
 import yaml
 import numpy as np
 
-from src.environement import ContiWorld
+import os, sys
+dir_here = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(dir_here)
+
+from src.environment import ContiWorld
 from src.ground_truth import GroundTruth
 from src.SEMPC import SEMPC
 from src.utils.helper import (TrainAndUpdateConstraint, TrainAndUpdateDensity,

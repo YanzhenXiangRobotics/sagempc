@@ -34,7 +34,6 @@ def expansion_operator(graph,  true_constraint, init_node, thresh, curr_node, Lc
     total_safe_graph = graph.subgraph(total_safe_nodes.numpy())
     edges = nx.algorithms.traversal.breadth_first_search.bfs_edges(
         total_safe_graph, init_node.item())
-
     connected_nodes = [init_node.item()] + [v for u, v in edges]
     reachable_safe_graph = graph.subgraph(np.asarray(connected_nodes))
 

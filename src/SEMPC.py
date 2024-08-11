@@ -515,8 +515,11 @@ class SEMPC():
         self.env.fig_2D.savefig(self.env.env_dir + f"test_{self.iter_plot}.png")
         self.sempc_solver.fig_3D.savefig(self.env.env_dir + f"test_3D_{self.iter_plot}.png")
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
+        len_plot_tmps = len(self.sempc_solver.plot_tmps)
         for _ in range(len_scatter_tmps):
             self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
+        for _ in range(len_plot_tmps):
+            self.sempc_solver.plot_tmps.pop(0).remove()
         print(bcolors.green + "Reached:", x_curr ,  bcolors.ENDC)
         # set current location as the location to be measured
         

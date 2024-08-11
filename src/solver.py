@@ -142,7 +142,7 @@ class SEMPC_solver(object):
                 self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
             )
             self.plot_tmps.append(
-                self.ax_3D.contour(X1, X2, lower, levels=[0], colors="blue")
+                self.ax.contour(X1, X2, lower, levels=[0], colors="blue")
             )
 
     def plot_safe_set(self, gp_val, gp_grad, x_h):
@@ -158,7 +158,10 @@ class SEMPC_solver(object):
                     safe[i] = False
         self.scatter_tmps.append(
             self.ax.scatter(
-                self.grids_coupled[safe, 0], self.grids_coupled[safe, 1], color="orange"
+                self.grids_coupled[safe, 0],
+                self.grids_coupled[safe, 1],
+                color="orange",
+                alpha=0.2,
             )
         )
 
@@ -210,8 +213,9 @@ class SEMPC_solver(object):
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
-            self.plot_3D(player)
-            self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
+            if sqp_iter == self.max_sqp_iter - 1:
+                self.plot_3D(player)
+                self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
 
             if (
                 self.params["algo"]["type"] == "ret_expander"
