@@ -14,6 +14,10 @@ from src.central_graph import (CentralGraph, diag_grid_world_graph,
                                expansion_operator, grid_world_graph)
 from src.solver import GoalOPT
 
+    
+def get_idx_from_grid(position, grid_V):
+    idx = torch.sum(torch.abs(position - grid_V),1).argmin()
+    return idx
 
 class Agent(object):
     def __init__(self, my_key, X_train, Cx_Y_train, Fx_Y_train, params, grid_V) -> None:
@@ -172,8 +176,8 @@ class Agent(object):
         # else:
         #     Cx_cb = self.Cx_model(X.float()).mean + self.Cx_beta*2*torch.sqrt(self.Cx_model(X.float()).variance)
         intersect_pessi_opti = V_upper_Cx - self.params["common"]["epsilon"]
-        init_node = self.get_idx_from_grid(self.origin)
-        curr_node = self.get_idx_from_grid(torch.from_numpy(self.current_location))
+        init_node = get_idx_from_grid(self.origin, self.grid_V)
+        curr_node = get_idx_from_grid(torch.from_numpy(self.current_location), self.grid_V)
         self.update_optimistic_graph(intersect_pessi_opti, init_node, self.params["common"]["constraint"],  curr_node, Lc=0)
         Cx_width = V_upper_Cx - V_lower_Cx
         if self.params["algo"]["type"]=="ret_expander" or self.params["algo"]["type"]=="MPC_expander":
@@ -535,10 +539,6 @@ class Agent(object):
         for position in positions:
             idx.append(torch.abs(torch.Tensor(
                 self.V) - position).argmin().item())
-        return idx
-    
-    def get_idx_from_grid(self, position):
-        idx = torch.sum(torch.abs(position - self.grid_V),1).argmin()
         return idx
 
     def get_Cx_data(self):

@@ -36,18 +36,16 @@ class Circle(Obstacle):  # assume diameter to be odd
     def occup(self):
         occup = set()
         lower_left = (
-            self.center[0] - math.ceil(self.radius),
-            self.center[1] - math.ceil(self.radius),
+            self.center[0] - self.radius,
+            self.center[1] - self.radius,
         )
         upper_right = (
-            self.center[0] + math.ceil(self.radius),
-            self.center[1] + math.ceil(self.radius),
+            self.center[0] + self.radius,
+            self.center[1] + self.radius,
         )
         X = lambda y: math.sqrt(self.radius**2 - y**2)
-        for x in range(lower_left[0], upper_right[0], self.resolution):
-            for y in range(lower_left[1], upper_right[1], self.resolution):
-                if (x - self.center[0]) ** 2 < math.ceil(
-                    X(math.floor(y - self.center[1]) + 0.5) - 0.5
-                ) ** 2:
+        for x in np.arange(lower_left[0], upper_right[0], self.resolution):
+            for y in np.arange(lower_left[1], upper_right[1], self.resolution):
+                if (x - self.center[0])**2 + (y - self.center[1])**2 <= self.radius**2:
                     occup.add((x, y))
         return occup

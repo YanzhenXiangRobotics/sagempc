@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "main.py",
+            "name": "main_block_env",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "main_cluttered_car",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": ["-param",
+                    "params_cluttered_car"        ]           
         }
     ]
 }

@@ -2,23 +2,15 @@ from world import World
 from obstacle import Rectangle, Circle
 import numpy as np
 import matplotlib.pyplot as plt
+import os, sys
+dir_here = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.join(dir_here, ".."))
+from fake_simulation_node import FakeSimulationNode
 
-world = World(bbox=[-2.18, -2.18, 0.2, 0.2], resolution=0.02)
-# world.add_obstacle(
-#     Rectangle(
-#         lower_left=[-2.05, -2.2], upper_right=[-1.7, -2.1], resolution=world.resolution
-#     )
-# )
-world.add_obstacle(
-    Rectangle(
-        lower_left=[-1.4, -2.2], upper_right=[-1.1, -1.6], resolution=world.resolution
-    )
-)
-world.add_obstacle(
-    Rectangle(
-        lower_left=[-2.2, -1.4], upper_right=[-1.6, -0.9], resolution=world.resolution
-    )
-)
+import rclpy
+rclpy.init()
+sim = FakeSimulationNode()
+world = sim.world
 
 # fig, ax = world.plot(show=False)
 min_dist_list = []
@@ -31,7 +23,7 @@ min_dist_list = np.array(min_dist_list)
 fig_3D = plt.figure()
 ax_3D = fig_3D.add_subplot(111, projection="3d")
 X1, X2 = world.grid_x1_x2()
-min_dist_list = min_dist_list.reshape(len(X1), len(X2))
+min_dist_list = min_dist_list.reshape(len(X2), len(X1))
 X1, X2 = np.meshgrid(X1, X2)
 ax_3D.plot_surface(X1, X2, min_dist_list)
 fig, ax = plt.subplots()

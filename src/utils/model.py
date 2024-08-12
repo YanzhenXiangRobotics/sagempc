@@ -380,6 +380,23 @@ def export_bicycle_model(name):
     model.name = name
     return model
 
+def export_nova_carter_discrete():
+
+    model = AcadosModel()
+    model.name = "nova_carter_discrete"
+    model.x = ca.SX.sym("x", 4)
+    model.u = ca.SX.sym("u", 3)
+
+    model.disc_dyn_expr = ca.vertcat(
+        model.x[0] + model.u[0] * np.cos(model.x[2]) * model.u[-1],
+        model.x[1] + model.u[0] * np.sin(model.x[2]) * model.u[-1],
+        model.x[2] + model.u[1] * model.u[-1],
+        model.x[-1] + model.u[-1],
+    )
+
+    return model
+
+
 
 ##############################Lipchitz constant#############################################
 def export_unicycle_model_with_discrete_rk4_LC(name):

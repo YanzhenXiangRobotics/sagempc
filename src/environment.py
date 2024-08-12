@@ -17,7 +17,10 @@ from gpytorch.kernels import (
     ScaleKernel,
 )
 import numpy as np
+
 # from src.utils.ocp import export_sim
+from src.agent import get_idx_from_grid
+import math
 
 
 class ContiWorld:
@@ -105,9 +108,7 @@ class ContiWorld:
             pickle.dump(self.env_data, a_file)
             a_file.close()
             self.params["env"]["start_loc"] = init[0][0].tolist()
-            if self.block_env:
-                self.params["env"]["goal_loc"] = [-1.0, -0.5]
-            else:
+            if not self.block_env:
                 self.params["env"]["goal_loc"] = self.VisuGrid[
                     torch.randint(0, self.VisuGrid.shape[0], (1,)).item()
                 ].tolist()
@@ -188,7 +189,7 @@ class ContiWorld:
 
     def plot2D(self):
         f, self.ax = plt.subplots()
-        self.fig_2D = f
+        self.fig = f
         self.ax.set_aspect("equal", "box")
         if self.block_env:
             posterior_mean = self.__Cx_2D.numpy()
@@ -399,13 +400,15 @@ class ContiWorld:
     def get_multi_constraint_observation(self, sets):
         train = {}
         locs = torch.vstack(sets)
-        import math
 
         if self.block_env:
             Cx_Y = []
             for loc in locs:
-                i = math.floor(loc[0] * self.Nx / 2.4)
-                j = math.floor(loc[1] * self.Ny / 2.4)
+                idx = get_idx_from_grid(loc, self.VisuGrid)
+                i, j = (
+                    math.floor(idx / self.params["env"]["shape"]["y"]),
+                idx % self.params["env"]["shape"]["y"],
+                )
                 Cx_Y.append(self.__Cx_2D[i, j])
             train["Cx_Y"] = torch.vstack(Cx_Y)
         else:
@@ -428,10 +431,12 @@ class ContiWorld:
         )
         # self.Cx_model_cont.posterior(loc.reshape(-1,2)).mean
         if self.block_env:
-            import math
-
-            i = math.floor((loc[0, 0] - self.VisuGrid[0, 0]) * self.Nx / 2.4)
-            j = math.floor((loc[0, 1] - self.VisuGrid[0, 1]) * self.Ny / 2.4)
+            idx = get_idx_from_grid(loc, self.VisuGrid)
+            i, j = (
+                math.floor(idx / self.params["env"]["shape"]["y"]),
+                idx % self.params["env"]["shape"]["y"],
+            )
+            print(self.__Cx_2D[i, j])
             obs_Cx.append(self.__Cx_2D[i, j] + noise[0])
         else:
             obs_Cx.append(self.Cx_model_cont.posterior(loc).mean + noise[0])
@@ -461,9 +466,9 @@ class ContiWorld:
 
     def __get_safe_init(self):
         if self.block_env:
-            loc = [torch.tensor([-2.0, -2.0])]
-            idx = torch.all(self.VisuGrid == loc[0], dim=-1)
-            idx = torch.atleast_1d(torch.nonzero(idx).squeeze())
+            loc = [torch.tensor(self.params["env"]["start_loc"])]
+            idx = get_idx_from_grid(loc[0], self.VisuGrid)
+            idx = torch.atleast_1d(idx)
             return loc, idx
         opt_set = self.__Cx - self.epsilon * 1.5 > self.constraint
         p = opt_set.view(-1) * 1
@@ -536,7 +541,7 @@ def grid(world_shape, step_size, start_loc):
         (n*m) x 2 array containing the coordinates of the states
     """
     nodes = torch.arange(0, world_shape["x"] * world_shape["y"])
-    return nodes_to_states(nodes, world_shape, step_size) + start_loc
+    return nodes_to_states(nodes, world_shape, step_size) + torch.tensor(start_loc)
 
 
 if __name__ == "__main__":

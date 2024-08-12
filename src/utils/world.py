@@ -55,7 +55,7 @@ class World:
         pos_arr = np.array(pos)
         dists = np.linalg.norm(occup_arr - pos_arr, axis=-1)
         min_dist = np.min(dists)
-        if min_dist < 0.5 * self.resolution:
+        if min_dist <= self.resolution / math.sqrt(2):
             min_dist = 0.0
         min_dist_index = np.argmin(dists)
         min_dist_point = occup_arr[min_dist_index]
