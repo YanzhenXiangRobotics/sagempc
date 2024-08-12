@@ -566,8 +566,7 @@ class SEMPC(Node):
             while self.t_curr - start < U[i, -1]:
                 msg = Twist()
                 msg.linear.x = U[i, 0]
-                msg.linear.y = U[i, 1]
-                msg.angular.z = U[i, 2]
+                msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)
 
                 print(
