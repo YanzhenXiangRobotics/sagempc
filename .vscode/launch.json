@@ -19,6 +19,13 @@
             "console": "integratedTerminal",
             "args": ["-param",
                     "params_cluttered_car"        ]           
-        }
+        },
+        {
+            "name": "fake_node",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/fake_simulation_node.py",
+            "console": "integratedTerminal"
+        },
     ]
 }

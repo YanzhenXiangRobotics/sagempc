@@ -71,6 +71,6 @@ class FakeSimulationNode(Node):
 if __name__ == "__main__":
     rclpy.init()
     sim = FakeSimulationNode()
-    sim.world.plot(show=True)
+    sim.world.plot(show=False)
     sim.setup_socket()
     rclpy.spin(sim)

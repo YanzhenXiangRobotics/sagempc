@@ -38,8 +38,9 @@ class SEMPC(Node):
         super().__init__("sempc")
         # self.oracle_solver = Oracle_solver(params)
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
-        self.sempc_solver = SEMPC_solver(params, env.VisuGrid, env.ax, visu)
         self.env = env
+        self.fig_dir = os.path.join(self.env.env_dir, "figs")
+        self.sempc_solver = SEMPC_solver(params, env.VisuGrid, env.ax, env.fig, visu, self.fig_dir)
         self.visu = visu
         self.params = params
         self.iter = -1
@@ -64,8 +65,7 @@ class SEMPC(Node):
             self.state_dim = self.n_order * self.x_dim
         self.obtained_init_state = False
         self.sempc_initialization()
-        self.iter_plot = 0
-        self.fig_dir = os.path.join(self.env.env_dir, "figs")
+        self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -507,7 +507,7 @@ class SEMPC(Node):
             #         player.optim_getx, player.optim_getu)
 
             # set objective as per desired goal
-            self.sempc_solver.solve(self.players[self.pl_idx])
+            self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
             X, U, Sl = self.oracle_solver.get_solution()
 
             # integrator
@@ -559,7 +559,6 @@ class SEMPC(Node):
             print(e)
 
     def apply_control(self, U):
-        print(U)
         for i in range(U.shape[0]):
             self.get_current_state()
             start = self.t_curr
@@ -570,7 +569,7 @@ class SEMPC(Node):
                 self.publisher.publish(msg)
 
                 print(
-                    f"Starting from {start} until {start + U[i, -1]} at {self.t_curr}, applied {U[i, :self.u_dim]}"
+                    f"Starting from {start} until {start + U[i, -1]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
                 )
 
                 self.get_current_state()
@@ -587,11 +586,14 @@ class SEMPC(Node):
         print(bcolors.OKCYAN + "Solving Constrints" + bcolors.ENDC)
 
         # Write in MPC style to reach the goal. The main loop is outside
-        x_curr = (
-            self.players[self.pl_idx]
-            .current_state[: self.state_dim]
-            .reshape(self.state_dim)
-        )  # 3D
+        if self.use_isaac_sim:
+            x_curr = self.x_curr
+        else:
+            x_curr = (
+                self.players[self.pl_idx]
+                .current_state[: self.state_dim]
+                .reshape(self.state_dim)
+            )  # 3D
         x_origin = self.players[
             self.pl_idx
         ].origin.numpy()  # origin: related to X_train, thus 2-dims
@@ -667,12 +669,12 @@ class SEMPC(Node):
 
         # set objective as per desired goal
         start_time = time.time()
-        self.sempc_solver.solve(self.players[self.pl_idx])
+        self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(U)
+            self.apply_control(U[: self.Hm, :])
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -736,17 +738,27 @@ class SEMPC(Node):
             self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red")
         else:
             self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"test_{self.iter_plot}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         self.sempc_solver.fig_3D.savefig(
-            os.path.join(self.fig_dir, f"test_3D_{self.iter_plot}.png")
+            os.path.join(self.fig_dir, f"sim_3D_{self.sim_iter}.png")
         )
-        len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
+        len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
+        len_threeD_tmps = len(self.sempc_solver.threeD_tmps)
+        for _ in range(len_plot_tmps):
+            self.sempc_solver.plot_tmps.pop(0).pop(0).remove()
         for _ in range(len_scatter_tmps):
             self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
-        for _ in range(len_plot_tmps):
-            self.sempc_solver.plot_tmps.pop(0).remove()
-        print(bcolors.green + "Reached:", x_curr, bcolors.ENDC)
+        for _ in range(len_threeD_tmps):
+            self.sempc_solver.threeD_tmps.pop(0).remove()
+        if self.use_isaac_sim:
+            x_curr = self.x_curr
+        print(
+            bcolors.green + "Reached:",
+            x_curr,
+            X[self.Hm, : self.state_dim],
+            bcolors.ENDC,
+        )
         # set current location as the location to be measured
 
         goal_dist = np.linalg.norm(
@@ -760,7 +772,7 @@ class SEMPC(Node):
         #     self.players[self.pl_idx].infeasible = True
         # self.prev_goal_dist = goal_dist
         # apply this input to your environment
-        self.iter_plot += 1
+        self.sim_iter += 1
 
     def not_reached_and_prob_feasible(self):
         """_summary_ The agent safely explores and either reach goal or remove it from safe set

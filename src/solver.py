@@ -12,7 +12,7 @@ from src.utils.ocp import export_oracle_ocp, export_sempc_ocp, export_sim
 # The class below is an optimizer class,
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
-    def __init__(self, params, grids_coupled, ax, visu) -> None:
+    def __init__(self, params, grids_coupled, ax, fig, visu, fig_dir) -> None:
         ocp = export_sempc_ocp(params)
         self.name_prefix = (
             params["algo"]["type"]
@@ -49,9 +49,11 @@ class SEMPC_solver(object):
         self.grids_coupled = grids_coupled
         self.visu = visu
         self.ax = ax
-        self.scatter_tmps, self.plot_tmps = [], []
+        self.fig = fig
+        self.plot_tmps, self.scatter_tmps, self.threeD_tmps = [], [], []
         self.fig_3D = plt.figure()
         self.ax_3D = self.fig_3D.add_subplot(111, projection="3d")
+        self.fig_dir = fig_dir
 
     def initilization(self, sqp_iter, x_h, u_h):
         for stage in range(self.H):
@@ -140,10 +142,10 @@ class SEMPC_solver(object):
             lower = (
                 pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
             ).reshape((X1.shape[0], X2.shape[1]))
-            self.plot_tmps.append(
+            self.threeD_tmps.append(
                 self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
             )
-            self.plot_tmps.append(
+            self.threeD_tmps.append(
                 self.ax.contour(X1, X2, lower, levels=[0], colors="blue")
             )
 
@@ -167,7 +169,7 @@ class SEMPC_solver(object):
             )
         )
 
-    def solve(self, player):
+    def solve(self, player, sim_iter):
         x_h = np.zeros((self.H + 1, self.state_dim + 1))
         z_h = np.zeros((self.H + 1, self.x_dim))
         if (
@@ -215,10 +217,8 @@ class SEMPC_solver(object):
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
-            if sqp_iter == self.max_sqp_iter - 1:
-                self.plot_3D(player)
-                self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
-
+            self.plot_3D(player)
+            self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -318,6 +318,7 @@ class SEMPC_solver(object):
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
+            self.plot_sqp_sol(X)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -361,6 +362,25 @@ class SEMPC_solver(object):
                     self.name_prefix + "ocp_initialization.json"
                 )
 
+            import os
+            sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
+            if not os.path.exists(sqp_plot_dir):
+                os.makedirs(sqp_plot_dir)
+            self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
+            if sqp_iter != self.max_sqp_iter - 1:
+                len_plot_tmps = len(self.plot_tmps)
+                len_scatter_tmps = len(self.scatter_tmps)
+                len_threeD_tmps = len(self.threeD_tmps)
+                for _ in range(len_plot_tmps):
+                    self.plot_tmps.pop(0).pop(0).remove()
+                for _ in range(len_scatter_tmps):
+                    self.scatter_tmps.pop(0).set_visible(False)
+                for _ in range(len_threeD_tmps):
+                    self.threeD_tmps.pop(0).remove()
+
+    def plot_sqp_sol(self, X):
+        self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black"))
+    
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim
         tol = 1e-5
