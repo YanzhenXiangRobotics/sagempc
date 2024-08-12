@@ -1,3 +1,8 @@
+import sys, os
+
+dir_here = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(dir_here)
+
 from obstacle import *
 import matplotlib.pyplot as plt
 import numpy as np

@@ -1,6 +1,7 @@
 import math
 import numpy as np
 
+
 class Obstacle:
     def __init__(self, resolution) -> None:
         self.resolution = resolution
@@ -21,7 +22,9 @@ class Rectangle(Obstacle):
     def occup(self):
         occup = set()
         for x in np.arange(self.lower_left[0], self.upper_right[0], self.resolution):
-            for y in np.arange(self.lower_left[1], self.upper_right[1], self.resolution):
+            for y in np.arange(
+                self.lower_left[1], self.upper_right[1], self.resolution
+            ):
                 occup.add((x, y))
         return occup
 
@@ -46,6 +49,8 @@ class Circle(Obstacle):  # assume diameter to be odd
         X = lambda y: math.sqrt(self.radius**2 - y**2)
         for x in np.arange(lower_left[0], upper_right[0], self.resolution):
             for y in np.arange(lower_left[1], upper_right[1], self.resolution):
-                if (x - self.center[0])**2 + (y - self.center[1])**2 <= self.radius**2:
+                if (x - self.center[0]) ** 2 + (
+                    y - self.center[1]
+                ) ** 2 <= self.radius**2:
                     occup.add((x, y))
         return occup

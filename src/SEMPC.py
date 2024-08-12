@@ -10,25 +10,34 @@ import time
 from src.solver import Oracle_solver, SEMPC_solver
 from src.utils.helper import (
     TrainAndUpdateConstraint,
+    TrainAndUpdateConstraint_isaac_sim,
     TrainAndUpdateDensity,
     get_frame_writer,
     oracle,
 )
-from src.utils.initializer import get_players_initialized
+from src.utils.initializer import (
+    get_players_initialized,
+    get_players_initialized_isaac_sim,
+)
 from src.utils.termcolor import bcolors
 
 import math
 from src.agent import get_idx_from_grid
+
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
 
 from mlsocket import MLSocket
 
 HOST = "127.0.0.1"
 PORT = 65432
 
-class SEMPC:
+
+class SEMPC(Node):
     def __init__(self, params, env, visu) -> None:
+        super().__init__("sempc")
         # self.oracle_solver = Oracle_solver(params)
-        self.use_isaac_sim = True
+        self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.sempc_solver = SEMPC_solver(params, env.VisuGrid, env.ax, visu)
         self.env = env
         self.visu = visu
@@ -42,6 +51,7 @@ class SEMPC:
         self.Hm = self.params["optimizer"]["Hm"]
         self.n_order = params["optimizer"]["order"]
         self.x_dim = params["optimizer"]["x_dim"]
+        self.x_goal = params["env"]["goal_loc"]
         self.eps = params["common"]["epsilon"]
         self.q_th = params["common"]["constraint"]
         self.prev_goal_dist = 100
@@ -52,11 +62,14 @@ class SEMPC:
             self.state_dim = self.n_order * self.x_dim + 1
         else:
             self.state_dim = self.n_order * self.x_dim
+        self.obtained_init_state = False
         self.sempc_initialization()
         self.iter_plot = 0
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
+        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.sample_iter = 0
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -197,6 +210,18 @@ class SEMPC:
         print(bcolors.green + "Goal:", xi_star, " uncertainity:", w, bcolors.ENDC)
         return w
 
+    def get_safe_init(self):
+        init_xy = {}
+        init_xy["Cx_X"] = [torch.from_numpy(self.x_curr[: self.x_dim])]
+        init_xy["Fx_X"] = init_xy["Cx_X"].copy()
+        init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.min_dist))
+        init_xy["Fx_Y"] = torch.atleast_2d(
+            torch.tensor(
+                [np.linalg.norm(self.x_curr[:-1] - np.array(self.x_goal), ord=2)]
+            )
+        )
+        return init_xy
+
     def enlarge_pessi_set(self, pessi_value):
         # Make it more efficient by only using matrix instead of vectors
         max_idx = pessi_value.argmax().item()
@@ -281,13 +306,27 @@ class SEMPC:
     #           self.max_density_sigma, " iter: ", self.iter)
 
     def sempc_initialization(self):
+        if self.use_isaac_sim:
+            while not self.obtained_init_state:
+                self.get_current_state()
+                print("waiting...")
+            print("initialized location", self.get_safe_init())
+        else:
+            print("initialized location", self.env.get_safe_init())
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
-        print("initialized location", self.env.get_safe_init())
         # TODO: Remove dependence of player on visu grid
-        self.players = get_players_initialized(
-            self.env.get_safe_init(), self.params, self.env.VisuGrid
-        )
+        if self.use_isaac_sim:
+            self.players = get_players_initialized_isaac_sim(
+                self.get_safe_init(),
+                torch.tensor(self.x_curr)[: self.x_dim],
+                self.params,
+                self.env.VisuGrid,
+            )
+        else:
+            self.players = get_players_initialized(
+                self.env.get_safe_init(), self.params, self.env.VisuGrid
+            )
 
         for it, player in enumerate(self.players):
             player.update_Cx_gp_with_current_data()
@@ -296,7 +335,10 @@ class SEMPC:
             init = self.env.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
-            player.update_current_state(state)
+            if self.use_isaac_sim:
+                player.update_current_state_t(self.x_curr, self.t_curr)
+            else:
+                player.update_current_state(state)
 
         associate_dict = {}
         associate_dict[0] = []
@@ -309,13 +351,22 @@ class SEMPC:
         # initial measurement (make sure l(x_init) >= 0)
         val = -100
         while val <= self.q_th:
-            TrainAndUpdateConstraint(
-                self.players[self.pl_idx].current_location,
-                self.pl_idx,
-                self.players,
-                self.params,
-                self.env,
-            )
+            if self.use_isaac_sim:
+                TrainAndUpdateConstraint_isaac_sim(
+                    self.players[self.pl_idx].current_location[: self.x_dim],
+                    self.min_dist,
+                    self.pl_idx,
+                    self.players,
+                    self.params,
+                )
+            else:
+                TrainAndUpdateConstraint(
+                    self.players[self.pl_idx].current_location,
+                    self.pl_idx,
+                    self.players,
+                    self.params,
+                    self.env,
+                )
             val = self.players[self.pl_idx].get_lb_at_curr_loc()
 
         # if self.params["algo"]["strategy"] == "SEpessi":
@@ -621,7 +672,8 @@ class SEMPC:
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
-        self.apply_control(U)
+        if self.use_isaac_sim:
+            self.apply_control(U)
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -666,7 +718,13 @@ class SEMPC:
                 # if np.linalg.norm(self.visu.utility_minimizer-self.players[self.pl_idx].safe_meas_loc) < 0.025:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         else:
-            self.players[self.pl_idx].update_current_state(X[self.Hm])
+            if self.use_isaac_sim:
+                self.get_current_state()
+                self.players[self.pl_idx].update_current_state_t(
+                    self.x_curr, self.t_curr
+                )
+            else:
+                self.players[self.pl_idx].update_current_state(X[self.Hm])
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)
         # self.visu.UpdateSafeVisu(0, self.players, self.env)
@@ -675,10 +733,11 @@ class SEMPC:
         # self.visu.f_handle["dyn"].savefig("temp1D.png")
         # self.visu.f_handle["gp"].savefig(
         #     str(self.iter) + 'temp in prog2.png')
-        self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
-        self.env.fig.savefig(
-            os.path.join(self.fig_dir, f"test_{self.iter_plot}.png")
-        )
+        if self.use_isaac_sim:
+            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red")
+        else:
+            self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"test_{self.iter_plot}.png"))
         self.sempc_solver.fig_3D.savefig(
             os.path.join(self.fig_dir, f"test_3D_{self.iter_plot}.png")
         )
@@ -728,13 +787,22 @@ class SEMPC:
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
-            TrainAndUpdateConstraint(
-                self.players[self.pl_idx].safe_meas_loc,
-                self.pl_idx,
-                self.players,
-                self.params,
-                self.env,
-            )
+            if self.use_isaac_sim:
+                TrainAndUpdateConstraint_isaac_sim(
+                    self.players[self.pl_idx].current_location[: self.x_dim],
+                    self.min_dist,
+                    self.pl_idx,
+                    self.players,
+                    self.params,
+                )
+            else:
+                TrainAndUpdateConstraint(
+                    self.players[self.pl_idx].safe_meas_loc,
+                    self.pl_idx,
+                    self.players,
+                    self.params,
+                    self.env,
+                )
             print(
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),

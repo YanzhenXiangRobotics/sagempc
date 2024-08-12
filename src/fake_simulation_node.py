@@ -5,8 +5,11 @@ import numpy as np
 import math
 import socket
 from mlsocket import MLSocket
-from src.world import World
-from src.obstacle import Rectangle, Circle
+import sys, os
+dir_here = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(dir_here)
+from utils.world import World
+from utils.obstacle import Rectangle, Circle
 
 HOST = "127.0.0.1"
 PORT = 65432

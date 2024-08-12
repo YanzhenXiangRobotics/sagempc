@@ -20,7 +20,7 @@ def get_idx_from_grid(position, grid_V):
     return idx
 
 class Agent(object):
-    def __init__(self, my_key, X_train, Cx_Y_train, Fx_Y_train, params, grid_V) -> None:
+    def __init__(self, my_key, X_train, Cx_Y_train, Fx_Y_train, params, grid_V, origin=None) -> None:
         self.my_key = my_key
         self.max_density_sigma = 10
         self.params = params
@@ -34,7 +34,10 @@ class Agent(object):
         self.opti = grid_V
         self.grid_V = grid_V
         self.grid_V_prev = grid_V
-        self.origin = X_train
+        if origin is None:
+            self.origin = X_train
+        else:
+            self.origin = origin
         self.x_dim = params["optimizer"]["x_dim"]
         self.Cx_beta = params["agent"]["Cx_beta"]
         self.Fx_beta = params["agent"]["Fx_beta"]
@@ -226,6 +229,10 @@ class Agent(object):
     def update_current_state(self, state):
         self.current_state = state
         self.update_current_location(state[:self.x_dim])
+
+    def update_current_state_t(self, x_curr, t_curr):
+        self.current_state = np.append(x_curr, t_curr)
+        self.update_current_location(x_curr[:self.x_dim])
 
     def get_recommendation_pt(self):
         if not self.params["agent"]["Two_stage"]:
