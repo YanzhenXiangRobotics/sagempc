@@ -40,7 +40,10 @@ class SEMPC(Node):
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
-        self.sempc_solver = SEMPC_solver(params, env.VisuGrid, env.ax, env.fig, visu, self.fig_dir)
+        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.sempc_solver = SEMPC_solver(
+            params, env.VisuGrid, env.ax, env.fig, visu, self.fig_dir, self.publisher
+        )
         self.visu = visu
         self.params = params
         self.iter = -1
@@ -68,7 +71,6 @@ class SEMPC(Node):
         self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
-        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
         self.sample_iter = 0
 
     def get_optimistic_path(self, node, goal_node, init_node):
@@ -562,7 +564,7 @@ class SEMPC(Node):
         for i in range(U.shape[0]):
             self.get_current_state()
             start = self.t_curr
-            while self.t_curr - start < U[i, -1] - 0.01:
+            while self.t_curr - start < U[i, -1] - 0.1:
                 msg = Twist()
                 msg.linear.x = U[i, 0]
                 msg.angular.z = U[i, 1]

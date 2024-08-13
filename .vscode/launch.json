@@ -34,5 +34,19 @@
             "program": "${workspaceFolder}/src/utils/block_world_dist_generator.py",
             "console": "integratedTerminal"
         },
+        {
+            "name": "simulation_node",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/simulation_node.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "measurement_node",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/measurement_node.py",
+            "console": "integratedTerminal"
+        },
     ]
 }

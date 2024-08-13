@@ -8,11 +8,13 @@ from acados_template import AcadosOcpSolver, AcadosSimSolver
 
 from src.utils.ocp import export_oracle_ocp, export_sempc_ocp, export_sim
 
+from geometry_msgs.msg import Twist
+
 
 # The class below is an optimizer class,
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
-    def __init__(self, params, grids_coupled, ax, fig, visu, fig_dir) -> None:
+    def __init__(self, params, grids_coupled, ax, fig, visu, fig_dir, publisher) -> None:
         ocp = export_sempc_ocp(params)
         self.name_prefix = (
             params["algo"]["type"]
@@ -55,6 +57,7 @@ class SEMPC_solver(object):
         self.ax_3D = self.fig_3D.add_subplot(111, projection="3d")
         self.fig_dir = fig_dir
         self.plot_per_sqp_iter = params["experiment"]["plot_per_sqp_iter"]
+        self.publisher = publisher
 
     def initilization(self, sqp_iter, x_h, u_h):
         for stage in range(self.H):
@@ -171,6 +174,10 @@ class SEMPC_solver(object):
         )
 
     def solve(self, player, sim_iter):
+        #publish msg of all 0
+        msg = Twist()
+        self.publisher.publish(msg)
+        
         x_h = np.zeros((self.H + 1, self.state_dim + 1))
         z_h = np.zeros((self.H + 1, self.x_dim))
         if (
