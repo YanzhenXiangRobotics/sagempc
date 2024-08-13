@@ -54,6 +54,7 @@ class SEMPC_solver(object):
         self.fig_3D = plt.figure()
         self.ax_3D = self.fig_3D.add_subplot(111, projection="3d")
         self.fig_dir = fig_dir
+        self.plot_per_sqp_iter = params["experiment"]["plot_per_sqp_iter"]
 
     def initilization(self, sqp_iter, x_h, u_h):
         for stage in range(self.H):
@@ -217,8 +218,11 @@ class SEMPC_solver(object):
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
-            self.plot_3D(player)
-            self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
+            if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
+                sqp_iter == (self.max_sqp_iter - 1)
+            ):
+                self.plot_3D(player)
+                self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -363,10 +367,11 @@ class SEMPC_solver(object):
                 )
 
             import os
+
             sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
-            if not os.path.exists(sqp_plot_dir):
+            if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
                 os.makedirs(sqp_plot_dir)
-            self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
+                self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
             if sqp_iter != self.max_sqp_iter - 1:
                 len_plot_tmps = len(self.plot_tmps)
                 len_scatter_tmps = len(self.scatter_tmps)
@@ -380,7 +385,7 @@ class SEMPC_solver(object):
 
     def plot_sqp_sol(self, X):
         self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black"))
-    
+
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim
         tol = 1e-5

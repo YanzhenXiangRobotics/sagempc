@@ -149,7 +149,7 @@ def concat_const_val(ocp, params):
         ocp.constraints.lbu = np.concatenate(
             [ocp.constraints.lbu, np.array([params["optimizer"]["dt"]])]
         )
-        ocp.constraints.ubu = np.concatenate([ocp.constraints.ubu, np.array([1.0])])
+        ocp.constraints.ubu = np.concatenate([ocp.constraints.ubu, np.array([5.0])])
         ocp.constraints.idxbu = np.concatenate(
             [ocp.constraints.idxbu, np.array([ocp.model.u.shape[0] - 1])]
         )
@@ -157,8 +157,8 @@ def concat_const_val(ocp, params):
     # ocp.constraints.x0 = np.concatenate(
     #     [ocp.constraints.x0, np.array([0.0])])
 
-    ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([1.0])])
-    ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([1.0])])
+    ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([5.0])])
+    ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([5.0])])
     ocp.constraints.idxbx_e = np.concatenate(
         [ocp.constraints.idxbx_e, np.array([ocp.model.x.shape[0] - 1])]
     )

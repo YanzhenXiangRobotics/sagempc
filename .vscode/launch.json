@@ -27,5 +27,12 @@
             "program": "${workspaceFolder}/src/fake_simulation_node.py",
             "console": "integratedTerminal"
         },
+        {
+            "name": "block_world_generator",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/utils/block_world_dist_generator.py",
+            "console": "integratedTerminal"
+        },
     ]
 }

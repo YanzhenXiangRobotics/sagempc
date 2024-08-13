@@ -565,7 +565,7 @@ void MPC_V0_env_0_i_8_sempc_acados_create_5_set_nlp_in(MPC_V0_env_0_i_8_sempc_so
     lbu[1] = -60;
     ubu[1] = 60;
     lbu[2] = 0.035;
-    ubu[2] = 1;
+    ubu[2] = 5;
 
     for (int i = 0; i < N; i++)
     {
@@ -683,8 +683,8 @@ void MPC_V0_env_0_i_8_sempc_acados_create_5_set_nlp_in(MPC_V0_env_0_i_8_sempc_so
     ubx_e[2] = 10;
     lbx_e[3] = -60;
     ubx_e[3] = 60;
-    lbx_e[4] = 1;
-    ubx_e[4] = 1;
+    lbx_e[4] = 5;
+    ubx_e[4] = 5;
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "idxbx", idxbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "lbx", lbx_e);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, N, "ubx", ubx_e);

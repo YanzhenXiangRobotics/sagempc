@@ -6,6 +6,7 @@ import math
 import socket
 from mlsocket import MLSocket
 import sys, os
+
 dir_here = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(dir_here)
 from utils.world import World
@@ -22,19 +23,28 @@ class FakeSimulationNode(Node):
             Twist, "/cmd_vel", self.listener_callback, 10
         )
         self.timer = self.create_timer(1 / 10, self.on_timer)
-        self.pose = np.array([-8.3, 4.0, math.pi])
+        self.pose = np.array([-20.0, -20.0, math.pi])
         self.u = np.zeros(
             2,
         )
         self.t = 0
-        self.dt = 1e-3
-        self.world = World(
-            bbox=[-14.45293, -16.74178, 9.54707, 22.0763], resolution=0.3
+        self.dt = 0.01
+        self.world = World(bbox=[-21.8, -21.8, 2.1, 2.1], resolution=0.2)
+        self.world.add_obstacle(
+            Rectangle(
+                lower_left=[-14.0, -22.0],
+                upper_right=[-11.0, -16.0],
+                resolution=self.world.resolution,
+            )
         )
-        # self.world.add_obstacle(
-        #     Rectangle(lower_left=[-2.0, -8.0], upper_right=[2.0, 8.0], resolution=self.world.resolution)
-        # )
-        self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
+        self.world.add_obstacle(
+            Rectangle(
+                lower_left=[-22.0, -14.0],
+                upper_right=[-16.0, -9.0],
+                resolution=self.world.resolution,
+            )
+        )
+        # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
 
     def setup_socket(self):
         self.s = MLSocket()

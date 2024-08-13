@@ -562,7 +562,7 @@ class SEMPC(Node):
         for i in range(U.shape[0]):
             self.get_current_state()
             start = self.t_curr
-            while self.t_curr - start < U[i, -1]:
+            while self.t_curr - start < U[i, -1] - 0.01:
                 msg = Twist()
                 msg.linear.x = U[i, 0]
                 msg.angular.z = U[i, 1]

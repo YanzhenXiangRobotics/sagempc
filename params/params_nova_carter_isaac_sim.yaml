@@ -1,16 +1,16 @@
 env: # Env parameters mainly used for env generation
-  start: [-14.45293, -16.74178] # origin of domain
+  start: [-21.8, -21.8] # origin of domain
   shape:
-    x: 80 # Number of grid points
-    y: 130
-  start_loc: [-8.3, 4.0] # Agent start location, overwritten by params_env.yaml
+    x: 120 # Number of grid points
+    y: 120
+  start_loc: [-20.0, -20.0] # Agent start location, overwritten by params_env.yaml
   start_angle: 3.14159
-  goal_loc: [5.0, 4.0] # Agent goal location, overwritten by params_env.yaml
+  goal_loc: [-10.0, -5.0] # Agent goal location, overwritten by params_env.yaml
   n_players: 1
-  Cx_lengthscale: 0.3 # Lenghtscale to generate the constraint for the environment
-  Cx_noise: 0.0 # Noise std use to generate environment samples
-  Fx_lengthscale: 1 # Same as Cx_lengthscale, if objective is also from a GP sample
-  Fx_noise: 0.0001
+  Cx_lengthscale: 1.0 # Lenghtscale to generate the constraint for the environment
+  Cx_noise: 0.001 # Noise std use to generate environment samples
+  Fx_lengthscale: 3.0 # Same as Cx_lengthscale, if objective is also from a GP sample
+  Fx_noise: 0.001
   Cx_beta: 1.5 # Scaling of beta. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
   Fx_beta: 1.5
   generate: True # Set True, False, walls, None: use some fixed save path
@@ -22,17 +22,17 @@ env: # Env parameters mainly used for env generation
 visu:
   show: False # Turn on the visualization
   show_current_loc: False # Show current location of the agent
-  step_size: 0.3 # Step size for the visualization
+  step_size: 0.2 # Step size for the visualization
   opti_path: False # Show the optimistic path generate by Problem 18/ discrete path in optimistic set
   show_path: True # Show the path travelled by the agent
   show_opti_set: False # Show the optimistic set
 
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
-  Cx_lengthscale: 1.0 # Lenghtscale used by the agent for belief of the environment
-  Cx_noise: 0.00001 # Noise std used by the agent for belief of the environment
-  Fx_lengthscale: 0.5 # Same as Cx_lengthscale, if objective is also from a GP sample
-  Fx_noise: 0.001
+  Cx_lengthscale: 0.7 # Lenghtscale used by the agent for belief of the environment
+  Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
+  Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
+  Fx_noise: 0.01
   Cx_beta: 1.5 # 1.5                               # Scaling of beta used by agent. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
   Fx_beta: 2.0 #1.5
   mean_shift_val: 2 # shift the mean of GP
@@ -43,8 +43,8 @@ optimizer:
   Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
   u_min: [-60, -60] # Constraints on action space, Minimum control input
   u_max: [60, 60] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
-  x_min: [-14.45293, -16.74178] # Constraints on state space, Minimum state value
-  x_max: [9.54707, 22.0763] # Constraints on state space, Maximum state value
+  x_min: [-21.8, -21.8] # Constraints on state space, Minimum state value
+  x_max: [2.0, 2.0] # Constraints on state space, Maximum state value
   linear_solver: "ma57" # linear solver used by the optimizer, see https://coin-or.github.io/Ipopt/OPTIONS.html#OPT_linear_solver
   oracle: # Oracle computes the optimistic goal $x^{g,o}$                                            # Oracle computes the optimistic goal $x^{g,o}$
     max_sqp_iter: 10
@@ -74,3 +74,4 @@ experiment:
   generate_regret_plot: True # Set True to generate the regret plot
   folder: "nova_carter_isaac_sim" # Folder to pick up the environment type and save the results
   use_isaac_sim: True
+  plot_per_sqp_iter: False
