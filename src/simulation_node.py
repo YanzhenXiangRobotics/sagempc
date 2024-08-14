@@ -16,6 +16,7 @@ enable_extension("omni.isaac.ros2_bridge")
 simulation_app.update()
 
 import os
+
 path_here = os.path.dirname(os.path.abspath(__file__))
 
 usd_path = os.path.join(path_here, "..", "min_example.usd")
@@ -32,7 +33,11 @@ while is_stage_loading():
     simulation_app.update()
 print("Loading Complete")
 
-simulation_context = SimulationContext(stage_units_in_meters=1.0)
+simulation_context = SimulationContext(
+    stage_units_in_meters=1.0, physics_dt=1e-2, rendering_dt=1e-2
+)
+# simulation_context = SimulationContext(stage_units_in_meters=1.0)
+
 
 simulation_context.play()
 simulation_context.step()
@@ -41,10 +46,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
 
+
 class SimTimeNode(Node):
     def __init__(self):
         super().__init__("sim_time_node")
         self.publisher = self.create_publisher(Float64, "/sim_time", 10)
+
 
 rclpy.init()
 sim_time_node = SimTimeNode()

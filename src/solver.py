@@ -174,9 +174,9 @@ class SEMPC_solver(object):
         )
 
     def solve(self, player, sim_iter):
-        #publish msg of all 0
-        msg = Twist()
-        self.publisher.publish(msg)
+        # #publish msg of all 0
+        # msg = Twist()
+        # self.publisher.publish(msg)
         
         x_h = np.zeros((self.H + 1, self.state_dim + 1))
         z_h = np.zeros((self.H + 1, self.x_dim))

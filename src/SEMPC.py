@@ -564,7 +564,7 @@ class SEMPC(Node):
         for i in range(U.shape[0]):
             self.get_current_state()
             start = self.t_curr
-            while self.t_curr - start < U[i, -1] - 0.1:
+            while self.t_curr - start < U[i, -1]:
                 msg = Twist()
                 msg.linear.x = U[i, 0]
                 msg.angular.z = U[i, 1]
@@ -575,6 +575,8 @@ class SEMPC(Node):
                 )
 
                 self.get_current_state()
+        # stop the carter
+        self.publisher.publish(Twist())
 
     def one_step_planner(self):
         """_summary_: Plans going and coming back all in one trajectory plan
@@ -740,7 +742,8 @@ class SEMPC(Node):
             self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red")
         else:
             self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(
             os.path.join(self.fig_dir, f"sim_3D_{self.sim_iter}.png")
         )
