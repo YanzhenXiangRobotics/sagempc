@@ -34,6 +34,8 @@ class MeasurementNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        self.min_dist = 6.0
+
         self.s = MLSocket()
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((HOST, PORT))
@@ -55,17 +57,11 @@ class MeasurementNode(Node):
         return pose_3D
 
     def sim_time_listener_callback(self, msg):
-        self.sim_time = msg.data
-
-    def min_dist_listener_callback(self, msg):
+        sim_time = msg.data
         try:
-            ranges = np.array(msg.ranges)
-            ranges = ranges[np.nonzero(ranges)]
-            min_dist = np.min(ranges)
-
             pose_3D = self.get_pose_3D()
             data_to_send = np.concatenate(
-                (pose_3D, np.array([min_dist]), np.array([self.sim_time]))
+                (pose_3D, np.array([self.min_dist]), np.array([sim_time]))
             )
 
             print(f"To send {data_to_send}")
@@ -75,6 +71,14 @@ class MeasurementNode(Node):
             print(f"Sent {data_to_send}")
             # print(data_to_send)
             conn.close()
+        except Exception as e:
+            print(e)
+
+    def min_dist_listener_callback(self, msg):
+        try:
+            ranges = np.array(msg.ranges)
+            ranges = ranges[np.nonzero(ranges)]
+            self.min_dist = np.min(ranges)
 
         except Exception as e:
             print(e)
