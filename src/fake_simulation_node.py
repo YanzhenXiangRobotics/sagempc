@@ -23,7 +23,7 @@ class FakeSimulationNode(Node):
         self.subscriber = self.create_subscription(
             Twist, "/cmd_vel", self.listener_callback, 10
         )
-        self.timer = self.create_timer(1 / 10, self.on_timer)
+        self.timer = self.create_timer(1 / 100, self.on_timer)
         self.pose = np.array([-20.0, -20.0, math.pi])
         self.u = np.zeros(
             2,
@@ -46,20 +46,20 @@ class FakeSimulationNode(Node):
             )
         )
         # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
-        self.world.add_obstacle(
-            DiamondSquare(
-                center=[-18.0, -18.0],
-                radius=1.0 / math.sqrt(2),
-                resolution=self.world.resolution,
-            )
-        )
-        self.world.add_obstacle(
-            Rectangle(
-                lower_left=[-21.8, -16.5],
-                upper_right=[-21.3, -15.5],
-                resolution=self.world.resolution,
-            )
-        )
+        # self.world.add_obstacle(
+        #     DiamondSquare(
+        #         center=[-18.0, -18.0],
+        #         radius=1.0 / math.sqrt(2),
+        #         resolution=self.world.resolution,
+        #     )
+        # )
+        # self.world.add_obstacle(
+        #     Rectangle(
+        #         lower_left=[-21.8, -16.5],
+        #         upper_right=[-21.3, -15.5],
+        #         resolution=self.world.resolution,
+        #     )
+        # )
         self.begin = time.time()
 
     def setup_socket(self):

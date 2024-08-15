@@ -20,16 +20,16 @@ HOST = "127.0.0.1"
 PORT = 65432
 
 import math
-
+import time
 
 class MeasurementNode(Node):
     def __init__(self):
         super().__init__("measurement_node")
         self.min_dist_subscriber = self.create_subscription(
-            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 60
+            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         )
         self.sim_time_subscriber = self.create_subscription(
-            Float64, "/sim_time", self.sim_time_listener_callback, 60
+            Float64, "/sim_time", self.sim_time_listener_callback, 10
         )
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -38,6 +38,8 @@ class MeasurementNode(Node):
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.s.bind((HOST, PORT))
         self.s.listen(5)
+
+        self.begin = time.time()
 
     def get_pose_3D(self):
         od_2_bl = self.tf_buffer.lookup_transform(
