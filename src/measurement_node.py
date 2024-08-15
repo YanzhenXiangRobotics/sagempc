@@ -34,7 +34,7 @@ class MeasurementNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.min_dist = 6.0
+        self.min_dist = 2.45
 
         self.s = MLSocket()
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

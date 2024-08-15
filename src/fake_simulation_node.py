@@ -46,20 +46,20 @@ class FakeSimulationNode(Node):
             )
         )
         # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
-        # self.world.add_obstacle(
-        #     DiamondSquare(
-        #         center=[-18.0, -18.0],
-        #         radius=1.0 / math.sqrt(2),
-        #         resolution=self.world.resolution,
-        #     )
-        # )
-        # self.world.add_obstacle(
-        #     Rectangle(
-        #         lower_left=[-21.8, -16.5],
-        #         upper_right=[-21.3, -15.5],
-        #         resolution=self.world.resolution,
-        #     )
-        # )
+        self.world.add_obstacle(
+            DiamondSquare(
+                center=[-18.0, -18.0],
+                radius=1.0 / math.sqrt(2),
+                resolution=self.world.resolution,
+            )
+        )
+        self.world.add_obstacle(
+            Rectangle(
+                lower_left=[-21.8, -16.5],
+                upper_right=[-21.3, -15.5],
+                resolution=self.world.resolution,
+            )
+        )
         self.begin = time.time()
 
     def setup_socket(self):
