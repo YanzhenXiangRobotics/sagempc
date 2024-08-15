@@ -13,7 +13,7 @@ env: # Env parameters mainly used for env generation
   Fx_noise: 0.001
   Cx_beta: 1.5 # Scaling of beta. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
   Fx_beta: 1.5
-  generate: True # Set True, False, walls, None: use some fixed save path
+  generate: False # Set True, False, walls, None: use some fixed save path
   block_env: True
   env_file_name: "env_data.pkl" # Name of the env file to load if generate= false and save if generate = true
   cov_module: "Matern" # Kernel used in generation options: 'Matern', Sq_exp, 'Poly'
