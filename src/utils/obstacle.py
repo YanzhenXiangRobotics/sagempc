@@ -54,3 +54,30 @@ class Circle(Obstacle):  # assume diameter to be odd
                 ) ** 2 <= self.radius**2:
                     occup.add((x, y))
         return occup
+
+
+class DiamondSquare(Obstacle):
+    def __init__(self, center, radius, resolution) -> None:
+        super().__init__(resolution)
+        self.center = center
+        self.radius = radius
+
+    @property
+    def occup(self):
+        occup = set()
+        for x in np.arange(
+            self.center[0] - self.radius, self.center[0] + self.radius, self.resolution
+        ):
+            for y in np.arange(
+                self.center[1] - self.radius,
+                self.center[1] + self.radius,
+                self.resolution,
+            ):
+                if (
+                    np.linalg.norm(
+                        np.array([x - self.center[0], y - self.center[1]]), ord=1
+                    )
+                    < self.radius
+                ):
+                    occup.add((x, y))
+        return occup

@@ -33,10 +33,10 @@ while is_stage_loading():
     simulation_app.update()
 print("Loading Complete")
 
-simulation_context = SimulationContext(
-    stage_units_in_meters=1.0, physics_dt=1e-2, rendering_dt=1e-2
-)
-# simulation_context = SimulationContext(stage_units_in_meters=1.0)
+# simulation_context = SimulationContext(
+#     stage_units_in_meters=1.0, physics_dt=1e-2, rendering_dt=1e-2
+# )
+simulation_context = SimulationContext(stage_units_in_meters=1.0)
 
 
 simulation_context.play()

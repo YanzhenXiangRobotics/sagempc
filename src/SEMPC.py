@@ -565,7 +565,9 @@ class SEMPC(Node):
             self.get_current_state()
             start = self.t_curr
             while self.t_curr - start < U[i, -1]:
+            # while self.t_curr - start < 0.035:
                 msg = Twist()
+                # msg.linear.x = 2.0
                 msg.linear.x = U[i, 0]
                 msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)

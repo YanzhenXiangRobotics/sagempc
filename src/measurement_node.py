@@ -19,15 +19,17 @@ import numpy as np
 HOST = "127.0.0.1"
 PORT = 65432
 
+import math
+
 
 class MeasurementNode(Node):
     def __init__(self):
-        super().__init__("measure_distance_node")
+        super().__init__("measurement_node")
         self.min_dist_subscriber = self.create_subscription(
-            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
+            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 60
         )
         self.sim_time_subscriber = self.create_subscription(
-            Float64, "/sim_time", self.sim_time_listener_callback, 10
+            Float64, "/sim_time", self.sim_time_listener_callback, 60
         )
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -38,37 +40,15 @@ class MeasurementNode(Node):
         self.s.listen(5)
 
     def get_pose_3D(self):
-        map_2_odom = self.tf_buffer.lookup_transform("map", "odom", rclpy.time.Time())
-        odom_2_base_link = self.tf_buffer.lookup_transform(
+        od_2_bl = self.tf_buffer.lookup_transform(
             "odom", "base_link", time=rclpy.time.Time()
         )
-        quat_map_2_odom = np.array(
-            [
-                map_2_odom.transform.rotation.x,
-                map_2_odom.transform.rotation.y,
-                map_2_odom.transform.rotation.z,
-                map_2_odom.transform.rotation.w,
-            ]
-        )
-        quat_odom_2_base_link = np.array(
-            [
-                odom_2_base_link.transform.rotation.x,
-                odom_2_base_link.transform.rotation.y,
-                odom_2_base_link.transform.rotation.z,
-                odom_2_base_link.transform.rotation.w,
-            ]
-        )
-        orient = quaternion_multiply(quat_map_2_odom, quat_odom_2_base_link)
-        translation_2D = np.array(
-            [
-                map_2_odom.transform.translation.x
-                - odom_2_base_link.transform.translation.x,
-                map_2_odom.transform.translation.y
-                - odom_2_base_link.transform.translation.y,
-            ]
-        )
-        orient = np.array(euler_from_quaternion(orient))
-        pose_3D = np.append(translation_2D, orient[2])
+        trans = od_2_bl.transform.translation
+        orient = od_2_bl.transform.rotation
+        orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
+        orient_euler = np.array(euler_from_quaternion(orient_quat))
+        pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
+        pose_3D += np.array([-20.0, -20.0, math.pi])
 
         return pose_3D
 
@@ -91,8 +71,8 @@ class MeasurementNode(Node):
             conn, _ = self.s.accept()
             conn.sendall(data_to_send)
             print(f"Sent {data_to_send}")
+            # print(data_to_send)
             conn.close()
-            
 
         except Exception as e:
             print(e)

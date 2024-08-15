@@ -13,7 +13,7 @@ env: # Env parameters mainly used for env generation
   Fx_noise: 0.001
   Cx_beta: 1.5 # Scaling of beta. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
   Fx_beta: 1.5
-  generate: True # Set True, False, walls, None: use some fixed save path
+  generate: False # Set True, False, walls, None: use some fixed save path
   block_env: True
   env_file_name: "env_data.pkl" # Name of the env file to load if generate= false and save if generate = true
   cov_module: "Matern" # Kernel used in generation options: 'Matern', Sq_exp, 'Poly'
@@ -41,8 +41,10 @@ agent:
 optimizer:
   H: 25 # Horizon
   Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
-  u_min: [-60, -60] # Constraints on action space, Minimum control input
-  u_max: [60, 60] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  u_min: [-0.5, -0.5] # Constraints on action space, Minimum control input
+  u_max: [0.5, 0.5] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  # u_min: [-60.0, -60.0] # Constraints on action space, Minimum control input
+  # u_max: [60.0, 60.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   x_min: [-21.8, -21.8] # Constraints on state space, Minimum state value
   x_max: [2.0, 2.0] # Constraints on state space, Maximum state value
   linear_solver: "ma57" # linear solver used by the optimizer, see https://coin-or.github.io/Ipopt/OPTIONS.html#OPT_linear_solver
