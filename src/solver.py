@@ -164,14 +164,14 @@ class SEMPC_solver(object):
                 )
                 if (const_val < 0) or (const_val > 10.0):
                     safe[i] = False
-        self.scatter_tmps.append(
-            self.ax.scatter(
-                self.grids_coupled[safe, 0],
-                self.grids_coupled[safe, 1],
-                color="orange",
-                alpha=0.2,
-            )
-        )
+        # self.scatter_tmps.append(
+        #     self.ax.scatter(
+        #         self.grids_coupled[safe, 0],
+        #         self.grids_coupled[safe, 1],
+        #         color="orange",
+        #         alpha=0.2,
+        #     )
+        # )
 
     def solve(self, player, sim_iter):
         # #publish msg of all 0

@@ -18,13 +18,17 @@ class World:
         self.obstacles = []
         self.occup = set()
 
-    def grid_x1_x2(self):
+    def grid_x1_x2(self, resolution=None):
+        if resolution is None:
+            resolution = self.resolution
         return np.arange(
-            self.bbox[0], self.bbox[2], self.resolution
-        ), np.arange(self.bbox[1], self.bbox[3], self.resolution)
+            self.bbox[0], self.bbox[2], resolution
+        ), np.arange(self.bbox[1], self.bbox[3], resolution)
 
-    def grids_2d(self):
-        X1, X2 = self.grid_x1_x2()
+    def grids_2d(self, resolution=None):
+        if resolution is None:
+            resolution = self.resolution
+        X1, X2 = self.grid_x1_x2(resolution)
         X1, X2 = np.meshgrid(X1, X2)
         X = np.vstack([X1.ravel(), X2.ravel()]).T
 

@@ -44,15 +44,15 @@ class MeasurementNode(Node):
         self.begin = time.time()
 
     def get_pose_3D(self):
-        od_2_bl = self.tf_buffer.lookup_transform(
-            "odom", "base_link", time=rclpy.time.Time()
+        od_2_cl = self.tf_buffer.lookup_transform(
+            "odom", "chassis_imu", time=rclpy.time.Time()
         )
-        trans = od_2_bl.transform.translation
-        orient = od_2_bl.transform.rotation
+        trans = od_2_cl.transform.translation
+        orient = od_2_cl.transform.rotation
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
         pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
-        pose_3D += np.array([-20.0, -20.0, math.pi])
+        pose_3D += np.array([-20.0, -16.5, math.pi])
 
         return pose_3D
 

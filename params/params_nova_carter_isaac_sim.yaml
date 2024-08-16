@@ -29,7 +29,7 @@ visu:
 
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
-  Cx_lengthscale: 0.7 # Lenghtscale used by the agent for belief of the environment
+  Cx_lengthscale: 2.0 # Lenghtscale used by the agent for belief of the environment
   Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
   Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.01
@@ -41,10 +41,10 @@ agent:
 optimizer:
   H: 25 # Horizon
   Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
-  # u_min: [-0.5, -0.5] # Constraints on action space, Minimum control input
-  # u_max: [0.5, 0.5] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
-  u_min: [-60.0, -60.0] # Constraints on action space, Minimum control input
-  u_max: [60.0, 60.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  u_min: [-0.5, -0.5] # Constraints on action space, Minimum control input
+  u_max: [0.5, 0.5] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  # u_min: [-60.0, -60.0] # Constraints on action space, Minimum control input
+  # u_max: [60.0, 60.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   x_min: [-21.8, -21.8] # Constraints on state space, Minimum state value
   x_max: [2.0, 2.0] # Constraints on state space, Maximum state value
   linear_solver: "ma57" # linear solver used by the optimizer, see https://coin-or.github.io/Ipopt/OPTIONS.html#OPT_linear_solver
@@ -62,7 +62,7 @@ optimizer:
 
 common:
   dim: 2
-  constraint: 0.0 # Constraint threshold for safety function
+  constraint: 0.6 # Constraint threshold for safety function
   epsilon: 0.5 # user defined accuracy
   Lc: 11.159 # Lipschitz constant of the constraint function
 

@@ -157,7 +157,15 @@ class SEMPC(Node):
             # self.players[self.pl_idx].update_pessimistic_graph(V_lower_Cx, init_node, self.q_th, Lc=0)
             # curr_node = self.players[self.pl_idx].get_nearest_pessi_idx(torch.from_numpy(self.players[self.pl_idx].current_location))
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
-            intersect_pessi_opti = V_upper_Cx - self.eps - 0.1
+            intersect_pessi_opti = V_upper_Cx - self.eps - 0.4
+            print(intersect_pessi_opti[curr_node.item()], "\n")
+            X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
+            intersect_pessi_opti_plot = (
+                intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
+            )
+            tmp_0 = self.env.ax.contour(
+                X1, X2, intersect_pessi_opti_plot, levels=[0], colors="green"
+            )
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -181,9 +189,6 @@ class SEMPC(Node):
                 )
             self.visu.opti_path = self.players[self.pl_idx].grid_V[opti_path]
             # if goal is within the pessimitic set set xi_star as goal directly
-            tmp = self.env.ax.plot(self.visu.opti_path[:, 0], self.visu.opti_path[:, 1])
-            self.env.fig.savefig("t.png")
-            tmp.pop(0).remove()
             if V_lower_Cx[goal_node] >= 0:
                 xi_star = self.players[self.pl_idx].grid_V[goal_node.item()].numpy()
                 self.goal_in_pessi = True
@@ -201,6 +206,17 @@ class SEMPC(Node):
                 )
             self.players[self.pl_idx].set_maximizer_goal(xi_star)
             w = 100
+
+            tmp_1 = self.env.ax.plot(
+                self.visu.opti_path[:, 0], self.visu.opti_path[:, 1], c="grey"
+            )
+            tmp_2 = self.env.ax.scatter(
+                xi_star[0], xi_star[1], marker="x", s=30, c="grey"
+            )
+            self.env.fig.savefig("t.png")
+            tmp_0.remove()
+            tmp_1.pop(0).remove()
+            tmp_2.set_visible(False)
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)
@@ -565,7 +581,7 @@ class SEMPC(Node):
             self.get_current_state()
             start = self.t_curr
             while self.t_curr - start < U[i, -1]:
-            # while self.t_curr - start < 0.035:
+                # while self.t_curr - start < 0.035:
                 msg = Twist()
                 # msg.linear.x = 2.0
                 msg.linear.x = U[i, 0]
@@ -741,7 +757,7 @@ class SEMPC(Node):
         # self.visu.f_handle["gp"].savefig(
         #     str(self.iter) + 'temp in prog2.png')
         if self.use_isaac_sim:
-            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red")
+            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red", s=5)
         else:
             self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))

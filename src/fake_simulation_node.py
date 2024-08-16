@@ -24,7 +24,7 @@ class FakeSimulationNode(Node):
             Twist, "/cmd_vel", self.listener_callback, 10
         )
         self.timer = self.create_timer(1 / 100, self.on_timer)
-        self.pose = np.array([-20.0, -20.0, math.pi])
+        self.pose = np.array([-20.0, -16.5, math.pi])
         self.u = np.zeros(
             2,
         )
@@ -86,18 +86,18 @@ class FakeSimulationNode(Node):
         if last_t != -1.0:
             self.dt = self.t - last_t
             # print(self.dt)
-            if self.dt > 2.0:
-                print(self.u)
+            # if self.dt > 2.0:
+            #     print(self.u)
             self.dynamics()
             min_dist, _ = self.world.min_dist_to_obsc(self.pose[:2])
             data_to_send = np.concatenate(
                 (self.pose, np.array([min_dist]), np.array([self.t]))
             )
-            # print(f"To send {data_to_send}")
+            print(f"To send {data_to_send}")
             conn, _ = self.s.accept()
             conn.sendall(data_to_send)
             conn.close()
-            # print(f"Sent {data_to_send}")
+            print(f"Sent {data_to_send}")
 
 
 if __name__ == "__main__":
