@@ -71,6 +71,8 @@ if not os.path.exists(save_path):
 with open(env_load_path + "/params_env.yaml") as file:
     env_st_goal_pos = yaml.load(file, Loader=yaml.FullLoader)
 params["env"]["start_loc"] = env_st_goal_pos["start_loc"]
+if len(params["env"]["start_loc"]) > 2:
+    params["env"]["start_loc"] = params["env"]["start_loc"][:2]
 params["env"]["goal_loc"] = env_st_goal_pos["goal_loc"]
 
 # 3) Setup the environment. This class defines different environments eg: wall, forest, or a sample from GP.

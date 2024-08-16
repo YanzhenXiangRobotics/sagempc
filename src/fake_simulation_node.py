@@ -17,6 +17,24 @@ PORT = 65432
 
 import time
 
+import os
+
+dir_here = os.path.abspath(os.path.dirname(__file__))
+import yaml
+
+with open(
+    os.path.join(
+        dir_here,
+        "..",
+        "experiments",
+        "nova_carter_isaac_sim",
+        "env_0",
+        "params_env.yaml",
+    )
+) as file:
+    params = yaml.load(file, Loader=yaml.FullLoader)
+
+
 class FakeSimulationNode(Node):
     def __init__(self):
         super().__init__("fake_simulation_node")
@@ -24,7 +42,7 @@ class FakeSimulationNode(Node):
             Twist, "/cmd_vel", self.listener_callback, 10
         )
         self.timer = self.create_timer(1 / 100, self.on_timer)
-        self.pose = np.array([-20.0, -16.5, math.pi])
+        self.pose = np.array(params["start_loc"])
         self.u = np.zeros(
             2,
         )

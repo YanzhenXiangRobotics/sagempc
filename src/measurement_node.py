@@ -22,6 +22,23 @@ PORT = 65432
 import math
 import time
 
+import os
+dir_here = os.path.abspath(os.path.dirname(__file__))
+import yaml
+
+with open(
+    os.path.join(
+        dir_here,
+        "..",
+        "experiments",
+        "nova_carter_isaac_sim",
+        "env_0",
+        "params_env.yaml",
+    )
+) as file:
+    params = yaml.load(file, Loader=yaml.FullLoader)
+
+
 class MeasurementNode(Node):
     def __init__(self):
         super().__init__("measurement_node")
@@ -34,7 +51,7 @@ class MeasurementNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.min_dist = 2.45
+        self.min_dist = -1.0
 
         self.s = MLSocket()
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -52,27 +69,28 @@ class MeasurementNode(Node):
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
         pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
-        pose_3D += np.array([-20.0, -16.5, math.pi])
+        pose_3D += np.array(params["start_loc"])
 
         return pose_3D
 
     def sim_time_listener_callback(self, msg):
         sim_time = msg.data
-        try:
-            pose_3D = self.get_pose_3D()
-            data_to_send = np.concatenate(
-                (pose_3D, np.array([self.min_dist]), np.array([sim_time]))
-            )
+        if self.min_dist != -1.0:
+            try:
+                pose_3D = self.get_pose_3D()
+                data_to_send = np.concatenate(
+                    (pose_3D, np.array([self.min_dist]), np.array([sim_time]))
+                )
 
-            print(f"To send {data_to_send}")
+                print(f"To send {data_to_send}")
 
-            conn, _ = self.s.accept()
-            conn.sendall(data_to_send)
-            print(f"Sent {data_to_send}")
-            # print(data_to_send)
-            conn.close()
-        except Exception as e:
-            print(e)
+                conn, _ = self.s.accept()
+                conn.sendall(data_to_send)
+                print(f"Sent {data_to_send}")
+                # print(data_to_send)
+                conn.close()
+            except Exception as e:
+                print(e)
 
     def min_dist_listener_callback(self, msg):
         try:
