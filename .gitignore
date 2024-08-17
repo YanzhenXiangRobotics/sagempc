@@ -139,4 +139,5 @@ MPC_V0*
 *.h
 settings.json
 *.png
-MPC_env_0*
+MPC_env_*
+MPC_expander_env_*
