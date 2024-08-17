@@ -677,7 +677,7 @@ class SEMPC(Node):
         else:
             st_origin = np.zeros(self.state_dim + 1)
             st_origin[: self.x_dim] = np.ones(self.x_dim) * x_origin
-            st_origin[self.x_dim] = self.params["start_angle"]
+            # st_origin[self.x_dim] = self.params["start_angle"]
             st_origin[-1] = 1.0
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_origin)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_origin)
