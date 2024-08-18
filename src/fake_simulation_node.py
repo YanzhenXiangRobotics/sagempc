@@ -33,6 +33,15 @@ with open(
     )
 ) as file:
     params = yaml.load(file, Loader=yaml.FullLoader)
+with open(
+    os.path.join(
+        dir_here,
+        "..",
+        "params",
+        "params_nova_carter_isaac_sim.yaml",
+    )
+) as file:
+    params_0 = yaml.load(file, Loader=yaml.FullLoader)
 
 
 class FakeSimulationNode(Node):
@@ -48,7 +57,9 @@ class FakeSimulationNode(Node):
         )
         self.t = -1.0
         # self.dt = 0.1
-        self.world = World(bbox=[-21.8, -21.8, 2.1, 2.1], resolution=0.2)
+        self.world = World(
+            bbox=[-21.8, -21.8, 2.1, 2.1], resolution=params_0["visu"]["step_size"]
+        )
         self.world.add_obstacle(
             Rectangle(
                 lower_left=[-14.0, -22.0],

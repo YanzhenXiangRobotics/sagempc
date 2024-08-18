@@ -157,7 +157,7 @@ class SEMPC(Node):
             # self.players[self.pl_idx].update_pessimistic_graph(V_lower_Cx, init_node, self.q_th, Lc=0)
             # curr_node = self.players[self.pl_idx].get_nearest_pessi_idx(torch.from_numpy(self.players[self.pl_idx].current_location))
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
-            if self.params["experiment"]["folder"] == "nova_carter_isaac_sim":
+            if self.params["agent"]["dynamics"] == "nova_carter":
                 offset = self.params["common"]["constraint"] - 0.2
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.1
@@ -172,7 +172,7 @@ class SEMPC(Node):
                 intersect_pessi_opti_plot,
                 levels=[self.params["common"]["constraint"]],
                 colors="green",
-                linewidths=0.5
+                linewidths=0.5,
             )
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
@@ -187,7 +187,13 @@ class SEMPC(Node):
             self.visu.utility_minimizer = self.players[
                 self.pl_idx
             ].get_utility_minimizer
-            if self.params["algo"]["type"] == "MPC_V0":
+            if (self.params["algo"]["type"] == "MPC_V0") or (
+                (self.params["algo"]["type"] == "MPC_expander")
+                and (self.params["agent"]["dynamics"] == "nova_carter")
+            ):
+                opti_path, goal_node = self.get_optimistic_path(
+                    curr_node, goal_node, init_node
+                )
                 opti_path, goal_node = self.get_optimistic_path(
                     curr_node, goal_node, init_node
                 )
@@ -222,7 +228,7 @@ class SEMPC(Node):
                 linewidth=0.5,
             )
             tmp_2 = self.env.ax.scatter(
-                xi_star[0], xi_star[1], marker="x", s=10, c="grey"
+                xi_star[0], xi_star[1], marker="x", s=30, c="grey"
             )
             self.env.fig.savefig("t.png")
             tmp_0.remove()
@@ -710,7 +716,7 @@ class SEMPC(Node):
         self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
-        X, U, Sl = self.sempc_solver.get_solution()
+        X, U, Sl = self.sempc_solver.get_solution(sqp_iter=-1)
         if self.use_isaac_sim:
             self.apply_control(U[: self.Hm, :])
         val = (

@@ -145,9 +145,8 @@ class SEMPC_solver(object):
         X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
         with torch.no_grad():
             pred = player.Cx_model(self.grids_coupled)
-            lower = (
-                pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
-            ).reshape((X1.shape[0], X2.shape[1]))
+            lower_list = pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
+            lower = lower_list.reshape((X1.shape[0], X2.shape[1]))
             mean = pred.mean.reshape((X1.shape[0], X2.shape[1]))
             self.threeD_tmps.append(
                 self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
@@ -159,7 +158,7 @@ class SEMPC_solver(object):
                     lower,
                     levels=[self.params["common"]["constraint"]],
                     colors="blue",
-                    linewidths=0.5
+                    linewidths=0.5,
                 )
             )
             self.threeD_tmps.append(
@@ -169,7 +168,44 @@ class SEMPC_solver(object):
                     mean,
                     levels=[self.params["common"]["constraint"]],
                     colors="pink",
-                    linewidths=0.5
+                    linewidths=0.5,
+                )
+            )
+            if self.params["algo"]["type"] == "MPC_expander":
+                self.plot_expander(lower_list)
+
+    def plot_expander(self, lower_list):
+        import math
+
+        resolution = self.params["visu"]["step_size"]
+        q_th = self.params["common"]["constraint"]
+        lower_list -= q_th
+        # candidates = self.grids_coupled[lower_list >= 0]
+        candi_indices = torch.where(lower_list >= 0)[0]
+        expander = set()
+        for idx in candi_indices:
+            i, j = (
+                math.floor(idx / self.params["env"]["shape"]["y"]),
+                idx % self.params["env"]["shape"]["y"],
+            )
+            expander.add((i, j))
+            r = lower_list[idx]
+            ext_dist = math.floor(r / resolution)
+            for i_1 in np.arange(i - ext_dist, i + ext_dist + 1, dtype=int):
+                for j_1 in np.arange(j - ext_dist, j + ext_dist + 1, dtype=int):
+                    if np.linalg.norm(np.array([i - i_1, j - j_1])) <= ext_dist:
+                        expander.add((i_1, j_1))
+        expander_pos = []
+        for idx_couple in expander:
+            idx = idx_couple[0] * self.params["env"]["shape"]["y"] + idx_couple[1]
+            pos = self.grids_coupled[idx].numpy()
+            if lower_list[idx] <= self.params["common"]["expander_offset"]:
+                expander_pos.append(pos)
+        expander_pos = np.array(expander_pos)
+        if expander_pos.size != 0:
+            self.scatter_tmps.append(
+                self.ax.scatter(
+                    expander_pos[:, 0], expander_pos[:, 1], c="orange", alpha=0.3, s=3
                 )
             )
 
@@ -257,6 +293,11 @@ class SEMPC_solver(object):
                 LB_cz_val, LB_cz_grad = player.get_gp_sensitivities(
                     u_h[:, -self.x_dim :], "LB", "Cx"
                 )
+                if sqp_iter == self.max_sqp_iter - 1:
+                    self.lb_cz_grad = LB_cz_grad[self.Hm]
+                    self.lb_cz_lin = LB_cz_val[self.Hm]
+                    self.z_lin = u_h[self.Hm, -self.x_dim :]
+                    self.x_lin = x_h[stage, : self.Hm]
                 for stage in range(self.H):
                     self.ocp_solver.set(
                         stage,
@@ -348,7 +389,7 @@ class SEMPC_solver(object):
             print("cost", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
 
-            X, U, Sl = self.get_solution()
+            X, U, Sl = self.get_solution(sqp_iter)
             self.plot_sqp_sol(X)
             # print(X)
             # for stage in range(self.H):
@@ -412,6 +453,9 @@ class SEMPC_solver(object):
 
     def plot_sqp_sol(self, X):
         self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5))
+        self.scatter_tmps.append(
+            self.ax.scatter(X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30)
+        )
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim
@@ -431,7 +475,7 @@ class SEMPC_solver(object):
     def model_ss(self, model_x):
         val = model_x - model.f_expl_expr[:-1]
 
-    def get_solution(self):
+    def get_solution(self, sqp_iter):
         X = np.zeros((self.H + 1, self.nx))
         U = np.zeros((self.H, self.nu))
         Sl = np.zeros((self.H + 1))
@@ -443,6 +487,38 @@ class SEMPC_solver(object):
             # Sl[i] = self.ocp_solver.get(i, "sl")
 
         X[self.H, :] = self.ocp_solver.get(self.H, "x")
+        if (self.params["algo"]["type"] == "MPC_expander") and (sqp_iter == self.max_sqp_iter - 1):
+            xm, zm = X[self.Hm, :], U[self.Hm, -self.x_dim :]
+            Lc = self.params["common"]["Lc"]
+            q_th = self.params["common"]["constraint"]
+            tol = 1e-3
+            val_lin = self.lb_cz_lin
+            (
+                +self.lb_cz_grad.T @ (zm - self.z_lin)
+                - (Lc / (np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin) + tol))
+                * (
+                    (self.x_lin[: self.x_dim] - self.z_lin).T
+                    @ (xm - self.x_lin)[: self.x_dim]
+                )
+                - (Lc / (np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin) + tol))
+                * ((self.z_lin - self.x_lin[: self.x_dim]).T @ (zm - self.z_lin))
+                - Lc * np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin)
+                - q_th
+            )
+            print(val_lin, "\n\n\n\n\n")
+
+            # gp_val[stage],
+            # gp_grad[stage],
+            # x_h[stage, : self.state_dim],
+            # xg[stage],
+            # w[stage],
+            # x_terminal,
+            # UB_cx_val[stage],
+            # UB_cx_grad[stage],
+            # cw[stage],
+            # u_h[stage, -self.x_dim :],
+            # LB_cz_val[stage],
+            # LB_cz_grad[stage],
         return X, U, Sl
 
     def get_solver_status():

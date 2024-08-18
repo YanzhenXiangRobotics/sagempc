@@ -16,7 +16,7 @@ from src.utils.model import (
     export_nova_carter_discrete_Lc,
 )
 
-test_wo_expander = True
+test_wo_expander = False
 
 def oracle_const_expr(model, x_dim, n_order, params, model_x):
     ub_cx_lin = ca.SX.sym("ub_cx_lin")
@@ -376,6 +376,11 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         ocp.cost.zu = 1e1 * np.array([1, 0.1])
         ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1]])
         ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1]])
+        # ocp.constraints.idxsh = np.array([1, 2])
+        # ocp.cost.zl = 1e2 * np.array([1, 1e3])
+        # ocp.cost.zu = 1e1 * np.array([1, 1e3])
+        # ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1e3]])
+        # ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1e3]])
     else:
         ocp.constraints.idxsh = np.array([1])
         ocp.cost.zl = 1e2 * np.array([1])
@@ -443,9 +448,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         or params["algo"]["type"] == "MPC_expander"
     ) and (not test_wo_expander):
         l_max = (
-            params["common"]["constraint"]
-            if params["experiment"]["folder"] == "nova_carter"
-            else 0.2
+            params["common"]["constraint"] + params["common"]["expander_offset"]
+            if params["agent"]["dynamics"] == "nova_carter"
+            else params["common"]["expander_offset"]
         )
         ocp.constraints.lh = np.array([0, eps, -1e8])
         ocp.constraints.uh = np.array([10.0, 1e8, l_max])

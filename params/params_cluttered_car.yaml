@@ -62,7 +62,8 @@ common:
   dim : 2
   constraint : 0.0                                  # Constraint threshold for safety function                      
   epsilon : 0.05                                     # user defined accuracy
-  Lc : 11.159                                       # Lipschitz constant of the constraint function                  
+  Lc : 11.159                                       # Lipschitz constant of the constraint function
+  expander_offset: 0.2                 
 
 algo:
   objective: "GO"                                  # Objective of the algorithm, options: "GO", "SE" (goal-oriented, maximum domain safe exploration)
