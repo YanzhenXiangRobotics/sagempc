@@ -88,6 +88,7 @@ class FakeSimulationNode(Node):
 
     def listener_callback(self, msg):
         self.u = np.array([msg.linear.x, msg.angular.z])
+        print(self.u)
 
     def dynamics(self):
         self.pose = np.array(

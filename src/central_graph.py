@@ -27,8 +27,11 @@ class CentralGraph():
 def expansion_operator(graph,  true_constraint, init_node, thresh, curr_node, Lc):
     # print("init_node", init_node)
     # Total safet set
+    print(true_constraint[init_node])
     total_safe_nodes = torch.arange(0, true_constraint.shape[0])[
         true_constraint > thresh]
+    if init_node not in total_safe_nodes:
+        total_safe_nodes = torch.concatenate((total_safe_nodes, torch.atleast_1d(init_node)))
     total_safe_nodes = torch.cat([total_safe_nodes, curr_node.reshape(-1)])
     total_safe_nodes = torch.unique(total_safe_nodes)
     total_safe_graph = graph.subgraph(total_safe_nodes.numpy())

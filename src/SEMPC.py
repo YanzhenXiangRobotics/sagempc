@@ -157,14 +157,22 @@ class SEMPC(Node):
             # self.players[self.pl_idx].update_pessimistic_graph(V_lower_Cx, init_node, self.q_th, Lc=0)
             # curr_node = self.players[self.pl_idx].get_nearest_pessi_idx(torch.from_numpy(self.players[self.pl_idx].current_location))
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
-            intersect_pessi_opti = V_upper_Cx - self.eps - 0.4
-            print(intersect_pessi_opti[curr_node.item()], "\n")
+            if self.params["experiment"]["folder"] == "nova_carter_isaac_sim":
+                offset = self.params["common"]["constraint"] - 0.2
+            elif self.params["experiment"]["folder"] == "cluttered_envs":
+                offset = 0.1
+            intersect_pessi_opti = V_upper_Cx - self.eps - offset
             X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
             intersect_pessi_opti_plot = (
                 intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
             )
             tmp_0 = self.env.ax.contour(
-                X1, X2, intersect_pessi_opti_plot, levels=[0], colors="green"
+                X1,
+                X2,
+                intersect_pessi_opti_plot,
+                levels=[self.params["common"]["constraint"]],
+                colors="green",
+                linewidths=0.5
             )
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
@@ -208,10 +216,13 @@ class SEMPC(Node):
             w = 100
 
             tmp_1 = self.env.ax.plot(
-                self.visu.opti_path[:, 0], self.visu.opti_path[:, 1], c="grey"
+                self.visu.opti_path[:, 0],
+                self.visu.opti_path[:, 1],
+                c="grey",
+                linewidth=0.5,
             )
             tmp_2 = self.env.ax.scatter(
-                xi_star[0], xi_star[1], marker="x", s=30, c="grey"
+                xi_star[0], xi_star[1], marker="x", s=10, c="grey"
             )
             self.env.fig.savefig("t.png")
             tmp_0.remove()
@@ -580,7 +591,7 @@ class SEMPC(Node):
         for i in range(U.shape[0]):
             self.get_current_state()
             start = self.t_curr
-            while self.t_curr - start < U[i, -1]:
+            while self.t_curr - start < U[i, 2]:
                 # while self.t_curr - start < 0.035:
                 msg = Twist()
                 # msg.linear.x = 2.0
@@ -589,7 +600,7 @@ class SEMPC(Node):
                 self.publisher.publish(msg)
 
                 print(
-                    f"Starting from {start} until {start + U[i, -1]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
+                    f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
                 )
 
                 self.get_current_state()
@@ -635,7 +646,10 @@ class SEMPC(Node):
             # st_ub[-1] = 1.0
             # self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
-        elif self.params["algo"]["type"] == "MPC_V0":
+        elif self.params["algo"]["type"] == "MPC_V0" or (
+            self.params["agent"]["dynamics"] == "nova_carter"
+            and self.params["algo"]["type"] == "MPC_expander"
+        ):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_lb = np.zeros(self.x_dim + 1)
                 st_ub = np.zeros(self.x_dim + 1)
@@ -675,9 +689,11 @@ class SEMPC(Node):
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         else:
-            st_origin = np.zeros(self.state_dim + 1)
+            if self.params["agent"]["dynamics"] == "nova_carter":
+                st_origin = np.zeros(self.x_dim + 1)
+            else:
+                st_origin = np.zeros(self.state_dim + 1)
             st_origin[: self.x_dim] = np.ones(self.x_dim) * x_origin
-            # st_origin[self.x_dim] = self.params["start_angle"]
             st_origin[-1] = 1.0
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_origin)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_origin)
@@ -757,14 +773,12 @@ class SEMPC(Node):
         # self.visu.f_handle["gp"].savefig(
         #     str(self.iter) + 'temp in prog2.png')
         if self.use_isaac_sim:
-            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red", s=5)
+            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red", s=3)
         else:
-            self.env.ax.scatter(x_curr[0], x_curr[1], color="red")
+            self.env.ax.scatter(x_curr[0], x_curr[1], color="red", s=3)
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
-        self.sempc_solver.fig_3D.savefig(
-            os.path.join(self.fig_dir, f"sim_3D_{self.sim_iter}.png")
-        )
+        self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
         len_threeD_tmps = len(self.sempc_solver.threeD_tmps)

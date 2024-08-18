@@ -98,10 +98,10 @@ class ContiWorld:
             self.__init_safe["idx"] = init[1]
             self.env_data["Cx"] = self.__Cx
             self.env_data["Fx"] = self.__Fx
-            if not self.block_env:
-                self.env_data["Cx_model"] = self.Cx_model_cont
-            else:
+            if self.block_env:
                 self.env_data["Cx_gt"] = self.__Cx
+            else:
+                self.env_data["Cx_model"] = self.Cx_model_cont
             self.env_data["Fx_model"] = self.Fx_model_cont
             self.env_data["init_safe"] = self.__init_safe
             a_file = open(env_file_path, "wb")
@@ -129,14 +129,14 @@ class ContiWorld:
             self.env_data = pickle.load(k)
             k.close()
             self.env_data["init_safe"]["loc"][0] = torch.Tensor(env_params["start_loc"])
-            if not self.block_env:
+            if self.block_env:
+                self.__Cx = self.env_data["Cx_gt"]
+                self.__Cx_2D = self.__Cx.reshape(self.Nx, self.Ny)
+            else:
                 self.Cx_model_cont = self.env_data["Cx_model"]
                 self.__Cx = self.Cx_model_cont.posterior(
                     self.VisuGrid
                 ).mvn.mean.detach()
-            else:
-                self.__Cx = self.env_data["Cx_gt"]
-                self.__Cx_2D = self.__Cx.reshape(self.Nx, self.Ny)
             self.Fx_model_cont = self.env_data["Fx_model"]
             # print("Lipschitz", self.get_true_lipschitz())
             # self.__Fx = self.Fx_model_cont.posterior(

@@ -13,8 +13,10 @@ from src.utils.model import (
     export_unicycle_model_with_discrete_rk4,
     export_unicycle_model_with_discrete_rk4_LC,
     export_nova_carter_discrete,
+    export_nova_carter_discrete_Lc,
 )
 
+test_wo_expander = True
 
 def oracle_const_expr(model, x_dim, n_order, params, model_x):
     ub_cx_lin = ca.SX.sym("ub_cx_lin")
@@ -291,6 +293,8 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
             cw * var,
             w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
         )
+        if test_wo_expander:
+            model.con_h_expr = model.con_h_expr[:-1]
         # model.con_h_expr = ca.vertcat(lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin).T@(model_x-x_lin)[:x_dim])
         #                         - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin))
         #                         - Lc*ca.norm_1(x_lin[:x_dim] - z_lin) - q_th, cw*var, w*(lb_cx_lin + lb_cx_grad.T @ (model_x-x_lin)[:x_dim]))
@@ -366,7 +370,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     if (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
-    ):
+    ) and (not test_wo_expander):
         ocp.constraints.idxsh = np.array([1, 2])
         ocp.cost.zl = 1e2 * np.array([1, 1])
         ocp.cost.zu = 1e1 * np.array([1, 0.1])
@@ -437,9 +441,14 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     elif (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
-    ):
+    ) and (not test_wo_expander):
+        l_max = (
+            params["common"]["constraint"]
+            if params["experiment"]["folder"] == "nova_carter"
+            else 0.2
+        )
         ocp.constraints.lh = np.array([0, eps, -1e8])
-        ocp.constraints.uh = np.array([10.0, 1e8, 0.2])
+        ocp.constraints.uh = np.array([10.0, 1e8, l_max])
     else:
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
@@ -509,14 +518,14 @@ def export_sempc_ocp(params):
     x_dim = params["optimizer"]["x_dim"]
     # model = export_integrator_model('sempc')
     # model = export_n_integrator_model('sempc', n_order, x_dim)
-    if params["agent"]["dynamics"] == "nova_carter":
-        model = export_nova_carter_discrete()
-    elif (
+    if (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
     ):
         if params["agent"]["dynamics"] == "unicycle":
             model = export_unicycle_model_with_discrete_rk4_LC(name_prefix + "sempc")
+        elif params["agent"]["dynamics"] == "nova_carter":
+            model = export_nova_carter_discrete_Lc()
         else:
             model = export_pendulum_ode_model_with_discrete_rk4_Lc(
                 name_prefix + "sempc", n_order, x_dim
@@ -532,6 +541,8 @@ def export_sempc_ocp(params):
             model = export_robot_model_with_discrete_rk4(name_prefix + "sempc")
         elif params["agent"]["dynamics"] == "bicycle":
             model = export_bicycle_model_with_discrete_rk4(name_prefix + "sempc")
+        elif params["agent"]["dynamics"] == "nova_carter":
+            model = export_nova_carter_discrete()
         else:
             model = export_pendulum_ode_model_with_discrete_rk4(
                 name_prefix + "sempc", n_order, x_dim

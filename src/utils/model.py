@@ -428,3 +428,21 @@ def export_unicycle_model_with_discrete_rk4_LC(name):
     # print("built RK4 for pendulum model with dT = ", dT)
     # print(xf)
     return model
+
+def export_nova_carter_discrete_Lc():
+
+    model = AcadosModel()
+    model.name = "nova_carter_discrete_Lc"
+    model.x = ca.SX.sym("x", 4)
+    model.u = ca.SX.sym("u", 3)
+    z = ca.SX.sym("z", 2)
+    model.u = ca.vertcat(model.u, z)
+
+    model.disc_dyn_expr = ca.vertcat(
+        model.x[0] + model.u[0] * np.cos(model.x[2]) * model.u[2],
+        model.x[1] + model.u[0] * np.sin(model.x[2]) * model.u[2],
+        model.x[2] + model.u[1] * model.u[2],
+        model.x[-1] + model.u[2],
+    )
+
+    return model

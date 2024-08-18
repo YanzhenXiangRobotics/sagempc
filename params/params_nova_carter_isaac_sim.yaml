@@ -29,7 +29,7 @@ visu:
 
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
-  Cx_lengthscale: 2.0 # Lenghtscale used by the agent for belief of the environment
+  Cx_lengthscale: 1.5 # Lenghtscale used by the agent for belief of the environment
   Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
   Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.01
@@ -64,7 +64,7 @@ common:
   dim: 2
   constraint: 0.6 # Constraint threshold for safety function
   epsilon: 0.5 # user defined accuracy
-  Lc: 11.159 # Lipschitz constant of the constraint function
+  Lc: 1.0 # Lipschitz constant of the constraint function
 
 algo:
   objective: "GO" # Objective of the algorithm, options: "GO", "SE" (goal-oriented, maximum domain safe exploration)

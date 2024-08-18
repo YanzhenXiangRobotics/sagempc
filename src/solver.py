@@ -14,7 +14,9 @@ from geometry_msgs.msg import Twist
 # The class below is an optimizer class,
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
-    def __init__(self, params, grids_coupled, ax, fig, visu, fig_dir, publisher) -> None:
+    def __init__(
+        self, params, grids_coupled, ax, fig, visu, fig_dir, publisher
+    ) -> None:
         ocp = export_sempc_ocp(params)
         self.name_prefix = (
             params["algo"]["type"]
@@ -146,11 +148,29 @@ class SEMPC_solver(object):
             lower = (
                 pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
             ).reshape((X1.shape[0], X2.shape[1]))
+            mean = pred.mean.reshape((X1.shape[0], X2.shape[1]))
             self.threeD_tmps.append(
                 self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
             )
             self.threeD_tmps.append(
-                self.ax.contour(X1, X2, lower, levels=[0], colors="blue")
+                self.ax.contour(
+                    X1,
+                    X2,
+                    lower,
+                    levels=[self.params["common"]["constraint"]],
+                    colors="blue",
+                    linewidths=0.5
+                )
+            )
+            self.threeD_tmps.append(
+                self.ax.contour(
+                    X1,
+                    X2,
+                    mean,
+                    levels=[self.params["common"]["constraint"]],
+                    colors="pink",
+                    linewidths=0.5
+                )
             )
 
     def plot_safe_set(self, gp_val, gp_grad, x_h):
@@ -177,7 +197,7 @@ class SEMPC_solver(object):
         # #publish msg of all 0
         # msg = Twist()
         # self.publisher.publish(msg)
-        
+
         x_h = np.zeros((self.H + 1, self.state_dim + 1))
         z_h = np.zeros((self.H + 1, self.x_dim))
         if (
@@ -391,7 +411,7 @@ class SEMPC_solver(object):
                     self.threeD_tmps.pop(0).remove()
 
     def plot_sqp_sol(self, X):
-        self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black"))
+        self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5))
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim
