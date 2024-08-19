@@ -73,6 +73,7 @@ class SEMPC_solver(object):
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
+                or self.params["algo"]["type"] == "MPC_expander_V0"
             ):
                 u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
             # initialize the first SQP iteration.
@@ -97,6 +98,7 @@ class SEMPC_solver(object):
                     if (
                         self.params["algo"]["type"] == "ret_expander"
                         or self.params["algo"]["type"] == "MPC_expander"
+                        or self.params["algo"]["type"] == "MPC_expander_V0"
                     ):
                         u_init = np.concatenate([np.array([0.0, 0.0, dt]), z_init])
                     else:
@@ -171,7 +173,10 @@ class SEMPC_solver(object):
                     linewidths=0.5,
                 )
             )
-            if self.params["algo"]["type"] == "MPC_expander":
+            if (
+                self.params["algo"]["type"] == "MPC_expander"
+                or self.params["algo"]["type"] == "MPC_expander_V0"
+            ):
                 self.plot_expander(lower_list)
 
     def plot_expander(self, lower_list):
@@ -239,6 +244,7 @@ class SEMPC_solver(object):
         if (
             self.params["algo"]["type"] == "ret_expander"
             or self.params["algo"]["type"] == "MPC_expander"
+            or self.params["algo"]["type"] == "MPC_expander_V0"
         ):
             u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
         else:
@@ -289,15 +295,11 @@ class SEMPC_solver(object):
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
+                or self.params["algo"]["type"] == "MPC_expander_V0"
             ):
                 LB_cz_val, LB_cz_grad = player.get_gp_sensitivities(
                     u_h[:, -self.x_dim :], "LB", "Cx"
                 )
-                if sqp_iter == self.max_sqp_iter - 1:
-                    self.lb_cz_grad = LB_cz_grad[self.Hm]
-                    self.lb_cz_lin = LB_cz_val[self.Hm]
-                    self.z_lin = u_h[self.Hm, -self.x_dim :]
-                    self.x_lin = x_h[stage, : self.Hm]
                 for stage in range(self.H):
                     self.ocp_solver.set(
                         stage,
@@ -389,7 +391,7 @@ class SEMPC_solver(object):
             print("cost", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
 
-            X, U, Sl = self.get_solution(sqp_iter)
+            X, U, Sl = self.get_solution()
             self.plot_sqp_sol(X)
             # print(X)
             # for stage in range(self.H):
@@ -400,6 +402,7 @@ class SEMPC_solver(object):
                     if (
                         self.params["algo"]["type"] == "ret_expander"
                         or self.params["algo"]["type"] == "MPC_expander"
+                        or self.params["algo"]["type"] == "MPC_expander_V0"
                     ):
                         plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
                         plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
@@ -475,7 +478,7 @@ class SEMPC_solver(object):
     def model_ss(self, model_x):
         val = model_x - model.f_expl_expr[:-1]
 
-    def get_solution(self, sqp_iter):
+    def get_solution(self):
         X = np.zeros((self.H + 1, self.nx))
         U = np.zeros((self.H, self.nu))
         Sl = np.zeros((self.H + 1))
@@ -487,38 +490,6 @@ class SEMPC_solver(object):
             # Sl[i] = self.ocp_solver.get(i, "sl")
 
         X[self.H, :] = self.ocp_solver.get(self.H, "x")
-        if (self.params["algo"]["type"] == "MPC_expander") and (sqp_iter == self.max_sqp_iter - 1):
-            xm, zm = X[self.Hm, :], U[self.Hm, -self.x_dim :]
-            Lc = self.params["common"]["Lc"]
-            q_th = self.params["common"]["constraint"]
-            tol = 1e-3
-            val_lin = self.lb_cz_lin
-            (
-                +self.lb_cz_grad.T @ (zm - self.z_lin)
-                - (Lc / (np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin) + tol))
-                * (
-                    (self.x_lin[: self.x_dim] - self.z_lin).T
-                    @ (xm - self.x_lin)[: self.x_dim]
-                )
-                - (Lc / (np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin) + tol))
-                * ((self.z_lin - self.x_lin[: self.x_dim]).T @ (zm - self.z_lin))
-                - Lc * np.linalg.norm(self.x_lin[: self.x_dim] - self.z_lin)
-                - q_th
-            )
-            print(val_lin, "\n\n\n\n\n")
-
-            # gp_val[stage],
-            # gp_grad[stage],
-            # x_h[stage, : self.state_dim],
-            # xg[stage],
-            # w[stage],
-            # x_terminal,
-            # UB_cx_val[stage],
-            # UB_cx_grad[stage],
-            # cw[stage],
-            # u_h[stage, -self.x_dim :],
-            # LB_cz_val[stage],
-            # LB_cz_grad[stage],
         return X, U, Sl
 
     def get_solver_status():

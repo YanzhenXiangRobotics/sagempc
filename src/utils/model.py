@@ -446,3 +446,9 @@ def export_nova_carter_discrete_Lc():
     )
 
     return model
+
+def export_bicycle_model_with_discrete_rk4_Lc(name):
+    model = export_bicycle_model_with_discrete_rk4(name)
+    z = ca.SX.sym("z", model.x.shape[0] - 1)
+    model.u = ca.vertcat(model.u, z)
+    return model

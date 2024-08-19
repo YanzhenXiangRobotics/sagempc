@@ -67,7 +67,7 @@ common:
 
 algo:
   objective: "GO"                                  # Objective of the algorithm, options: "GO", "SE" (goal-oriented, maximum domain safe exploration)
-  type: "MPC_expander"                                   # Variant of the SageOC, "ret", "ret_expander", "MPC_expander", "MPC", "MPC_Xn", "MPC_V0"
+  type: "MPC_expander_V0"                                   # Variant of the SageOC, "ret", "ret_expander", "MPC_expander", "MPC", "MPC_Xn", "MPC_V0"
   init: "past_iterate"                             # Warmstart based on past iterate discrete path
 
 experiment:

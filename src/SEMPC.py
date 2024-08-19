@@ -188,8 +188,7 @@ class SEMPC(Node):
                 self.pl_idx
             ].get_utility_minimizer
             if (self.params["algo"]["type"] == "MPC_V0") or (
-                (self.params["algo"]["type"] == "MPC_expander")
-                and (self.params["agent"]["dynamics"] == "nova_carter")
+                self.params["algo"]["type"] == "MPC_expander_V0"
             ):
                 opti_path, goal_node = self.get_optimistic_path(
                     curr_node, goal_node, init_node
@@ -212,6 +211,7 @@ class SEMPC(Node):
                 if (
                     self.params["algo"]["type"] == "ret_expander"
                     or self.params["algo"]["type"] == "MPC_expander"
+                    or self.params["algo"]["type"] == "MPC_expander_V0"
                 ):
                     pessi_value = self.enlarge_pessi_set(pessi_value)
                 idx_out_pessi = np.where(pessi_value < self.q_th)[0][0].item()
@@ -653,8 +653,7 @@ class SEMPC(Node):
             # self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         elif self.params["algo"]["type"] == "MPC_V0" or (
-            self.params["agent"]["dynamics"] == "nova_carter"
-            and self.params["algo"]["type"] == "MPC_expander"
+            self.params["algo"]["type"] == "MPC_expander_V0"
         ):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_lb = np.zeros(self.x_dim + 1)
@@ -716,7 +715,7 @@ class SEMPC(Node):
         self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
-        X, U, Sl = self.sempc_solver.get_solution(sqp_iter=-1)
+        X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
             self.apply_control(U[: self.Hm, :])
         val = (
