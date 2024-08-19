@@ -63,7 +63,7 @@ optimizer:
 common:
   dim: 2
   constraint: 0.6 # Constraint threshold for safety function
-  epsilon: 0.5 # user defined accuracy
+  epsilon: 0.8 # user defined accuracy
   Lc: 1.0 # Lipschitz constant of the constraint function
   expander_offset: 0.1
 

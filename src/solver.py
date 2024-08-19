@@ -392,7 +392,14 @@ class SEMPC_solver(object):
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
-            self.plot_sqp_sol(X)
+            if (
+                self.params["algo"]["type"] == "ret_expander"
+                or self.params["algo"]["type"] == "MPC_expander"
+                or self.params["algo"]["type"] == "MPC_expander_V0"
+            ):
+                self.plot_sqp_sol(X, U[self.Hm, -self.x_dim :])
+            else:
+                self.plot_sqp_sol(X)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -454,11 +461,15 @@ class SEMPC_solver(object):
                 for _ in range(len_threeD_tmps):
                     self.threeD_tmps.pop(0).remove()
 
-    def plot_sqp_sol(self, X):
+    def plot_sqp_sol(self, X, zm=None):
         self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5))
         self.scatter_tmps.append(
             self.ax.scatter(X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30)
         )
+        if zm is not None:
+            self.scatter_tmps.append(
+                self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
+            )
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim

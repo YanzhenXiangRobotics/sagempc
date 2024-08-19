@@ -350,7 +350,14 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
     # model.con_h_expr_e = ca.vertcat(lb_cx_lin +
     #                                 lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
     model.p = p_lin
-    return model, w, xg, var
+    return_tuple = (model, w, xg, var)
+    if (
+        params["algo"]["type"] == "ret_expander"
+        or params["algo"]["type"] == "MPC_expander"
+        or params["algo"]["type"] == "MPC_expander_V0"
+    ):
+        return_tuple += (x_lin, z_lin)
+    return return_tuple
 
 
 def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
@@ -367,7 +374,6 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     ocp.model.cost_expr_ext_cost_e = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
     )
-
     if (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
@@ -404,6 +410,16 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     return ocp
 
 
+def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
+    # penalty_sqp_stepsize = 1000 * ca.norm_2(model_x - x_lin) + 1000 * ca.norm_2(
+    #     model_z - z_lin
+    # )
+    penalty_sqp_stepsize = 0.0 * ca.norm_2(model_x - x_lin)
+    ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
+    ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
+    return ocp
+
+
 def sempc_const_val(ocp, params, x_dim, n_order):
     # constraints
     eps = params["common"]["epsilon"]  # - 0.05
@@ -431,7 +447,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         # ubx[:x_dim] = params["optimizer"]["x_max"]*np.ones(x_dim)
 
     x0 = np.zeros(ocp.model.x.shape[0])
-    x0[:x_dim] = np.array(params["env"]["start_loc"])  # np.ones(x_dim)*0.72
+    x0[:x_dim] = np.array(params["env"]["start_loc"][:x_dim])  # np.ones(x_dim)*0.72
+    if params["agent"]["dynamics"] == "nova_carter":
+        x0[x_dim] = params["env"]["start_angle"]
     ocp.constraints.x0 = x0.copy()
 
     ocp.constraints.lbx_e = lbx.copy()
@@ -562,9 +580,16 @@ def export_sempc_ocp(params):
     model_x = model.x[:-1]
     model_z = model.u[-x_dim:]
 
-    model, w, xg, var = sempc_const_expr(
-        model, x_dim, n_order, params, model_x, model_z
-    )
+    return_tuple = sempc_const_expr(model, x_dim, n_order, params, model_x, model_z)
+
+    if (
+        params["algo"]["type"] == "ret_expander"
+        or params["algo"]["type"] == "MPC_expander"
+        or params["algo"]["type"] == "MPC_expander_V0"
+    ):
+        model, w, xg, var, x_lin, z_lin = return_tuple
+    else:
+        model, w, xg, var = return_tuple
 
     ocp.model = model
 
@@ -573,6 +598,13 @@ def export_sempc_ocp(params):
     ocp = sempc_const_val(ocp, params, x_dim, n_order)
 
     ocp = concat_const_val(ocp, params)
+
+    if (
+        params["algo"]["type"] == "ret_expander"
+        or params["algo"]["type"] == "MPC_expander"
+        or params["algo"]["type"] == "MPC_expander_V0"
+    ):
+        ocp = concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin)
 
     ocp = sempc_set_options(ocp, params)
 
