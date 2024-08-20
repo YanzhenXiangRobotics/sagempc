@@ -15,7 +15,7 @@ from geometry_msgs.msg import Twist
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
     def __init__(
-        self, params, grids_coupled, ax, fig, visu, fig_dir, publisher
+        self, params, grids_coupled, ax, legend_handles, fig, visu, fig_dir, publisher
     ) -> None:
         ocp = export_sempc_ocp(params)
         self.name_prefix = (
@@ -53,6 +53,7 @@ class SEMPC_solver(object):
         self.grids_coupled = grids_coupled
         self.visu = visu
         self.ax = ax
+        self.legend_handles = legend_handles
         self.fig = fig
         self.plot_tmps, self.scatter_tmps, self.threeD_tmps = [], [], []
         self.fig_3D = plt.figure()
@@ -153,26 +154,30 @@ class SEMPC_solver(object):
             self.threeD_tmps.append(
                 self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
             )
-            self.threeD_tmps.append(
-                self.ax.contour(
-                    X1,
-                    X2,
-                    lower,
-                    levels=[self.params["common"]["constraint"]],
-                    colors="blue",
-                    linewidths=0.5,
-                )
+            pessi_contour = self.ax.contour(
+                X1,
+                X2,
+                lower,
+                levels=[self.params["common"]["constraint"]],
+                colors="blue",
+                linewidths=0.5,
             )
-            self.threeD_tmps.append(
-                self.ax.contour(
-                    X1,
-                    X2,
-                    mean,
-                    levels=[self.params["common"]["constraint"]],
-                    colors="pink",
-                    linewidths=0.5,
-                )
+            self.threeD_tmps.append(pessi_contour)
+            (artists,), _ = pessi_contour.legend_elements()
+            artists.set_label("pessimistic contour")
+            self.legend_handles.append(artists)
+            mean_contour = self.ax.contour(
+                X1,
+                X2,
+                mean,
+                levels=[self.params["common"]["constraint"]],
+                colors="pink",
+                linewidths=0.5,
             )
+            self.threeD_tmps.append(mean_contour)
+            (artists,), _ = mean_contour.legend_elements()
+            artists.set_label("mean contour")
+            self.legend_handles.append(artists)
             if (
                 self.params["algo"]["type"] == "MPC_expander"
                 or self.params["algo"]["type"] == "MPC_expander_V0"
@@ -208,11 +213,16 @@ class SEMPC_solver(object):
                 expander_pos.append(pos)
         expander_pos = np.array(expander_pos)
         if expander_pos.size != 0:
-            self.scatter_tmps.append(
-                self.ax.scatter(
-                    expander_pos[:, 0], expander_pos[:, 1], c="orange", alpha=0.3, s=3
-                )
+            tmp = self.ax.scatter(
+                expander_pos[:, 0],
+                expander_pos[:, 1],
+                c="orange",
+                alpha=0.3,
+                s=3,
+                label="expander",
             )
+            self.scatter_tmps.append(tmp)
+            self.legend_handles.append(tmp)
 
     def plot_safe_set(self, gp_val, gp_grad, x_h):
         safe = torch.full((self.grids_coupled.shape[0],), True)
@@ -397,9 +407,9 @@ class SEMPC_solver(object):
                 or self.params["algo"]["type"] == "MPC_expander"
                 or self.params["algo"]["type"] == "MPC_expander_V0"
             ):
-                self.plot_sqp_sol(X, U[self.Hm, -self.x_dim :])
+                self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
             else:
-                self.plot_sqp_sol(X)
+                self.plot_sqp_sol(sqp_iter, X)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -450,26 +460,35 @@ class SEMPC_solver(object):
             if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
                 os.makedirs(sqp_plot_dir)
                 self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
-            if sqp_iter != self.max_sqp_iter - 1:
-                len_plot_tmps = len(self.plot_tmps)
-                len_scatter_tmps = len(self.scatter_tmps)
-                len_threeD_tmps = len(self.threeD_tmps)
-                for _ in range(len_plot_tmps):
-                    self.plot_tmps.pop(0).pop(0).remove()
-                for _ in range(len_scatter_tmps):
-                    self.scatter_tmps.pop(0).set_visible(False)
-                for _ in range(len_threeD_tmps):
-                    self.threeD_tmps.pop(0).remove()
+            # if sqp_iter != self.max_sqp_iter - 1:
+            #     len_plot_tmps = len(self.plot_tmps)
+            #     len_scatter_tmps = len(self.scatter_tmps)
+            #     len_threeD_tmps = len(self.threeD_tmps)
+            #     for _ in range(len_plot_tmps):
+            #         self.plot_tmps.pop(0).remove()
+            #     for _ in range(len_scatter_tmps):
+            #         self.scatter_tmps.pop(0).set_visible(False)
+            #     for _ in range(len_threeD_tmps):
+            #         self.threeD_tmps.pop(0).remove()
 
-    def plot_sqp_sol(self, X, zm=None):
-        self.plot_tmps.append(self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5))
-        self.scatter_tmps.append(
-            self.ax.scatter(X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30)
-        )
-        if zm is not None:
-            self.scatter_tmps.append(
-                self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
+    def plot_sqp_sol(self, sqp_iter, X, zm=None):
+        if sqp_iter == self.max_sqp_iter - 1:
+            (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5)
+            tmp_1 = self.ax.scatter(
+                X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30
             )
+            self.plot_tmps.append(tmp_0)
+            self.scatter_tmps.append(tmp_1)
+            # if sqp_iter == self.max_sqp_iter - 1:
+            tmp_0.set_label("X solution")
+            tmp_1.set_label("X solution at Hm")
+            self.legend_handles += [tmp_0, tmp_1]
+            if zm is not None:
+                tmp_2 = self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
+                self.scatter_tmps.append(tmp_2)
+                # if sqp_iter == self.max_sqp_iter - 1:
+                tmp_2.set_label("Z solution at Hm")
+                self.legend_handles.append(tmp_2)
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim

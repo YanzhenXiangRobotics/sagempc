@@ -37,6 +37,15 @@ with open(
     )
 ) as file:
     params = yaml.load(file, Loader=yaml.FullLoader)
+with open(
+    os.path.join(
+        dir_here,
+        "..",
+        "params",
+        "params_nova_carter_isaac_sim.yaml",
+    )
+) as file:
+    params_0 = yaml.load(file, Loader=yaml.FullLoader)
 
 
 class MeasurementNode(Node):
@@ -69,7 +78,8 @@ class MeasurementNode(Node):
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
         pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
-        pose_3D += np.array(params["start_loc"])
+        start_pose = np.append(np.array(params["start_loc"]), params_0["env"]["start_angle"])
+        pose_3D += np.array(start_pose)
 
         return pose_3D
 

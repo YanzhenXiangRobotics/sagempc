@@ -189,6 +189,7 @@ class ContiWorld:
 
     def plot2D(self):
         f, self.ax = plt.subplots()
+        self.legend_handles = []
         self.fig = f
         self.ax.set_aspect("equal", "box")
         if self.block_env:
@@ -209,20 +210,25 @@ class ContiWorld:
             posterior_mean,
             np.array([self.constraint, self.constraint + self.epsilon]),
         )
-        self.ax.plot(
+
+        (start_loc,) = self.ax.plot(
             self.params["env"]["start_loc"][0],
             self.params["env"]["start_loc"][1],
             "*",
             color="tab:red",
             mew=2,
+            label="start loc",
         )
-        self.ax.plot(
+        self.legend_handles.append(start_loc)
+        (goal_loc,) = self.ax.plot(
             self.params["env"]["goal_loc"][0],
             self.params["env"]["goal_loc"][1],
             "*",
             color="tab:green",
             mew=2,
+            label="goal loc",
         )
+        self.legend_handles.append(goal_loc)
         # plt.plot(observed_pred.mean.detach().numpy())
         # lower, upper = observed_posterior.mvn.confidence_region()
         # lower = lower*(1+self.Cx_beta)/2 + upper*(1-self.Cx_beta)/2
@@ -407,7 +413,7 @@ class ContiWorld:
                 idx = get_idx_from_grid(loc, self.VisuGrid)
                 i, j = (
                     math.floor(idx / self.params["env"]["shape"]["y"]),
-                idx % self.params["env"]["shape"]["y"],
+                    idx % self.params["env"]["shape"]["y"],
                 )
                 Cx_Y.append(self.__Cx_2D[i, j])
             train["Cx_Y"] = torch.vstack(Cx_Y)

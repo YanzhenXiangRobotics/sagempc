@@ -42,7 +42,14 @@ class SEMPC(Node):
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
         self.sempc_solver = SEMPC_solver(
-            params, env.VisuGrid, env.ax, env.fig, visu, self.fig_dir, self.publisher
+            params,
+            env.VisuGrid,
+            env.ax,
+            env.legend_handles,
+            env.fig,
+            visu,
+            self.fig_dir,
+            self.publisher,
         )
         self.visu = visu
         self.params = params
@@ -72,6 +79,7 @@ class SEMPC(Node):
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
         self.sample_iter = 0
+        self.has_legend = False
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -174,6 +182,12 @@ class SEMPC(Node):
                 colors="green",
                 linewidths=0.5,
             )
+            # tmp_0.collections[0].set_label("optimistic contour")
+            (artists,), _ = tmp_0.legend_elements()
+            artists.set_label(
+                "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
+            )
+            self.env.legend_handles.append(artists)
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -221,19 +235,24 @@ class SEMPC(Node):
             self.players[self.pl_idx].set_maximizer_goal(xi_star)
             w = 100
 
-            tmp_1 = self.env.ax.plot(
+            (tmp_1,) = self.env.ax.plot(
                 self.visu.opti_path[:, 0],
                 self.visu.opti_path[:, 1],
-                c="grey",
+                c="violet",
                 linewidth=0.5,
+                label="A* path",
             )
             tmp_2 = self.env.ax.scatter(
-                xi_star[0], xi_star[1], marker="x", s=30, c="grey"
+                xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
             )
-            self.env.fig.savefig("t.png")
-            tmp_0.remove()
-            tmp_1.pop(0).remove()
-            tmp_2.set_visible(False)
+            self.sempc_solver.threeD_tmps.append(tmp_0)
+            self.sempc_solver.plot_tmps.append(tmp_1)
+            self.sempc_solver.scatter_tmps.append(tmp_2)
+            self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
+            # self.env.fig.savefig("t.png")
+            # tmp_0.remove()
+            # tmp_1.pop(0).remove()
+            # tmp_2.set_visible(False)
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)
@@ -778,17 +797,34 @@ class SEMPC(Node):
         # self.visu.f_handle["gp"].savefig(
         #     str(self.iter) + 'temp in prog2.png')
         if self.use_isaac_sim:
-            self.env.ax.scatter(self.x_curr[0], self.x_curr[1], color="red", s=3)
+            self.env.legend_handles.append(
+                self.env.ax.scatter(
+                    self.x_curr[0],
+                    self.x_curr[1],
+                    color="red",
+                    s=3,
+                    label="actual trajectory",
+                )
+            )
         else:
-            self.env.ax.scatter(x_curr[0], x_curr[1], color="red", s=3)
+            self.env.legend_handles.append(
+                self.env.ax.scatter(
+                    x_curr[0], x_curr[1], color="red", s=3, label="actual trajectory"
+                )
+            )
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        if not self.has_legend:
+            self.env.ax.legend(handles=self.env.legend_handles)
+            self.has_legend = True
+        self.env.ax.set_xlim([-21.8, -9.0])
+        self.env.ax.set_ylim([-21.8, -4.0])
         self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
         len_threeD_tmps = len(self.sempc_solver.threeD_tmps)
         for _ in range(len_plot_tmps):
-            self.sempc_solver.plot_tmps.pop(0).pop(0).remove()
+            self.sempc_solver.plot_tmps.pop(0).remove()
         for _ in range(len_scatter_tmps):
             self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
         for _ in range(len_threeD_tmps):
