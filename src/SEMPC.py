@@ -625,9 +625,9 @@ class SEMPC(Node):
                 msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)
 
-                # print(
-                #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
-                # )
+                print(
+                    f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
+                )
 
                 self.get_current_state()
         # stop the carter

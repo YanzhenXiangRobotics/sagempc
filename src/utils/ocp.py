@@ -186,7 +186,7 @@ def oracle_set_options(ocp, params):
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"  # 'GAUSS_NEWTON', 'EXACT'
     ocp.solver_options.integrator_type = "DISCRETE"  # IRK
     # ocp.solver_options.print_level = 1
-    ocp.solver_options.levenberg_marquardt = 1.0e-1
+    ocp.solver_options.levenberg_marquardt = 5.0e-1
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_type = "SQP_RTI"  # SQP_RTI, SQP
     # ocp.solver_options.qp_solver_warm_start = 1
@@ -299,8 +299,6 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
             - q_th,
             cw * var,
             w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
-            100 * (model_x - x_lin)[:x_dim].T @ (model_x - x_lin)[:x_dim],
-            100 * (model_z - z_lin).T @ (model_z - z_lin),
             # lb_cz_lin + lb_cz_grad.T @ (model_z - z_lin) - q_th,
             # lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin) - q_th,
         )
@@ -318,7 +316,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         #                 - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin)), cw*var)
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
         model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th,
+            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
         )
     elif params["algo"]["type"] == "MPC_Xn":
         p_lin = ca.vertcat(
@@ -370,8 +368,8 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
 
 def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     q = 1e-3 * np.diag(np.ones(x_dim))
-    qx = np.diag(np.ones(x_dim))
-    # qx = 1e3 * np.diag(np.ones(x_dim))
+    # qx = np.diag(np.ones(x_dim))
+    qx = 1e3 * np.diag(np.ones(x_dim))
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
@@ -388,19 +386,12 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         or params["algo"]["type"] == "MPC_expander"
         or params["algo"]["type"] == "MPC_expander_V0"
     ):
-        # ocp.constraints.idxsh = np.array([1, 2, 3, 4])
-        # z_pen = 1e5
-        # ocp.cost.zl = 1e2 * np.array([1, 1, 1, 1])
-        # ocp.cost.zu = 1e1 * np.array([1, 0.1, z_pen, z_pen])
-        # ocp.cost.Zl = np.eye(4)
-        # ocp.cost.Zu = np.array(
-        #     [[1, 0, 0, 1], [0, 1, 0, 0], [0, 0, z_pen, 0], [0, 0, 0, z_pen]]
-        # )
         ocp.constraints.idxsh = np.array([1, 2])
         ocp.cost.zl = 1e2 * np.array([1, 1])
-        ocp.cost.zu = 1e1 * np.array([1, 0.1])
+        ocp.cost.zu = 1e1 * np.array([1, 0.01])
         ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1]])
-        ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1]])
+        ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 0.1]])
+        # ocp.constraints.idxsh = np.array([1, 2])
         # ocp.cost.zl = 1e2 * np.array([1, 1e3])
         # ocp.cost.zu = 1e1 * np.array([1, 1e3])
         # ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1e3]])
@@ -431,14 +422,14 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     return ocp
 
 
-# def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
-#     # penalty_sqp_stepsize = 10.0 * (model_x - x_lin).T @ (model_x - x_lin) + 10.0 * (
-#     #     model_z - z_lin
-#     # ).T @ (model_z - z_lin)
-#     penalty_sqp_stepsize = 0.0 * (model_x - x_lin).T @ (model_x - x_lin)
-#     ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
-#     ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
-#     return ocp
+def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
+    # penalty_sqp_stepsize = 10.0 * (model_x - x_lin).T @ (model_x - x_lin) + 10.0 * (
+    #     model_z - z_lin
+    # ).T @ (model_z - z_lin)
+    penalty_sqp_stepsize = 0.0 * (model_x - x_lin).T @ (model_x - x_lin)
+    ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
+    ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
+    return ocp
 
 
 def sempc_const_val(ocp, params, x_dim, n_order):
@@ -498,8 +489,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         # ocp.constraints.uh = np.array([10.0, 1e8])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
         # ocp.constraints.uh = np.array([10.0, 1e8, l_max, 10.0])
-        ocp.constraints.lh = np.array([0, eps, -1e8, 0.0, 0.0])
-        ocp.constraints.uh = np.array([10.0, 1e8, l_max, 1e-4, 1e-4])
+        ocp.constraints.lh = np.array([0, eps, -1e8])
+        ocp.constraints.uh = np.array([10.0, 1e8, l_max])
     else:
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
@@ -624,12 +615,12 @@ def export_sempc_ocp(params):
 
     ocp = concat_const_val(ocp, params)
 
-    # if (
-    #     params["algo"]["type"] == "ret_expander"
-    #     or params["algo"]["type"] == "MPC_expander"
-    #     or params["algo"]["type"] == "MPC_expander_V0"
-    # ):
-    #     ocp = concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin)
+    if (
+        params["algo"]["type"] == "ret_expander"
+        or params["algo"]["type"] == "MPC_expander"
+        or params["algo"]["type"] == "MPC_expander_V0"
+    ):
+        ocp = concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin)
 
     ocp = sempc_set_options(ocp, params)
 
