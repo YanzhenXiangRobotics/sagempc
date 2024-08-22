@@ -37,7 +37,7 @@ show = False
 if show:
     plt.show()
 
-train_gp = True
+train_gp = False
 if train_gp:
     from botorch.models import SingleTaskGP
     from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -78,7 +78,7 @@ if train_gp:
             )
         optimizer.step()
 
-store = False
+store = True
 if store:
     import pickle
 

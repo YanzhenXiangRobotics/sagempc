@@ -186,7 +186,7 @@ def oracle_set_options(ocp, params):
     ocp.solver_options.hessian_approx = "GAUSS_NEWTON"  # 'GAUSS_NEWTON', 'EXACT'
     ocp.solver_options.integrator_type = "DISCRETE"  # IRK
     # ocp.solver_options.print_level = 1
-    ocp.solver_options.levenberg_marquardt = 1.0e-1
+    ocp.solver_options.levenberg_marquardt = 5.0e-1
     ocp.solver_options.nlp_solver_ext_qp_res = 1
     ocp.solver_options.nlp_solver_type = "SQP_RTI"  # SQP_RTI, SQP
     # ocp.solver_options.qp_solver_warm_start = 1
@@ -285,6 +285,10 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         # l_n(z) - Lc sqrt((x1-z1)^2 + (x1-z1)^2) \leq 0, w(x) \geq \epsilon
         tol = 1.0e-3
         model.con_h_expr = ca.vertcat(
+            # lb_cz_lin
+            # + lb_cz_grad.T @ (model_z - z_lin)
+            # - Lc * ca.norm_2(model_x[:x_dim] - model_z)
+            # - q_th,
             lb_cz_lin
             + lb_cz_grad.T @ (model_z - z_lin)
             - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
@@ -295,6 +299,8 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
             - q_th,
             cw * var,
             w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
+            # lb_cz_lin + lb_cz_grad.T @ (model_z - z_lin) - q_th,
+            # lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin) - q_th,
         )
         # model.con_h_expr = ca.vertcat(lb_cz_lin + lb_cz_grad.T @ (model_z-z_lin) - Lc*(ca.sign(x_lin[:x_dim]-z_lin).T@(model_x-x_lin)[:x_dim])
         #                         - Lc*(ca.sign(z_lin-x_lin[:x_dim]).T@(model_z-z_lin))
@@ -362,7 +368,8 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
 
 def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     q = 1e-3 * np.diag(np.ones(x_dim))
-    qx = np.diag(np.ones(x_dim))
+    # qx = np.diag(np.ones(x_dim))
+    qx = 1e3 * np.diag(np.ones(x_dim))
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
@@ -381,14 +388,19 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     ):
         ocp.constraints.idxsh = np.array([1, 2])
         ocp.cost.zl = 1e2 * np.array([1, 1])
-        ocp.cost.zu = 1e1 * np.array([1, 0.1])
+        ocp.cost.zu = 1e1 * np.array([1, 0.01])
         ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1]])
-        ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1]])
+        ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 0.1]])
         # ocp.constraints.idxsh = np.array([1, 2])
         # ocp.cost.zl = 1e2 * np.array([1, 1e3])
         # ocp.cost.zu = 1e1 * np.array([1, 1e3])
         # ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1e3]])
         # ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1e3]])
+        # ocp.constraints.idxsh = np.array([1])
+        # ocp.cost.zl = 1e2 * np.array([1])
+        # ocp.cost.zu = 1e1 * np.array([1])
+        # ocp.cost.Zl = 1e1 * np.array([1])
+        # ocp.cost.Zu = 1e1 * np.array([1])
     else:
         ocp.constraints.idxsh = np.array([1])
         ocp.cost.zl = 1e2 * np.array([1])
@@ -411,10 +423,10 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
 
 
 def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
-    # penalty_sqp_stepsize = 1000 * ca.norm_2(model_x - x_lin) + 1000 * ca.norm_2(
+    # penalty_sqp_stepsize = 10.0 * (model_x - x_lin).T @ (model_x - x_lin) + 10.0 * (
     #     model_z - z_lin
-    # )
-    penalty_sqp_stepsize = 0.0 * ca.norm_2(model_x - x_lin)
+    # ).T @ (model_z - z_lin)
+    penalty_sqp_stepsize = 0.0 * (model_x - x_lin).T @ (model_x - x_lin)
     ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
     ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
     return ocp
@@ -473,6 +485,10 @@ def sempc_const_val(ocp, params, x_dim, n_order):
             if params["agent"]["dynamics"] == "nova_carter"
             else params["common"]["expander_offset"]
         )
+        # ocp.constraints.lh = np.array([0, eps])
+        # ocp.constraints.uh = np.array([10.0, 1e8])
+        # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
+        # ocp.constraints.uh = np.array([10.0, 1e8, l_max, 10.0])
         ocp.constraints.lh = np.array([0, eps, -1e8])
         ocp.constraints.uh = np.array([10.0, 1e8, l_max])
     else:

@@ -166,9 +166,10 @@ class SEMPC(Node):
             # curr_node = self.players[self.pl_idx].get_nearest_pessi_idx(torch.from_numpy(self.players[self.pl_idx].current_location))
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
-                offset = self.params["common"]["constraint"] - 0.2
+                # offset = self.params["common"]["constraint"] - 0.4
+                offset = 0.2
             elif self.params["experiment"]["folder"] == "cluttered_envs":
-                offset = 0.1
+                offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
             X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
             intersect_pessi_opti_plot = (
@@ -814,10 +815,12 @@ class SEMPC(Node):
             )
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         if not self.has_legend:
+            # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
             self.env.ax.legend(handles=self.env.legend_handles)
             self.has_legend = True
-        self.env.ax.set_xlim([-21.8, -9.0])
-        self.env.ax.set_ylim([-21.8, -4.0])
+        if self.params["agent"]["dynamics"] == "nova_carter":
+            self.env.ax.set_xlim([-21.8, -9.0])
+            self.env.ax.set_ylim([-21.8, -4.0])
         self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)

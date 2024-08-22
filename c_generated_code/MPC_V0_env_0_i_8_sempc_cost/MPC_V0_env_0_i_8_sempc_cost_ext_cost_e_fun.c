@@ -57,22 +57,25 @@ static const casadi_int casadi_s3[5] = {1, 1, 0, 1, 0};
 
 /* MPC_V0_env_0_i_8_sempc_cost_ext_cost_e_fun:(i0[5],i1[],i2[],i3[18])->(o0) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
-  casadi_real a0, a1, a2, a3, a4;
-  a0=arg[3]? arg[3][9] : 0;
-  a1=arg[0]? arg[0][0] : 0;
-  a2=arg[3]? arg[3][7] : 0;
-  a3=(a1-a2);
-  a3=(a0*a3);
-  a1=(a1-a2);
-  a3=(a3*a1);
-  a1=arg[0]? arg[0][1] : 0;
-  a2=arg[3]? arg[3][8] : 0;
-  a4=(a1-a2);
-  a0=(a0*a4);
-  a1=(a1-a2);
+  casadi_real a0, a1, a2, a3, a4, a5;
+  a0=1000.;
+  a1=arg[3]? arg[3][9] : 0;
+  a2=arg[0]? arg[0][0] : 0;
+  a3=arg[3]? arg[3][7] : 0;
+  a4=(a2-a3);
+  a4=(a1*a4);
+  a4=(a0*a4);
+  a2=(a2-a3);
+  a4=(a4*a2);
+  a2=arg[0]? arg[0][1] : 0;
+  a3=arg[3]? arg[3][8] : 0;
+  a5=(a2-a3);
+  a1=(a1*a5);
   a0=(a0*a1);
-  a3=(a3+a0);
-  if (res[0]!=0) res[0][0]=a3;
+  a2=(a2-a3);
+  a0=(a0*a2);
+  a4=(a4+a0);
+  if (res[0]!=0) res[0][0]=a4;
   return 0;
 }
 

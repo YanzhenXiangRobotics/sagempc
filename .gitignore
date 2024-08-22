@@ -141,6 +141,6 @@ settings.json
 *.png
 
 Nova_Carter_ROS.usd
-MPC_env_*
+MPC_V0_env_*
 MPC_expander_env_*
 MPC_expander_V0_env_*

@@ -398,7 +398,7 @@ class SEMPC_solver(object):
             status = self.ocp_solver.solve()
             t_1 = timeit.default_timer()
             # self.ocp_solver.print_statistics()
-            print("cost", self.ocp_solver.get_cost())
+            print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()

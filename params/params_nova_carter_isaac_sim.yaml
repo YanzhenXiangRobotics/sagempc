@@ -22,7 +22,7 @@ env: # Env parameters mainly used for env generation
 visu:
   show: False # Turn on the visualization
   show_current_loc: False # Show current location of the agent
-  step_size: 0.2 # Step size for the visualization
+  step_size: 0.1 # Step size for the visualization
   opti_path: False # Show the optimistic path generate by Problem 18/ discrete path in optimistic set
   show_path: True # Show the path travelled by the agent
   show_opti_set: False # Show the optimistic set
@@ -63,7 +63,7 @@ optimizer:
 common:
   dim: 2
   constraint: 0.6 # Constraint threshold for safety function
-  epsilon: 0.5 # user defined accuracy
+  epsilon: 0.2 # user defined accuracy
   Lc: 1.0 # Lipschitz constant of the constraint function
   expander_offset: 0.1
 
