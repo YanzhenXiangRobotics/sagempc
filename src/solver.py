@@ -394,14 +394,72 @@ class SEMPC_solver(object):
             status = self.ocp_solver.solve()
 
             self.ocp_solver.options_set("rti_phase", 2)
-            t_0 = timeit.default_timer()
-            status = self.ocp_solver.solve()
-            t_1 = timeit.default_timer()
-            # self.ocp_solver.print_statistics()
-            print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
-            residuals = self.ocp_solver.get_residuals()
+            # t_0 = timeit.default_timer()
+            # status = self.ocp_solver.solve()
+            # t_1 = timeit.default_timer()
+            # # self.ocp_solver.print_statistics()
+            # # print(
+            # #     "cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals()
+            # # )
+            # residuals = self.ocp_solver.get_residuals()
 
-            X, U, Sl = self.get_solution()
+            # X, U, Sl = self.get_solution()
+
+            # model_x, x_lin = X[self.Hm, : self.x_dim], x_h[self.Hm, : self.x_dim]
+            # model_z, z_lin = U[self.Hm, -self.x_dim :], u_h[self.Hm, -self.x_dim :]
+            # step_size_x, step_size_z = model_x - x_lin, model_z - z_lin
+            Lc, q_th, tol = (
+                self.params["common"]["Lc"],
+                self.params["common"]["constraint"],
+                1.0e-3,
+            )
+            actual = -1.0
+            zu_original = self.ocp_solver.acados_ocp.cost.zu
+            Zu_original = self.ocp_solver.acados_ocp.cost.Zu
+            while actual < 0.0:
+                status = self.ocp_solver.solve()
+                X, U, Sl = self.get_solution()
+                residuals = self.ocp_solver.get_residuals()
+                model_x, x_lin = X[self.Hm, : self.x_dim], x_h[self.Hm, : self.x_dim]
+                model_z, z_lin = U[self.Hm, -self.x_dim :], u_h[self.Hm, -self.x_dim :]
+                step_size_x, step_size_z = model_x - x_lin, model_z - z_lin
+                actual = (
+                    player.funct(torch.from_numpy(model_z).reshape(1, -1)).item()
+                    - Lc * ca.norm_2(model_x - model_z)
+                    - q_th
+                )
+                print(
+                    "step size x: ",
+                    step_size_x,
+                    "step size z: ",
+                    step_size_z,
+                    "\n",
+                    "grad z_lin: ",
+                    LB_cz_grad[self.Hm, :],
+                    "\n",
+                    "val_lin: ",
+                    LB_cz_val[self.Hm]
+                    + LB_cz_grad[self.Hm, :].T @ step_size_z
+                    - (Lc / (ca.norm_2(x_lin[: self.x_dim] - z_lin) + tol))
+                    * (
+                        (x_lin[: self.x_dim] - z_lin).T
+                        @ (model_x - x_lin)[: self.x_dim]
+                    )
+                    - (Lc / (ca.norm_2(x_lin[: self.x_dim] - z_lin) + tol))
+                    * ((z_lin - x_lin[: self.x_dim]).T @ (model_z - z_lin))
+                    - Lc * ca.norm_2(x_lin[: self.x_dim] - z_lin)
+                    - q_th,
+                    "actual: ",
+                    actual,
+                )
+                zu = self.ocp_solver.acados_ocp.cost.zu
+                Zu = self.ocp_solver.acados_ocp.cost.Zu
+                zu_1 = zu[1] * 0.1
+                Zu_1 = Zu[1, 1] * 0.1
+                zu[1] = zu_1
+                Zu[1, 1] = Zu_1
+                self.ocp_solver.acados_ocp.cost.zu = zu
+                self.ocp_solver.acados_ocp.cost.Zu = Zu
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -470,6 +528,8 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
+        self.ocp_solver.acados_ocp.cost.zu = zu_original
+        self.ocp_solver.acados_ocp.cost.Zu = Zu_original
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
         if sqp_iter == self.max_sqp_iter - 1:
