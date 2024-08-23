@@ -167,7 +167,7 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                offset = 0.2
+                offset = 0.3
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
@@ -315,7 +315,7 @@ class SEMPC(Node):
                         self.visu.utility_minimizer
                         - self.players[self.pl_idx].current_location
                     )
-                    < 0.025
+                    < self.params["visu"]["step_size"]
                 )
             elif self.params["algo"]["objective"] == "SE":
                 running_condition_true = self.players[self.pl_idx].feasible
@@ -363,7 +363,7 @@ class SEMPC(Node):
     def sempc_initialization(self):
         if self.use_isaac_sim:
             while not self.obtained_init_state:
-                self.get_current_state()
+                self.get_current_state_measurement()
                 print("waiting...")
             print("initialized location", self.get_safe_init())
         else:
@@ -391,7 +391,8 @@ class SEMPC(Node):
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
             if self.use_isaac_sim:
-                player.update_current_state_t(self.x_curr, self.t_curr)
+                self.get_current_state_measurement()
+                player.update_current_state(self.x_curr)
             else:
                 player.update_current_state(state)
 
@@ -407,8 +408,9 @@ class SEMPC(Node):
         val = -100
         while val <= self.q_th:
             if self.use_isaac_sim:
+                self.get_current_state_measurement()
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.players[self.pl_idx].current_location[: self.x_dim],
+                    self.x_curr[: self.x_dim],
                     self.min_dist,
                     self.pl_idx,
                     self.players,
@@ -597,7 +599,7 @@ class SEMPC(Node):
         self.prev
         # apply this input to your environment
 
-    def get_current_state(self):
+    def get_current_state_measurement(self):
         try:
             s = MLSocket()
             s.connect((HOST, PORT))
@@ -606,32 +608,62 @@ class SEMPC(Node):
 
             self.x_curr = data[: self.state_dim]
             self.min_dist = data[self.state_dim]
-            self.t_curr = data[-1]
 
             self.obtained_init_state = True
 
         except Exception as e:
             print(e)
 
-    def apply_control(self, U):
-        for i in range(U.shape[0]):
-            self.get_current_state()
-            start = self.t_curr
-            while self.t_curr - start < U[i, 2]:
-                # while self.t_curr - start < 0.035:
-                msg = Twist()
-                # msg.linear.x = 2.0
-                msg.linear.x = U[i, 0]
-                msg.angular.z = U[i, 1]
+    def _angle_helper(self, angle):
+        if angle > math.pi:
+            angle -= 2 * math.pi
+        elif angle < -math.pi:
+            angle += 2 * math.pi
+        return angle
+
+    def _compute_pid_error(self, x_desire):
+        error_pos_global = x_desire - self.x_curr[: self.x_dim]
+        actual_angle = self._angle_helper(self.x_curr[-1])
+        R = np.array(
+            [
+                [np.cos(actual_angle), -np.sin(actual_angle)],
+                [np.sin(actual_angle), np.cos(actual_angle)],
+            ]
+        )
+        error_pos_robot = R.T @ error_pos_global
+        error_angle = np.arctan2(error_pos_robot[1], error_pos_robot[0])
+        if error_angle < -0.5 * math.pi:
+            error_angle += math.pi
+        elif error_angle > 0.5 * math.pi:
+            error_angle -= math.pi
+        return error_pos_robot, error_angle
+
+    def _pos_pid_ctrl(self, error_pos_x, last_error_pos_x):
+        return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
+
+    def _angle_pid_ctrl(self, error_angle, last_error_angle):
+        return 0.5 * error_angle + 0.5 * (error_angle - last_error_angle)
+
+    def apply_control(self, X):
+        msg = Twist()
+        for i in range(X.shape[0] - 1):
+            self.get_current_state_measurement()
+            error_pos_robot, error_angle = self._compute_pid_error(
+                x_desire=X[i + 1, : self.x_dim]
+            )
+            last_error_pos, last_angle_error = error_pos_robot, error_angle
+            while np.linalg.norm(error_pos_robot) > 0.05:
+                msg.linear.x = self._pos_pid_ctrl(error_pos_robot[0], last_error_pos[0])
+                msg.angular.z = self._angle_pid_ctrl(error_angle, last_angle_error)
                 self.publisher.publish(msg)
-
-                print(
-                    f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
+                last_error_pos, last_angle_error = error_pos_robot, error_angle
+                self.get_current_state_measurement()
+                error_pos_robot, error_angle = self._compute_pid_error(
+                    x_desire=X[i + 1, : self.x_dim]
                 )
-
-                self.get_current_state()
-        # stop the carter
-        self.publisher.publish(Twist())
+                print(i, error_angle)
+        msg = Twist()
+        self.publisher.publish(msg)
 
     def one_step_planner(self):
         """_summary_: Plans going and coming back all in one trajectory plan
@@ -737,7 +769,7 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(U[: self.Hm, :])
+            self.apply_control(X[: self.Hm, :])
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -783,10 +815,8 @@ class SEMPC(Node):
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         else:
             if self.use_isaac_sim:
-                self.get_current_state()
-                self.players[self.pl_idx].update_current_state_t(
-                    self.x_curr, self.t_curr
-                )
+                self.get_current_state_measurement()
+                self.players[self.pl_idx].update_current_state(self.x_curr)
             else:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         # assert np.isclose(x_curr,X[self.Hm]).all()
@@ -881,7 +911,7 @@ class SEMPC(Node):
             )
             if self.use_isaac_sim:
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.players[self.pl_idx].current_location[: self.x_dim],
+                    self.x_curr[: self.x_dim],
                     self.min_dist,
                     self.pl_idx,
                     self.players,

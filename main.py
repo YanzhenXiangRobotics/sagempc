@@ -13,31 +13,37 @@ import yaml
 import numpy as np
 
 import os, sys
+
 dir_here = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(dir_here)
 
 from src.environment import ContiWorld
 from src.ground_truth import GroundTruth
 from src.SEMPC import SEMPC
-from src.utils.helper import (TrainAndUpdateConstraint, TrainAndUpdateDensity,
-                              get_frame_writer, oracle)
+from src.utils.helper import (
+    TrainAndUpdateConstraint,
+    TrainAndUpdateDensity,
+    get_frame_writer,
+    oracle,
+)
 from src.utils.initializer import get_players_initialized
 from src.utils.plotting import plot_1D, plot_2D
 from src.visu import Visu
 
-warnings.filterwarnings('ignore')
-plt.rcParams['figure.figsize'] = [12, 6]
+warnings.filterwarnings("ignore")
+plt.rcParams["figure.figsize"] = [12, 6]
 
 workspace = "sagempc"
 
-parser = argparse.ArgumentParser(description='A foo that bars')
-parser.add_argument('-param', default="params_nova_carter_isaac_sim")  # params
+parser = argparse.ArgumentParser(description="A foo that bars")
+parser.add_argument("-param", default="params_nova_carter_isaac_sim")  # params
 # parser.add_argument('-param', default="params_cluttered_car")
-parser.add_argument('-env', type=int, default=0)
-parser.add_argument('-i', type=int, default=8)  # initialized at origin
+parser.add_argument("-env", type=int, default=0)
+parser.add_argument("-i", type=int, default=8)  # initialized at origin
 args = parser.parse_args()
 
 import sys, os
+
 dir_project = os.path.abspath(os.path.dirname(__file__))
 
 # 1) Load the config file
@@ -77,7 +83,12 @@ params["env"]["goal_loc"] = env_st_goal_pos["goal_loc"]
 
 # 3) Setup the environment. This class defines different environments eg: wall, forest, or a sample from GP.
 env = ContiWorld(
-    env_params=params["env"], common_params=params["common"], visu_params=params["visu"], env_dir=env_load_path, params=params)
+    env_params=params["env"],
+    common_params=params["common"],
+    visu_params=params["visu"],
+    env_dir=env_load_path,
+    params=params,
+)
 
 opt = GroundTruth(env, params)
 
@@ -92,12 +103,27 @@ if args.i != -1:
 if not os.path.exists(save_path + str(traj_iter)):
     os.makedirs(save_path + str(traj_iter))
 
-visu = Visu(grid_V=env.VisuGrid, safe_boundary=env.get_safe_init()["Cx_X"], true_constraint_function=opt.true_constraint_function, true_objective_func=opt.true_density,
-            opt_goal=opt.opt_goal, optimal_feasible_boundary=opt.optimal_feasible_boundary, params=params, path=save_path + str(traj_iter))
+visu = Visu(
+    grid_V=env.VisuGrid,
+    safe_boundary=env.get_safe_init()["Cx_X"],
+    true_constraint_function=opt.true_constraint_function,
+    true_objective_func=opt.true_density,
+    opt_goal=opt.opt_goal,
+    optimal_feasible_boundary=opt.optimal_feasible_boundary,
+    params=params,
+    path=save_path + str(traj_iter),
+)
 
 import rclpy
+
 rclpy.init()
 se_mpc = SEMPC(params, env, visu)
-se_mpc.sempc_main()
-print("avg time", np.mean(visu.iteration_time))
-visu.save_data()
+
+# se_mpc.sempc_main()
+# print("avg time", np.mean(visu.iteration_time))
+# visu.save_data()
+
+X_test = np.zeros((30, 2))
+X_test[:, 0] = np.linspace(-19.785, -17.0, X_test.shape[0])
+X_test[:, 1] = np.linspace(-16.02, -20.0, X_test.shape[0])
+se_mpc.apply_control(X_test)

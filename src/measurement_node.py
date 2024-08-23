@@ -23,6 +23,7 @@ import math
 import time
 
 import os
+
 dir_here = os.path.abspath(os.path.dirname(__file__))
 import yaml
 
@@ -54,9 +55,10 @@ class MeasurementNode(Node):
         self.min_dist_subscriber = self.create_subscription(
             LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         )
-        self.sim_time_subscriber = self.create_subscription(
-            Float64, "/sim_time", self.sim_time_listener_callback, 10
-        )
+        # self.sim_time_subscriber = self.create_subscription(
+        #     Float64, "/sim_time", self.sim_time_listener_callback, 10
+        # )
+        self.timer = self.create_timer(1 / 100, self.on_timer)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
@@ -78,19 +80,20 @@ class MeasurementNode(Node):
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
         pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
-        start_pose = np.append(np.array(params["start_loc"]), params_0["env"]["start_angle"])
+        start_pose = np.append(
+            np.array(params["start_loc"]), params_0["env"]["start_angle"]
+        )
         pose_3D += np.array(start_pose)
 
         return pose_3D
 
-    def sim_time_listener_callback(self, msg):
-        sim_time = msg.data
+    # def sim_time_listener_callback(self, msg):
+    # sim_time = msg.data
+    def on_timer(self):
         if self.min_dist != -1.0:
             try:
                 pose_3D = self.get_pose_3D()
-                data_to_send = np.concatenate(
-                    (pose_3D, np.array([self.min_dist]), np.array([sim_time]))
-                )
+                data_to_send = np.concatenate((pose_3D, np.array([self.min_dist])))
 
                 print(f"To send {data_to_send}")
 
