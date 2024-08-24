@@ -124,6 +124,6 @@ se_mpc = SEMPC(params, env, visu)
 # visu.save_data()
 
 X_test = np.zeros((30, 2))
-X_test[:, 0] = np.linspace(-19.785, -17.0, X_test.shape[0])
-X_test[:, 1] = np.linspace(-16.02, -20.0, X_test.shape[0])
+X_test[:, 0] = np.linspace(-20.0, -35.0, X_test.shape[0])
+X_test[:, 1] = np.linspace(-16.0, -31.0, X_test.shape[0])
 se_mpc.apply_control(X_test)

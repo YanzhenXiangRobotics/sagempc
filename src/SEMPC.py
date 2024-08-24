@@ -410,8 +410,8 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.x_curr[: self.x_dim],
-                    self.min_dist,
+                    self.query_pts,
+                    self.query_meas,
                     self.pl_idx,
                     self.players,
                     self.params,
@@ -607,8 +607,21 @@ class SEMPC(Node):
             s.close()
 
             self.x_curr = data[: self.state_dim]
-            self.min_dist = data[self.state_dim]
-
+            min_dist_angle = data[self.state_dim]
+            min_dist = data[-1]
+            resolution = 0.3
+            query_pts_x = np.arange(
+                self.x_curr[0],
+                self.x_curr[0] + min_dist * np.cos(min_dist_angle),
+                resolution,
+            )
+            query_pts_y = np.linspace(
+                self.x_curr[1],
+                self.x_curr[1] + min_dist * np.sin(min_dist_angle),
+                len(query_pts_x),
+            )
+            self.query_pts = np.concatenate((query_pts_x, query_pts_y), axis=-1)
+            self.query_meas = np.linspace(min_dist, 0, len(query_pts_x))
             self.obtained_init_state = True
 
         except Exception as e:
@@ -624,6 +637,7 @@ class SEMPC(Node):
     def _compute_pid_error(self, x_desire):
         error_pos_global = x_desire - self.x_curr[: self.x_dim]
         actual_angle = self._angle_helper(self.x_curr[-1])
+        # actual_angle = self.x_curr[-1]
         R = np.array(
             [
                 [np.cos(actual_angle), -np.sin(actual_angle)],
@@ -642,7 +656,7 @@ class SEMPC(Node):
         return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
 
     def _angle_pid_ctrl(self, error_angle, last_error_angle):
-        return 0.5 * error_angle + 0.5 * (error_angle - last_error_angle)
+        return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
 
     def apply_control(self, X):
         msg = Twist()
@@ -652,7 +666,7 @@ class SEMPC(Node):
                 x_desire=X[i + 1, : self.x_dim]
             )
             last_error_pos, last_angle_error = error_pos_robot, error_angle
-            while np.linalg.norm(error_pos_robot) > 0.05:
+            while np.linalg.norm(error_pos_robot) > 0.10:
                 msg.linear.x = self._pos_pid_ctrl(error_pos_robot[0], last_error_pos[0])
                 msg.angular.z = self._angle_pid_ctrl(error_angle, last_angle_error)
                 self.publisher.publish(msg)
@@ -661,7 +675,7 @@ class SEMPC(Node):
                 error_pos_robot, error_angle = self._compute_pid_error(
                     x_desire=X[i + 1, : self.x_dim]
                 )
-                print(i, error_angle)
+                print(i, self.x_curr, error_angle)
         msg = Twist()
         self.publisher.publish(msg)
 
@@ -910,9 +924,10 @@ class SEMPC(Node):
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
             if self.use_isaac_sim:
+                self.get_current_state_measurement()
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.x_curr[: self.x_dim],
-                    self.min_dist,
+                    self.query_pts,
+                    self.query_meas,
                     self.pl_idx,
                     self.players,
                     self.params,

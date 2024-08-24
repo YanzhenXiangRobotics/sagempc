@@ -55,9 +55,6 @@ class MeasurementNode(Node):
         self.min_dist_subscriber = self.create_subscription(
             LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         )
-        # self.sim_time_subscriber = self.create_subscription(
-        #     Float64, "/sim_time", self.sim_time_listener_callback, 10
-        # )
         self.timer = self.create_timer(1 / 100, self.on_timer)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -87,13 +84,17 @@ class MeasurementNode(Node):
 
         return pose_3D
 
-    # def sim_time_listener_callback(self, msg):
-    # sim_time = msg.data
     def on_timer(self):
         if self.min_dist != -1.0:
             try:
-                pose_3D = self.get_pose_3D()
-                data_to_send = np.concatenate((pose_3D, np.array([self.min_dist])))
+                self.pose_3D = self.get_pose_3D()
+                data_to_send = np.concatenate(
+                    (
+                        self.pose_3D,
+                        np.array(self.min_dist_angle),
+                        np.array([self.min_dist]),
+                    )
+                )
 
                 print(f"To send {data_to_send}")
 
@@ -109,8 +110,11 @@ class MeasurementNode(Node):
         try:
             ranges = np.array(msg.ranges)
             ranges = ranges[np.nonzero(ranges)]
-            self.min_dist = np.min(ranges)
-
+            min_dist_idx = np.argmin(ranges)
+            self.min_dist_angle = (
+                -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
+            )
+            self.min_dist = ranges(self.min_dist_idx)
         except Exception as e:
             print(e)
 
