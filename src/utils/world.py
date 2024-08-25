@@ -21,9 +21,9 @@ class World:
     def grid_x1_x2(self, resolution=None):
         if resolution is None:
             resolution = self.resolution
-        return np.arange(
-            self.bbox[0], self.bbox[2], resolution
-        ), np.arange(self.bbox[1], self.bbox[3], resolution)
+        return np.arange(self.bbox[0], self.bbox[2], resolution), np.arange(
+            self.bbox[1], self.bbox[3], resolution
+        )
 
     def grids_2d(self, resolution=None):
         if resolution is None:
@@ -68,7 +68,10 @@ class World:
             min_dist = 0.0
         min_dist_index = np.argmin(dists)
         min_dist_point = occup_arr[min_dist_index]
-        return min_dist, min_dist_point
+        min_dist_angle = np.arctan2(
+            min_dist_point[1] - pos_arr[1], min_dist_point[0] - pos_arr[0]
+        )
+        return min_dist, min_dist_angle
 
 
 if __name__ == "__main__":

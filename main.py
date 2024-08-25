@@ -119,11 +119,11 @@ import rclpy
 rclpy.init()
 se_mpc = SEMPC(params, env, visu)
 
-# se_mpc.sempc_main()
-# print("avg time", np.mean(visu.iteration_time))
-# visu.save_data()
+se_mpc.sempc_main()
+print("avg time", np.mean(visu.iteration_time))
+visu.save_data()
 
-X_test = np.zeros((30, 2))
-X_test[:, 0] = np.linspace(-20.0, -35.0, X_test.shape[0])
-X_test[:, 1] = np.linspace(-16.0, -31.0, X_test.shape[0])
-se_mpc.apply_control(X_test)
+# X_test = np.zeros((30, 2))
+# X_test[:, 0] = np.linspace(-20.0, -35.0, X_test.shape[0])
+# X_test[:, 1] = np.linspace(-16.0, -31.0, X_test.shape[0])
+# se_mpc.apply_control(X_test)

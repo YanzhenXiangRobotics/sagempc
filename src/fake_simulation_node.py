@@ -68,26 +68,26 @@ class FakeSimulationNode(Node):
         self.world = World(bbox=start + end, resolution=step_size)
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-18.0, -22.0],
-                upper_right=[-13.0, -15.4],
+                lower_left=[-14.0, -22.0],
+                upper_right=[-11.0, -16.0],
                 resolution=self.world.resolution,
             )
         )
         self.world.add_obstacle(
             Rectangle(
                 lower_left=[-22.0, -14.0],
-                upper_right=[-16.0, -13.5],
+                upper_right=[-16.0, -13.0],
                 resolution=self.world.resolution,
             )
         )
         # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
-        # self.world.add_obstacle(
-        #     DiamondSquare(
-        #         center=[-18.0, -18.0],
-        #         radius=1.0 / math.sqrt(2),
-        #         resolution=self.world.resolution,
-        #     )
-        # )
+        self.world.add_obstacle(
+            DiamondSquare(
+                center=[-18.0, -18.0],
+                radius=1.0 / math.sqrt(2),
+                resolution=self.world.resolution,
+            )
+        )
         self.world.add_obstacle(
             Rectangle(
                 lower_left=[-21.8, -16.5],
@@ -125,8 +125,15 @@ class FakeSimulationNode(Node):
             # if self.dt > 2.0:
             #     print(self.u)
             self.dynamics()
-            min_dist, _ = self.world.min_dist_to_obsc(self.pose[:2])
-            data_to_send = np.concatenate((self.pose, np.array([min_dist])))
+            min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
+            data_to_send = np.concatenate(
+                (
+                    self.pose,
+                    np.array([min_dist_angle]),
+                    np.array([min_dist]),
+                    np.array([self.t]),
+                )
+            )
             print(f"To send {data_to_send}")
             conn, _ = self.s.accept()
             conn.sendall(data_to_send)

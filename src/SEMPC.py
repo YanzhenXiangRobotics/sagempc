@@ -269,7 +269,7 @@ class SEMPC(Node):
         init_xy = {}
         init_xy["Cx_X"] = [torch.from_numpy(self.x_curr[: self.x_dim])]
         init_xy["Fx_X"] = init_xy["Cx_X"].copy()
-        init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.min_dist))
+        init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.query_meas[0]))
         init_xy["Fx_Y"] = torch.atleast_2d(
             torch.tensor(
                 [np.linalg.norm(self.x_curr[:-1] - np.array(self.x_goal), ord=2)]
@@ -392,7 +392,6 @@ class SEMPC(Node):
             state[: self.x_dim] = init
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
-                player.update_current_state(self.x_curr)
             else:
                 player.update_current_state(state)
 
@@ -608,21 +607,33 @@ class SEMPC(Node):
 
             self.x_curr = data[: self.state_dim]
             min_dist_angle = data[self.state_dim]
-            min_dist = data[-1]
-            resolution = 0.3
-            query_pts_x = np.arange(
-                self.x_curr[0],
-                self.x_curr[0] + min_dist * np.cos(min_dist_angle),
-                resolution,
+            min_dist = data[self.state_dim + 1]
+            self.t_curr = data[-1]
+
+            query_pts_x_start = self.x_curr[0]
+            query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
+            # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
+            num_pts = 5
+            query_pts_x = np.linspace(
+                query_pts_x_start,
+                query_pts_x_end,
+                num_pts,
             )
             query_pts_y = np.linspace(
                 self.x_curr[1],
-                self.x_curr[1] + min_dist * np.sin(min_dist_angle),
+                self.x_curr[1]
+                + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
                 len(query_pts_x),
             )
-            self.query_pts = np.concatenate((query_pts_x, query_pts_y), axis=-1)
-            self.query_meas = np.linspace(min_dist, 0, len(query_pts_x))
+            self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
+            self.query_meas = np.linspace(
+                min_dist,
+                min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
+                len(query_pts_x),
+            )
             self.obtained_init_state = True
+
+            self.players[self.pl_idx].update_current_state(self.x_curr)
 
         except Exception as e:
             print(e)
@@ -658,24 +669,23 @@ class SEMPC(Node):
     def _angle_pid_ctrl(self, error_angle, last_error_angle):
         return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
 
-    def apply_control(self, X):
+    def apply_control(self, U):
         msg = Twist()
-        for i in range(X.shape[0] - 1):
+        for i in range(U.shape[0]):
             self.get_current_state_measurement()
-            error_pos_robot, error_angle = self._compute_pid_error(
-                x_desire=X[i + 1, : self.x_dim]
-            )
-            last_error_pos, last_angle_error = error_pos_robot, error_angle
-            while np.linalg.norm(error_pos_robot) > 0.10:
-                msg.linear.x = self._pos_pid_ctrl(error_pos_robot[0], last_error_pos[0])
-                msg.angular.z = self._angle_pid_ctrl(error_angle, last_angle_error)
+            start = self.t_curr
+            while self.t_curr - start < U[i, 2]:
+                msg.linear.x = U[i, 0]
+                msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)
-                last_error_pos, last_angle_error = error_pos_robot, error_angle
                 self.get_current_state_measurement()
-                error_pos_robot, error_angle = self._compute_pid_error(
-                    x_desire=X[i + 1, : self.x_dim]
+                print(
+                    f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
                 )
-                print(i, self.x_curr, error_angle)
+            uncertainty = self.players[self.pl_idx].get_width_at_curr_loc()
+            print("uncertainty: ", uncertainty)
+            # if uncertainty > 2.0 * self.params["common"]["epsilon"]:
+            #     break
         msg = Twist()
         self.publisher.publish(msg)
 
@@ -783,7 +793,7 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(X[: self.Hm, :])
+            self.apply_control(U[: self.Hm, :])
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -830,7 +840,6 @@ class SEMPC(Node):
         else:
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
-                self.players[self.pl_idx].update_current_state(self.x_curr)
             else:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         # assert np.isclose(x_curr,X[self.Hm]).all()

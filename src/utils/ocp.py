@@ -144,8 +144,11 @@ def concat_const_val(ocp, params):
         ocp.constraints.lbu = np.concatenate(
             [ocp.constraints.lbu, np.array([params["optimizer"]["dt"]]), lbx]
         )
+        # ocp.constraints.ubu = np.concatenate(
+        #     [ocp.constraints.ubu, np.array([1.0]), ubx]
+        # )
         ocp.constraints.ubu = np.concatenate(
-            [ocp.constraints.ubu, np.array([1.0]), ubx]
+            [ocp.constraints.ubu, np.array([5.0]), ubx]
         )
         ocp.constraints.idxbu = np.arange(ocp.constraints.idxbu.shape[0] + 1 + x_dim)
     else:
