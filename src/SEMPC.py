@@ -166,7 +166,7 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                offset = -0.02
+                offset = -0.04
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
@@ -407,9 +407,15 @@ class SEMPC(Node):
         while val <= self.q_th:
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
+                if self.params["experiment"]["batch_update"]:
+                    query_pts = self.query_pts
+                    query_meas = self.query_meas
+                else:
+                    query_pts = self.query_pts[0]
+                    query_meas = self.query_meas[0]
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.query_pts,
-                    self.query_meas,
+                    query_pts,
+                    query_meas,
                     self.pl_idx,
                     self.players,
                     self.params,
@@ -612,7 +618,7 @@ class SEMPC(Node):
             query_pts_x_start = self.x_curr[0]
             query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
             # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
-            num_pts = 5
+            num_pts = self.params["experiment"]["batch_size"]
             query_pts_x = np.linspace(
                 query_pts_x_start,
                 query_pts_x_end,
@@ -670,7 +676,7 @@ class SEMPC(Node):
 
     def apply_control(self, U):
         msg = Twist()
-        for i in range(U.shape[0]):
+        for i in range(U.shape[0] - 1):
             self.get_current_state_measurement()
             start = self.t_curr
             while self.t_curr - start < U[i, 2]:
@@ -717,6 +723,7 @@ class SEMPC(Node):
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
+        self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 = x_curr.copy()       
         if self.params["algo"]["type"] == "MPC_Xn":
             pass
             # st_lb = np.zeros(self.state_dim+1)
@@ -874,7 +881,8 @@ class SEMPC(Node):
         if self.params["agent"]["dynamics"] == "nova_carter":
             self.env.ax.set_xlim([-21.8, -9.0])
             self.env.ax.set_ylim([-21.8, -4.0])
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
@@ -934,9 +942,15 @@ class SEMPC(Node):
             )
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
+                if self.params["experiment"]["batch_update"]:
+                    query_pts = self.query_pts
+                    query_meas = self.query_meas
+                else:
+                    query_pts = self.query_pts[0]
+                    query_meas = self.query_meas[0]
                 TrainAndUpdateConstraint_isaac_sim(
-                    self.query_pts,
-                    self.query_meas,
+                    query_pts,
+                    query_meas,
                     self.pl_idx,
                     self.players,
                     self.params,

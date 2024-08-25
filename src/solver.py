@@ -288,6 +288,8 @@ class SEMPC_solver(object):
             else:
                 #    pass
                 x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
+                if sqp_iter == 0:
+                    print(x_h, u_h)
                 if self.params["algo"]["init"] == "discrete":
                     self.path_init(player.solver_init_path)
 

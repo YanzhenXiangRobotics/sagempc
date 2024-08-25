@@ -74,7 +74,7 @@ def TrainAndUpdateConstraint_isaac_sim(
     train = {}
     train["Cx_X"] = query_pt.reshape(-1, params["common"]["dim"])
     if not torch.is_tensor(query_meas):
-        query_meas = torch.atleast_1d(torch.from_numpy(query_meas).float()).reshape(
+        query_meas = torch.atleast_1d(torch.from_numpy(np.atleast_1d(query_meas)).float()).reshape(
             -1, 1
         )
     train["Cx_Y"] = query_meas

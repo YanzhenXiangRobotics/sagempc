@@ -88,13 +88,13 @@ class FakeSimulationNode(Node):
         #         resolution=self.world.resolution,
         #     )
         # )
-        self.world.add_obstacle(
-            Rectangle(
-                lower_left=[-21.0, -16.5],
-                upper_right=[-20.8, -16.0],
-                resolution=self.world.resolution,
-            )
-        )
+        # self.world.add_obstacle(
+        #     Rectangle(
+        #         lower_left=[-21.0, -16.5],
+        #         upper_right=[-20.8, -16.0],
+        #         resolution=self.world.resolution,
+        #     )
+        # )
         self.begin = time.time()
 
     def setup_socket(self):
