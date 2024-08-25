@@ -166,7 +166,7 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                offset = 0.02
+                offset = -0.02
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset

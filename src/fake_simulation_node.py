@@ -75,7 +75,7 @@ class FakeSimulationNode(Node):
         )
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-22.0, -14.0],
+                lower_left=[-20.8, -14.0],
                 upper_right=[-16.0, -13.0],
                 resolution=self.world.resolution,
             )
@@ -90,8 +90,8 @@ class FakeSimulationNode(Node):
         # )
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-21.8, -16.5],
-                upper_right=[-21.3, -15.5],
+                lower_left=[-21.0, -16.5],
+                upper_right=[-20.8, -16.0],
                 resolution=self.world.resolution,
             )
         )
