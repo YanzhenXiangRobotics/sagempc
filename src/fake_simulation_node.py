@@ -68,8 +68,8 @@ class FakeSimulationNode(Node):
         self.world = World(bbox=start + end, resolution=step_size)
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-14.0, -22.0],
-                upper_right=[-11.0, -16.0],
+                lower_left=[-18.5, -22.0],
+                upper_right=[-11.0, -15.5],
                 resolution=self.world.resolution,
             )
         )
@@ -81,13 +81,13 @@ class FakeSimulationNode(Node):
             )
         )
         # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
-        self.world.add_obstacle(
-            DiamondSquare(
-                center=[-18.0, -18.0],
-                radius=1.0 / math.sqrt(2),
-                resolution=self.world.resolution,
-            )
-        )
+        # self.world.add_obstacle(
+        #     DiamondSquare(
+        #         center=[-18.0, -18.0],
+        #         radius=1.0 / math.sqrt(2),
+        #         resolution=self.world.resolution,
+        #     )
+        # )
         self.world.add_obstacle(
             Rectangle(
                 lower_left=[-21.8, -16.5],
@@ -110,8 +110,8 @@ class FakeSimulationNode(Node):
     def dynamics(self):
         self.pose = np.array(
             [
-                self.pose[0] + self.u[0] * np.cos(self.pose[2]) * self.dt,
-                self.pose[1] + self.u[0] * np.sin(self.pose[2]) * self.dt,
+                self.pose[0] + self.u[0] * np.cos(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
+                self.pose[1] + self.u[0] * np.sin(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
                 self.pose[2] + self.u[1] * self.dt,
             ]
         )

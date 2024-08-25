@@ -78,7 +78,6 @@ class SEMPC(Node):
         self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
-        self.sample_iter = 0
         self.has_legend = False
 
     def get_optimistic_path(self, node, goal_node, init_node):
@@ -167,7 +166,7 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                offset = 0.3
+                offset = 0.02
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
@@ -793,6 +792,7 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
+            print("sum t: ", np.sum(U[:, -1]))
             self.apply_control(U[: self.Hm, :])
         val = (
             2
@@ -874,7 +874,7 @@ class SEMPC(Node):
         if self.params["agent"]["dynamics"] == "nova_carter":
             self.env.ax.set_xlim([-21.8, -9.0])
             self.env.ax.set_ylim([-21.8, -4.0])
-        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)

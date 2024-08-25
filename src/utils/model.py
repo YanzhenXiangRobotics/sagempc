@@ -5,9 +5,9 @@ from acados_template import AcadosModel
 
 def export_integrator_model(name):
     model = AcadosModel()
-    x = ca.SX.sym('x')
-    x_dot = u = ca.SX.sym('x_dot')
-    u = ca.SX.sym('u')
+    x = ca.SX.sym("x")
+    x_dot = u = ca.SX.sym("x_dot")
+    u = ca.SX.sym("u")
 
     model.f_expl_expr = u  # xdot=u
     model.f_impl_expr = x_dot - u  # xdot=u
@@ -21,17 +21,17 @@ def export_integrator_model(name):
 def export_n_integrator_model(name, n_order=4, x_dim=2):
     # x^n = A x + Bu
     model = AcadosModel()
-    x = ca.SX.sym('x', n_order*x_dim)
-    x_dot = ca.SX.sym('x_dot', n_order*x_dim)
-    u = ca.SX.sym('u', x_dim)
+    x = ca.SX.sym("x", n_order * x_dim)
+    x_dot = ca.SX.sym("x_dot", n_order * x_dim)
+    u = ca.SX.sym("u", x_dim)
 
     # for i in range(n_order):
 
-    A = np.diag(np.ones((n_order-1)*x_dim), x_dim)
-    B = np.zeros((n_order*x_dim, x_dim))
+    A = np.diag(np.ones((n_order - 1) * x_dim), x_dim)
+    B = np.zeros((n_order * x_dim, x_dim))
     np.fill_diagonal(np.fliplr(np.flipud(B)), 1)
 
-    f_expl = A@x + B@u
+    f_expl = A @ x + B @ u
     f_impl = x_dot - f_expl
 
     model.f_expl_expr = f_expl  # xdot=u
@@ -42,14 +42,15 @@ def export_n_integrator_model(name, n_order=4, x_dim=2):
     model.name = name
     return model
 
+
 def export_N_model():
-    
     return model
+
 
 def export_pendulum_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
     model = export_n_integrator_model(name, n_order, x_dim)
-    dT = ca.SX.sym('dt', 1)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -61,13 +62,13 @@ def export_pendulum_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
@@ -78,9 +79,9 @@ def export_pendulum_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
 
 def export_pendulum_ode_model_with_discrete_rk4_Lc(name, n_order=4, x_dim=2):
     model = export_n_integrator_model(name, n_order, x_dim)
-    dT = ca.SX.sym('dt', 1)
-    z = ca.SX.sym('z', x_dim)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    z = ca.SX.sym("z", x_dim)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -92,13 +93,13 @@ def export_pendulum_ode_model_with_discrete_rk4_Lc(name, n_order=4, x_dim=2):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
@@ -106,10 +107,11 @@ def export_pendulum_ode_model_with_discrete_rk4_Lc(name, n_order=4, x_dim=2):
     # print(xf)
     return model
 
+
 def export_NH_integrator_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
     model = export_NH_integrator_model(name)
-    dT = ca.SX.sym('dt', 1)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -121,13 +123,13 @@ def export_NH_integrator_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
@@ -139,12 +141,12 @@ def export_NH_integrator_ode_model_with_discrete_rk4(name, n_order=4, x_dim=2):
 def export_NH_integrator_model(name):
     # x^n = A x + Bu
     model = AcadosModel()
-    x = ca.SX.sym('x', 3)
-    x_dot = ca.SX.sym('x_dot', 3)
-    u = ca.SX.sym('u', 2)
+    x = ca.SX.sym("x", 3)
+    x_dot = ca.SX.sym("x_dot", 3)
+    u = ca.SX.sym("u", 2)
 
     # x_dot = V*cos(theta), V*sin(theta), omega
-    f_expl = ca.vertcat(u[0]*ca.cos(x[2]), u[0]*ca.sin(x[2]), u[1])
+    f_expl = ca.vertcat(u[0] * ca.cos(x[2]), u[0] * ca.sin(x[2]), u[1])
     f_impl = x_dot - f_expl
 
     model.f_expl_expr = f_expl  # xdot=u
@@ -155,10 +157,11 @@ def export_NH_integrator_model(name):
     model.name = name
     return model
 
+
 def export_robot_model_with_discrete_rk4(name):
     model = export_robot_model(name)
-    dT = ca.SX.sym('dt', 1)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -170,24 +173,25 @@ def export_robot_model_with_discrete_rk4(name):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
     # print("built RK4 for pendulum model with dT = ", dT)
     # print(xf)
     return model
+
 
 def export_unicycle_model_with_discrete_rk4(name):
     model = export_unicycle_model(name)
-    dT = ca.SX.sym('dt', 1)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -199,19 +203,20 @@ def export_unicycle_model_with_discrete_rk4(name):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
     # print("built RK4 for pendulum model with dT = ", dT)
     # print(xf)
     return model
+
 
 def export_robot_model(name) -> AcadosModel:
     # model_name = "unicycle_ode"
@@ -262,6 +267,7 @@ def export_robot_model(name) -> AcadosModel:
 
     return model
 
+
 def export_unicycle_model(name) -> AcadosModel:
     # model_name = "unicycle_ode"
 
@@ -272,7 +278,7 @@ def export_unicycle_model(name) -> AcadosModel:
     theta = ca.SX.sym("theta")
     theta_d = ca.SX.sym("theta_d")
 
-    x = ca.vertcat(x, y, theta,v)
+    x = ca.vertcat(x, y, theta, v)
 
     F = ca.SX.sym("F")
     T = ca.SX.sym("T")
@@ -314,8 +320,8 @@ def export_unicycle_model(name) -> AcadosModel:
 
 def export_bicycle_model_with_discrete_rk4(name):
     model = export_bicycle_model(name)
-    dT = ca.SX.sym('dt', 1)
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -327,19 +333,20 @@ def export_bicycle_model_with_discrete_rk4(name):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
     # print("built RK4 for pendulum model with dT = ", dT)
     # print(xf)
     return model
+
 
 def export_bicycle_model(name):
     model = AcadosModel()
@@ -364,10 +371,10 @@ def export_bicycle_model(name):
 
     xdot = ca.vertcat(x_dot, y_dot, phi_dot, v_dot)
     factor = 0.01
-    lf = 1.105*factor
-    lr = 1.738*factor
+    lf = 1.105 * factor
+    lr = 1.738 * factor
     # # dynamics
-    b = ca.atan(lr * ca.tan(delta) / (lf + lr))  
+    b = ca.atan(lr * ca.tan(delta) / (lf + lr))
     f_expl = ca.vertcat(v * ca.cos(phi + b), v * ca.sin(phi + b), v * ca.sin(b) / lr, a)
     # f_expl = ca.vertcat(v * ca.cos(phi), v * ca.sin(phi), v * ca.tan(delta) / (lr+lf), a)
     f_impl = xdot - f_expl
@@ -380,16 +387,22 @@ def export_bicycle_model(name):
     model.name = name
     return model
 
-def export_nova_carter_discrete():
 
+def export_nova_carter_discrete():
     model = AcadosModel()
     model.name = "nova_carter_discrete"
     model.x = ca.SX.sym("x", 4)
     model.u = ca.SX.sym("u", 3)
 
     model.disc_dyn_expr = ca.vertcat(
-        model.x[0] + model.u[0] * np.cos(model.x[2]) * model.u[-1],
-        model.x[1] + model.u[0] * np.sin(model.x[2]) * model.u[-1],
+        model.x[0]
+        + model.u[0]
+        * np.cos(model.x[2] + 0.5 * model.u[1] * model.u[-1])
+        * model.u[-1],
+        model.x[1]
+        + model.u[0]
+        * np.sin(model.x[2] + 0.5 * model.u[1] * model.u[-1])
+        * model.u[-1],
         model.x[2] + model.u[1] * model.u[-1],
         model.x[-1] + model.u[-1],
     )
@@ -397,13 +410,12 @@ def export_nova_carter_discrete():
     return model
 
 
-
 ##############################Lipchitz constant#############################################
 def export_unicycle_model_with_discrete_rk4_LC(name):
     model = export_unicycle_model(name)
-    dT = ca.SX.sym('dt', 1)
-    z = ca.SX.sym('z', 2) # z = [x,y]
-    T = ca.SX.sym('T', 1)
+    dT = ca.SX.sym("dt", 1)
+    z = ca.SX.sym("z", 2)  # z = [x,y]
+    T = ca.SX.sym("T", 1)
     x = model.x
     u = model.u
     model.x = ca.vertcat(x, T)
@@ -415,13 +427,13 @@ def export_unicycle_model_with_discrete_rk4_LC(name):
     model.f_expl_expr = f_expl
     model.f_impl_expr = xdot - f_expl
 
-    ode = ca.Function('ode', [x, u], [model.f_expl_expr])
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
     # set up RK4
-    k1 = ode(x,       u)
-    k2 = ode(x+dT/2*k1, u)
-    k3 = ode(x+dT/2*k2, u)
-    k4 = ode(x+dT*k3,  u)
-    xf = x + dT/6 * (k1 + 2*k2 + 2*k3 + k4)
+    k1 = ode(x, u)
+    k2 = ode(x + dT / 2 * k1, u)
+    k3 = ode(x + dT / 2 * k2, u)
+    k4 = ode(x + dT * k3, u)
+    xf = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
     model.xdot = xdot
     model.disc_dyn_expr = xf
@@ -429,8 +441,8 @@ def export_unicycle_model_with_discrete_rk4_LC(name):
     # print(xf)
     return model
 
-def export_nova_carter_discrete_Lc():
 
+def export_nova_carter_discrete_Lc():
     model = AcadosModel()
     model.name = "nova_carter_discrete_Lc"
     model.x = ca.SX.sym("x", 4)
@@ -446,6 +458,7 @@ def export_nova_carter_discrete_Lc():
     )
 
     return model
+
 
 def export_bicycle_model_with_discrete_rk4_Lc(name):
     model = export_bicycle_model_with_discrete_rk4(name)

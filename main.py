@@ -51,6 +51,9 @@ with open(dir_project + "/params/" + args.param + ".yaml") as file:
     params = yaml.load(file, Loader=yaml.FullLoader)
 params["env"]["i"] = args.i
 params["env"]["name"] = args.env
+if params["agent"]["dynamics"] == "nova_carter":
+    params["optimizer"]["dt"] = 0.035
+    # params["optimizer"]["dt"] = 0.9 * params["optimizer"]["Tf"] / params["optimizer"]["H"]
 print(params)
 
 # 2) Set the path and copy params from file
