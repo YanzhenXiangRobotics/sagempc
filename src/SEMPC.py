@@ -881,8 +881,8 @@ class SEMPC(Node):
         if self.params["agent"]["dynamics"] == "nova_carter":
             self.env.ax.set_xlim([-21.8, -9.0])
             self.env.ax.set_ylim([-21.8, -4.0])
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
