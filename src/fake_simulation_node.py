@@ -126,6 +126,8 @@ class FakeSimulationNode(Node):
             #     print(self.u)
             self.dynamics()
             min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
+            min_dist += np.random.uniform(-0.05, 0.05)
+            min_dist_angle += np.random.uniform(-0.1, 0.1)
             data_to_send = np.concatenate(
                 (
                     self.pose,

@@ -879,8 +879,11 @@ class SEMPC(Node):
             self.env.ax.legend(handles=self.env.legend_handles)
             self.has_legend = True
         if self.params["agent"]["dynamics"] == "nova_carter":
-            self.env.ax.set_xlim([-21.8, -9.0])
-            self.env.ax.set_ylim([-21.8, -4.0])
+            # self.env.ax.set_xlim([-21.8, -9.0])
+            # self.env.ax.set_ylim([-21.8, -4.0])
+            self.env.ax.set_xlim([-21.0, -18.0])
+            self.env.ax.set_ylim([-16.0, -14.0])
+            self.env.ax.grid()
         self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))

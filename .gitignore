@@ -6,7 +6,7 @@ utils/__pycache__/
 # C extensions
 *.so
 
-experiments/
+# experiments/
 meeting/
 extra/
 openweathermap/
@@ -138,7 +138,7 @@ MPC_V0*
 *.o
 *.h
 settings.json
-*.png
+# *.png
 
 Nova_Carter_ROS.usd
 MPC_V0_env_*

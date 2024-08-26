@@ -1,0 +1,27 @@
+Cx_beta: 1.5
+Cx_lengthscale: 1.0
+Cx_noise: 0.001
+Fx_beta: 1.5
+Fx_lengthscale: 3.0
+Fx_noise: 0.001
+block_env: true
+compute_true_Lipschitz: false
+cov_module: Matern
+env_file_name: env_data.pkl
+generate: true
+goal_loc:
+- -20.0
+- -1
+i: 8
+n_players: 1
+name: 0
+shape:
+  x: 120
+  y: 120
+start:
+- -21.8
+- -21.8
+start_angle: 3.14159
+start_loc:
+- -20.0
+- -16.0
