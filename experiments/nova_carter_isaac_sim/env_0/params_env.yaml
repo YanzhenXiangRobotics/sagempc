@@ -10,8 +10,8 @@ cov_module: Matern
 env_file_name: env_data.pkl
 generate: true
 goal_loc:
-- -20.0
-- -1
+- -16.0
+- -12.0
 i: 8
 n_players: 1
 name: 0

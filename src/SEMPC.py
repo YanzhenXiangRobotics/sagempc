@@ -723,7 +723,7 @@ class SEMPC(Node):
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
-        self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 = x_curr.copy()       
+        self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 = x_curr.copy()
         if self.params["algo"]["type"] == "MPC_Xn":
             pass
             # st_lb = np.zeros(self.state_dim+1)
@@ -881,8 +881,16 @@ class SEMPC(Node):
         if self.params["agent"]["dynamics"] == "nova_carter":
             # self.env.ax.set_xlim([-21.8, -9.0])
             # self.env.ax.set_ylim([-21.8, -4.0])
-            self.env.ax.set_xlim([-21.0, -18.0])
-            self.env.ax.set_ylim([-16.0, -14.0])
+
+            self.env.ax.set_xlim(
+                [
+                    self.params["env"]["start"][0],
+                    self.params["env"]["goal_loc"][0] + 2.0,
+                ]
+            )
+            self.env.ax.set_ylim(
+                [self.params["env"]["start_loc"][1], self.params["env"]["goal_loc"][1]]
+            )
             self.env.ax.grid()
         self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))

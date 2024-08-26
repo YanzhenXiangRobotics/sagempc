@@ -55,7 +55,9 @@ class MeasurementNode(Node):
         self.min_dist_subscriber = self.create_subscription(
             LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         )
-        self.timer = self.create_timer(1 / 100, self.on_timer)
+        self.sim_time_subscriber = self.create_subscription(
+            Float64, "/sim_time", self.sim_time_listener_callback, 10
+        )
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
@@ -67,6 +69,14 @@ class MeasurementNode(Node):
         self.s.listen(5)
 
         self.begin = time.time()
+
+    def _angle_helper(self, angle):
+        if angle >= math.pi:
+            return self._angle_helper(angle - 2 * math.pi)
+        elif angle < -math.pi:
+            return self._angle_helper(angle + 2 * math.pi)
+        else:
+            return angle
 
     def get_pose_3D(self):
         od_2_cl = self.tf_buffer.lookup_transform(
@@ -81,18 +91,21 @@ class MeasurementNode(Node):
             np.array(params["start_loc"]), params_0["env"]["start_angle"]
         )
         pose_3D += np.array(start_pose)
+        pose_3D[-1] = self._angle_helper(pose_3D[-1])
 
         return pose_3D
 
-    def on_timer(self):
+    def sim_time_listener_callback(self, msg):
+        sim_time = msg.data
         if self.min_dist != -1.0:
             try:
                 self.pose_3D = self.get_pose_3D()
                 data_to_send = np.concatenate(
                     (
                         self.pose_3D,
-                        np.array(self.min_dist_angle),
+                        np.array([self.min_dist_angle]),
                         np.array([self.min_dist]),
+                        np.array([sim_time]),
                     )
                 )
 
@@ -111,10 +124,13 @@ class MeasurementNode(Node):
             ranges = np.array(msg.ranges)
             ranges = ranges[np.nonzero(ranges)]
             min_dist_idx = np.argmin(ranges)
+            self.min_dist = ranges[min_dist_idx]
             self.min_dist_angle = (
-                -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
+                - msg.angle_increment * min_dist_idx + self.pose_3D[-1]
+                # -math.pi + msg.angle_increment * min_dist_idx
             )
-            self.min_dist = ranges(self.min_dist_idx)
+            self.min_dist_angle = self._angle_helper(self.min_dist_angle)
+
         except Exception as e:
             print(e)
 
