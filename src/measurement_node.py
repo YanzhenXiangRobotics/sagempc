@@ -122,11 +122,13 @@ class MeasurementNode(Node):
     def min_dist_listener_callback(self, msg):
         try:
             ranges = np.array(msg.ranges)
-            ranges = ranges[np.nonzero(ranges)]
+            # choice = np.round(np.linspace(1, len(ranges)-1, num=36)).astype(int)
+            # print(ranges[choice], "\n\n")
+            ranges[ranges==0.0] += 1e3
             min_dist_idx = np.argmin(ranges)
             self.min_dist = ranges[min_dist_idx]
             self.min_dist_angle = (
-                - msg.angle_increment * min_dist_idx + self.pose_3D[-1]
+                -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
                 # -math.pi + msg.angle_increment * min_dist_idx
             )
             self.min_dist_angle = self._angle_helper(self.min_dist_angle)

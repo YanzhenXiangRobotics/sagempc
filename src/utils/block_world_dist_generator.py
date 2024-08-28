@@ -33,7 +33,7 @@ ax.grid(True)
 ax.set_xlim([world.bbox[0], world.bbox[2]])
 ax.set_ylim([world.bbox[1], world.bbox[3]])
 ax.contour(X1, X2, min_dist_list_2D, levels=[0])
-show = False
+show = True
 if show:
     plt.show()
 
