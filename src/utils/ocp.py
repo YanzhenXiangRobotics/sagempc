@@ -252,11 +252,11 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
     cw = ca.SX.sym("cw", 1, 1)
 
     q_th = params["common"]["constraint"]
-    var = (
-        ub_cx_lin
-        + ub_cx_grad.T @ (model_x - x_lin)[:x_dim]
-        - (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim])
-    )
+    # var = (
+    #     ub_cx_lin
+    #     + ub_cx_grad.T @ (model_x - x_lin)[:x_dim]
+    #     - (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim])
+    # )
     if (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
@@ -346,22 +346,19 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         )
     else:
         p_lin = ca.vertcat(
-            lb_cx_lin, lb_cx_grad, x_lin, xg, w, x_terminal, ub_cx_lin, ub_cx_grad, cw
+            lb_cx_lin, x_lin, xg, w, x_terminal, cw
         )
-        model.con_h_expr = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th, cw * var
-        )
-        model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        )
-        # model.con_h_expr_e = ca.vertcat(model_x - model.disc_dyn_expr[:-1])
-        # model.con_h_expr_e = ca.vertcat(model_x - model.f_expl_expr[:-1])
-    # model.con_h_expr = ca.vertcat(lb_cx_lin +
-    #                               lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
-    # model.con_h_expr_e = ca.vertcat(lb_cx_lin +
-    #                                 lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
+        model.con_h_expr = (model_x - x_lin)[:x_dim].T@(model_x - x_lin)[:x_dim] - (lb_cx_lin - q_th)**2
+        model.con_h_expr_e = (model_x - x_lin)[:x_dim].T@(model_x - x_lin)[:x_dim] - (lb_cx_lin - q_th)**2
+        # model.con_h_expr = ca.vertcat(
+        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th, cw * var
+        # )
+        # model.con_h_expr_e = ca.vertcat(
+        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
+        # )
     model.p = p_lin
-    return_tuple = (model, w, xg, var)
+    # return_tuple = (model, w, xg, var)
+    return_tuple = (model, w, xg)
     if (
         params["algo"]["type"] == "ret_expander"
         or params["algo"]["type"] == "MPC_expander"
@@ -371,7 +368,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
     return return_tuple
 
 
-def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
+def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, params):
     q = 1e-3 * np.diag(np.ones(x_dim))
     # qx = np.diag(np.ones(x_dim))
     qx = 1e3 * np.diag(np.ones(x_dim))
@@ -497,8 +494,10 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         ocp.constraints.lh = np.array([0, eps, -1e8])
         ocp.constraints.uh = np.array([10.0, 1e8, l_max])
     else:
-        ocp.constraints.lh = np.array([0, eps])
-        ocp.constraints.uh = np.array([10.0, 1e8])
+        # ocp.constraints.lh = np.array([0, eps])
+        # ocp.constraints.uh = np.array([10.0, 1e8])
+        ocp.constraints.lh = np.array([0.0])
+        ocp.constraints.uh = np.array([10.0])
     ocp.constraints.lh_e = np.array([0.0])
     ocp.constraints.uh_e = np.array([10.0])
 
@@ -610,11 +609,11 @@ def export_sempc_ocp(params):
     ):
         model, w, xg, var, x_lin, z_lin = return_tuple
     else:
-        model, w, xg, var = return_tuple
+        model, w, xg = return_tuple
 
     ocp.model = model
 
-    ocp = sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params)
+    ocp = sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, params)
 
     ocp = sempc_const_val(ocp, params, x_dim, n_order)
 

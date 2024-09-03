@@ -160,24 +160,24 @@ class SEMPC_solver(object):
                 lower,
                 levels=[self.params["common"]["constraint"]],
                 colors="blue",
-                linewidths=0.5,
+                linewidth=3.0,
             )
             self.threeD_tmps.append(pessi_contour)
             (artists,), _ = pessi_contour.legend_elements()
             artists.set_label("pessimistic contour")
             self.legend_handles.append(artists)
-            mean_contour = self.ax.contour(
-                X1,
-                X2,
-                mean,
-                levels=[self.params["common"]["constraint"]],
-                colors="pink",
-                linewidths=0.5,
-            )
-            self.threeD_tmps.append(mean_contour)
-            (artists,), _ = mean_contour.legend_elements()
-            artists.set_label("mean contour")
-            self.legend_handles.append(artists)
+            # mean_contour = self.ax.contour(
+            #     X1,
+            #     X2,
+            #     mean,
+            #     levels=[self.params["common"]["constraint"]],
+            #     colors="pink",
+            #     linewidths=0.5,
+            # )
+            # self.threeD_tmps.append(mean_contour)
+            # (artists,), _ = mean_contour.legend_elements()
+            # artists.set_label("mean contour")
+            # self.legend_handles.append(artists)
             if (
                 self.params["algo"]["type"] == "MPC_expander"
                 or self.params["algo"]["type"] == "MPC_expander_V0"
@@ -244,21 +244,21 @@ class SEMPC_solver(object):
         #     )
         # )
 
-    def solve(self, player, sim_iter):
+    def solve(self, player, sim_iter, x_curr):
         # #publish msg of all 0
         # msg = Twist()
         # self.publisher.publish(msg)
 
-        x_h = np.zeros((self.H + 1, self.state_dim + 1))
-        z_h = np.zeros((self.H + 1, self.x_dim))
-        if (
-            self.params["algo"]["type"] == "ret_expander"
-            or self.params["algo"]["type"] == "MPC_expander"
-            or self.params["algo"]["type"] == "MPC_expander_V0"
-        ):
-            u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
-        else:
-            u_h = np.zeros((self.H, self.x_dim + 1))  # u_dim
+        # x_h = np.zeros((self.H + 1, self.state_dim + 1))
+        # z_h = np.zeros((self.H + 1, self.x_dim))
+        # if (
+        #     self.params["algo"]["type"] == "ret_expander"
+        #     or self.params["algo"]["type"] == "MPC_expander"
+        #     or self.params["algo"]["type"] == "MPC_expander_V0"
+        # ):
+        #     u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
+        # else:
+        #     u_h = np.zeros((self.H, self.x_dim + 1))  # u_dim
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
         we[int(self.H - 1)] = 10000
@@ -271,128 +271,147 @@ class SEMPC_solver(object):
         x_origin = player.origin[: self.x_dim].numpy()
         x_terminal = np.zeros(self.state_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
-        for sqp_iter in range(self.max_sqp_iter):
-            self.ocp_solver.options_set("rti_phase", 1)
-            if (
-                self.params["algo"]["type"] == "ret"
-                or self.params["algo"]["type"] == "ret_expander"
-            ):
-                if player.goal_in_pessi:
-                    x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
-                else:
-                    for stage in range(self.H):
-                        # current stage values
-                        x_h[stage, :] = self.ocp_solver.get(stage, "x")
-                        u_h[stage, :] = self.ocp_solver.get(stage, "u")
-                    x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
-            else:
-                #    pass
-                x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
-                # if sqp_iter == 0:
-                #     print(x_h, u_h)
-                if self.params["algo"]["init"] == "discrete":
-                    self.path_init(player.solver_init_path)
 
-            gp_val, gp_grad = player.get_gp_sensitivities(
-                x_h[:, : self.x_dim], "LB", "Cx"
-            )  # pessimitic safe location
-            UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
-                x_h[:, : self.x_dim], "UB", "Cx"
-            )  # optimistic safe location
-            if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-                sqp_iter == (self.max_sqp_iter - 1)
-            ):
-                self.plot_3D(player)
-                self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
-            if (
-                self.params["algo"]["type"] == "ret_expander"
-                or self.params["algo"]["type"] == "MPC_expander"
-                or self.params["algo"]["type"] == "MPC_expander_V0"
-            ):
-                LB_cz_val, LB_cz_grad = player.get_gp_sensitivities(
-                    u_h[:, -self.x_dim :], "LB", "Cx"
-                )
-                for stage in range(self.H):
-                    self.ocp_solver.set(
-                        stage,
-                        "p",
-                        np.hstack(
-                            (
-                                gp_val[stage],
-                                gp_grad[stage],
-                                x_h[stage, : self.state_dim],
-                                xg[stage],
-                                w[stage],
-                                x_terminal,
-                                UB_cx_val[stage],
-                                UB_cx_grad[stage],
-                                cw[stage],
-                                u_h[stage, -self.x_dim :],
-                                LB_cz_val[stage],
-                                LB_cz_grad[stage],
-                            )
-                        ),
+        gp_val, _ = player.get_gp_sensitivities(
+                x_curr.reshape(1, -1)[:, :self.x_dim], "LB", "Cx"
+            ) 
+        for stage in range(self.H + 1):
+            self.ocp_solver.set(
+                stage,
+                "p",
+                np.hstack(
+                    (
+                        gp_val,
+                        x_curr,
+                        xg[stage],
+                        w[stage],
+                        x_terminal,
+                        cw[stage],
                     )
-                stage = self.H  # stage already is at self.H
-                self.ocp_solver.set(
-                    stage,
-                    "p",
-                    np.hstack(
-                        (
-                            gp_val[stage],
-                            gp_grad[stage],
-                            x_h[stage, : self.state_dim],
-                            xg[stage],
-                            w[stage],
-                            x_terminal,
-                            UB_cx_val[stage],
-                            UB_cx_grad[stage],
-                            cw[stage],
-                            u_h[stage - 1, -self.x_dim :],
-                            LB_cz_val[stage - 1],
-                            LB_cz_grad[stage - 1],
-                        )
-                    ),
-                )  # last 3 "stage-1" are dummy values
-            elif self.params["algo"]["type"] == "MPC_Xn":
-                for stage in range(self.H + 1):
-                    self.ocp_solver.set(
-                        stage,
-                        "p",
-                        np.hstack(
-                            (
-                                gp_val[stage],
-                                gp_grad[stage],
-                                x_h[stage, : self.state_dim],
-                                xg[stage],
-                                w[stage],
-                                x_terminal,
-                                UB_cx_val[stage],
-                                UB_cx_grad[stage],
-                                cw[stage],
-                                we[stage],
-                            )
-                        ),
-                    )
-            else:
-                for stage in range(self.H + 1):
-                    self.ocp_solver.set(
-                        stage,
-                        "p",
-                        np.hstack(
-                            (
-                                gp_val[stage],
-                                gp_grad[stage],
-                                x_h[stage, : self.state_dim],
-                                xg[stage],
-                                w[stage],
-                                x_terminal,
-                                UB_cx_val[stage],
-                                UB_cx_grad[stage],
-                                cw[stage],
-                            )
-                        ),
-                    )
+                ),
+            )
+        # for sqp_iter in range(self.max_sqp_iter):
+        #     self.ocp_solver.options_set("rti_phase", 1)
+        #     if (
+        #         self.params["algo"]["type"] == "ret"
+        #         or self.params["algo"]["type"] == "ret_expander"
+        #     ):
+        #         if player.goal_in_pessi:
+        #             x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
+        #         else:
+        #             for stage in range(self.H):
+        #                 # current stage values
+        #                 x_h[stage, :] = self.ocp_solver.get(stage, "x")
+        #                 u_h[stage, :] = self.ocp_solver.get(stage, "u")
+        #             x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
+        #     else:
+        #         #    pass
+        #         x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
+        #         # if sqp_iter == 0:
+        #         #     print(x_h, u_h)
+        #         if self.params["algo"]["init"] == "discrete":
+        #             self.path_init(player.solver_init_path)
+
+        #     gp_val, gp_grad = player.get_gp_sensitivities(
+        #         x_h[:, : self.x_dim], "LB", "Cx"
+        #     )  # pessimitic safe location
+        #     UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
+        #         x_h[:, : self.x_dim], "UB", "Cx"
+        #     )  # optimistic safe location
+        #     if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
+        #         sqp_iter == (self.max_sqp_iter - 1)
+        #     ):
+        #         self.plot_3D(player)
+        #         self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
+        #     if (
+        #         self.params["algo"]["type"] == "ret_expander"
+        #         or self.params["algo"]["type"] == "MPC_expander"
+        #         or self.params["algo"]["type"] == "MPC_expander_V0"
+        #     ):
+        #         LB_cz_val, LB_cz_grad = player.get_gp_sensitivities(
+        #             u_h[:, -self.x_dim :], "LB", "Cx"
+        #         )
+        #         for stage in range(self.H):
+        #             self.ocp_solver.set(
+        #                 stage,
+        #                 "p",
+        #                 np.hstack(
+        #                     (
+        #                         gp_val[stage],
+        #                         gp_grad[stage],
+        #                         x_h[stage, : self.state_dim],
+        #                         xg[stage],
+        #                         w[stage],
+        #                         x_terminal,
+        #                         UB_cx_val[stage],
+        #                         UB_cx_grad[stage],
+        #                         cw[stage],
+        #                         u_h[stage, -self.x_dim :],
+        #                         LB_cz_val[stage],
+        #                         LB_cz_grad[stage],
+        #                     )
+        #                 ),
+        #             )
+        #         stage = self.H  # stage already is at self.H
+        #         self.ocp_solver.set(
+        #             stage,
+        #             "p",
+        #             np.hstack(
+        #                 (
+        #                     gp_val[stage],
+        #                     gp_grad[stage],
+        #                     x_h[stage, : self.state_dim],
+        #                     xg[stage],
+        #                     w[stage],
+        #                     x_terminal,
+        #                     UB_cx_val[stage],
+        #                     UB_cx_grad[stage],
+        #                     cw[stage],
+        #                     u_h[stage - 1, -self.x_dim :],
+        #                     LB_cz_val[stage - 1],
+        #                     LB_cz_grad[stage - 1],
+        #                 )
+        #             ),
+        #         )  # last 3 "stage-1" are dummy values
+        #     elif self.params["algo"]["type"] == "MPC_Xn":
+        #         for stage in range(self.H + 1):
+        #             self.ocp_solver.set(
+        #                 stage,
+        #                 "p",
+        #                 np.hstack(
+        #                     (
+        #                         gp_val[stage],
+        #                         gp_grad[stage],
+        #                         x_h[stage, : self.state_dim],
+        #                         xg[stage],
+        #                         w[stage],
+        #                         x_terminal,
+        #                         UB_cx_val[stage],
+        #                         UB_cx_grad[stage],
+        #                         cw[stage],
+        #                         we[stage],
+        #                     )
+        #                 ),
+        #             )
+        #     else:
+        #         for stage in range(self.H + 1):
+        #             self.ocp_solver.set(
+        #                 stage,
+        #                 "p",
+        #                 np.hstack(
+        #                     (
+        #                         gp_val[stage],
+        #                         gp_grad[stage],
+        #                         x_h[stage, : self.state_dim],
+        #                         xg[stage],
+        #                         w[stage],
+        #                         x_terminal,
+        #                         UB_cx_val[stage],
+        #                         UB_cx_grad[stage],
+        #                         cw[stage],
+        #                     )
+        #                 ),
+        #             )
             status = self.ocp_solver.solve()
 
             self.ocp_solver.options_set("rti_phase", 2)
@@ -401,9 +420,12 @@ class SEMPC_solver(object):
             t_1 = timeit.default_timer()
             # self.ocp_solver.print_statistics()
             # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
+            print("cost", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
+            sqp_iter = 0
+            self.max_sqp_iter = 1
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -475,9 +497,9 @@ class SEMPC_solver(object):
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
         if sqp_iter == self.max_sqp_iter - 1:
-            (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5)
+            (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c="red", linewidth=3.0)
             tmp_1 = self.ax.scatter(
-                X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30
+                X[self.Hm, 0], X[self.Hm, 1], c="red", marker="x", s=100
             )
             self.plot_tmps.append(tmp_0)
             self.scatter_tmps.append(tmp_1)

@@ -174,20 +174,20 @@ class SEMPC(Node):
             intersect_pessi_opti_plot = (
                 intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
             )
-            tmp_0 = self.env.ax.contour(
-                X1,
-                X2,
-                intersect_pessi_opti_plot,
-                levels=[self.params["common"]["constraint"]],
-                colors="green",
-                linewidths=0.5,
-            )
+            # tmp_0 = self.env.ax.contour(
+            #     X1,
+            #     X2,
+            #     intersect_pessi_opti_plot,
+            #     levels=[self.params["common"]["constraint"]],
+            #     colors="green",
+            #     linewidths=0.5,
+            # )
             # tmp_0.collections[0].set_label("optimistic contour")
-            (artists,), _ = tmp_0.legend_elements()
-            artists.set_label(
-                "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
-            )
-            self.env.legend_handles.append(artists)
+            # (artists,), _ = tmp_0.legend_elements()
+            # artists.set_label(
+            #     "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
+            # )
+            # self.env.legend_handles.append(artists)
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -235,20 +235,20 @@ class SEMPC(Node):
             self.players[self.pl_idx].set_maximizer_goal(xi_star)
             w = 100
 
-            (tmp_1,) = self.env.ax.plot(
-                self.visu.opti_path[:, 0],
-                self.visu.opti_path[:, 1],
-                c="violet",
-                linewidth=0.5,
-                label="A* path",
-            )
-            tmp_2 = self.env.ax.scatter(
-                xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
-            )
-            self.sempc_solver.threeD_tmps.append(tmp_0)
-            self.sempc_solver.plot_tmps.append(tmp_1)
-            self.sempc_solver.scatter_tmps.append(tmp_2)
-            self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
+            # (tmp_1,) = self.env.ax.plot(
+            #     self.visu.opti_path[:, 0],
+            #     self.visu.opti_path[:, 1],
+            #     c="violet",
+            #     linewidth=0.5,
+            #     label="A* path",
+            # )
+            # tmp_2 = self.env.ax.scatter(
+            #     xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
+            # )
+            # self.sempc_solver.threeD_tmps.append(tmp_0)
+            # self.sempc_solver.plot_tmps.append(tmp_1)
+            # self.sempc_solver.scatter_tmps.append(tmp_2)
+            # self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
             # self.env.fig.savefig("t.png")
             # tmp_0.remove()
             # tmp_1.pop(0).remove()
@@ -791,10 +791,18 @@ class SEMPC(Node):
             #     # pt_in_exp_ub[:self.x_dim] = self.players[self.pl_idx].get_next_to_go_loc() + 0.01
             #     self.sempc_solver.ocp_solver.set(self.Hm, "lbx", pt_in_exp_lb)
             #     self.sempc_solver.ocp_solver.set(self.Hm, "ubx", pt_in_exp_ub)
-
+        self.env.legend_handles.append(
+            self.env.ax.scatter(
+                self.x_curr[0],
+                self.x_curr[1],
+                color="black",
+                s=50,
+                label="actual trajectory",
+            )
+        )
         # set objective as per desired goal
         start_time = time.time()
-        self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
+        self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter, self.x_curr)
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
@@ -857,41 +865,41 @@ class SEMPC(Node):
         # self.visu.f_handle["dyn"].savefig("temp1D.png")
         # self.visu.f_handle["gp"].savefig(
         #     str(self.iter) + 'temp in prog2.png')
-        if self.use_isaac_sim:
-            self.env.legend_handles.append(
-                self.env.ax.scatter(
-                    self.x_curr[0],
-                    self.x_curr[1],
-                    color="red",
-                    s=3,
-                    label="actual trajectory",
-                )
-            )
-        else:
-            self.env.legend_handles.append(
-                self.env.ax.scatter(
-                    x_curr[0], x_curr[1], color="red", s=3, label="actual trajectory"
-                )
-            )
+        # if self.use_isaac_sim:
+        #     self.env.legend_handles.append(
+        #         self.env.ax.scatter(
+        #             self.x_curr[0],
+        #             self.x_curr[1],
+        #             color="black",
+        #             s=30,
+        #             label="actual trajectory",
+        #         )
+        #     )
+        # else:
+        #     self.env.legend_handles.append(
+        #         self.env.ax.scatter(
+        #             x_curr[0], x_curr[1], color="red", s=3, label="actual trajectory"
+        #         )
+        #     )
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         if not self.has_legend:
             # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
-            self.env.ax.legend(handles=self.env.legend_handles)
+            # self.env.ax.legend(handles=self.env.legend_handles)
             self.has_legend = True
         if self.params["agent"]["dynamics"] == "nova_carter":
-            # self.env.ax.set_xlim([-21.8, -9.0])
-            # self.env.ax.set_ylim([-21.8, -4.0])
+            self.env.ax.set_xlim([-21.8, -17.0])
+            self.env.ax.set_ylim([-17.0, -14.0])
 
-            self.env.ax.set_xlim(
-                [
-                    self.params["env"]["start"][0],
-                    self.params["env"]["goal_loc"][0] + 2.0,
-                ]
-            )
-            self.env.ax.set_ylim(
-                [self.params["env"]["start_loc"][1], self.params["env"]["goal_loc"][1]]
-            )
-            self.env.ax.grid()
+            # self.env.ax.set_xlim(
+            #     [
+            #         self.params["env"]["start"][0],
+            #         self.params["env"]["goal_loc"][0] + 2.0,
+            #     ]
+            # )
+            # self.env.ax.set_ylim(
+            #     [self.params["env"]["start_loc"][1], self.params["env"]["goal_loc"][1]]
+            # )
+            # self.env.ax.grid()
         self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))

@@ -30,8 +30,10 @@ ax_3D.plot_surface(X1, X2, min_dist_list_2D)
 fig, ax = plt.subplots()
 ax.set_aspect("equal", adjustable="box")
 ax.grid(True)
-ax.set_xlim([world.bbox[0], world.bbox[2]])
-ax.set_ylim([world.bbox[1], world.bbox[3]])
+ax.set_xlim([world.bbox[0], -14])
+ax.set_ylim([world.bbox[1], -12])
+# ax_3D.set_xlim([world.bbox[0], -14])
+# ax_3D.set_ylim([world.bbox[1], -12])
 ax.contour(X1, X2, min_dist_list_2D, levels=[0])
 show = True
 if show:
@@ -78,7 +80,7 @@ if train_gp:
             )
         optimizer.step()
 
-store = True
+store = False
 if store:
     import pickle
 

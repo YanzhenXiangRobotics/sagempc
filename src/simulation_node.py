@@ -1,7 +1,7 @@
 from isaacsim import SimulationApp
 
 # Example ROS2 bridge sample showing manual control over messages
-simulation_app = SimulationApp({"renderer": "RayTracedLighting", "headless": False})
+simulation_app = SimulationApp({"headless": True})
 import carb
 import omni
 import omni.graph.core as og
@@ -55,10 +55,13 @@ class SimTimeNode(Node):
 
 rclpy.init()
 sim_time_node = SimTimeNode()
+last_t = -1.0
 while True:
     simulation_context.step()
     t = simulation_context.current_time
-    print(t)
+    if t - last_t > 1.0:
+        print(t)
+        last_t = t
     sim_time_msg = Float64()
     sim_time_msg.data = t
     sim_time_node.publisher.publish(sim_time_msg)

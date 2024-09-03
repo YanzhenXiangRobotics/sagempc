@@ -6,7 +6,6 @@ import warnings
 from datetime import datetime
 
 import casadi as ca
-import gpytorch
 import matplotlib.pyplot as plt
 import torch
 import yaml

@@ -68,20 +68,20 @@ class FakeSimulationNode(Node):
         self.world = World(bbox=start + end, resolution=step_size)
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-18.5, -22.0],
-                upper_right=[-11.0, -15.5],
+                lower_left=[-16.0, -22.0],
+                upper_right=[-6.0, -15.5],
                 resolution=self.world.resolution,
             )
         )
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-20.8, -14.0],
-                upper_right=[-16.0, -13.0],
+                lower_left=[-21.8, -14.0],
+                upper_right=[-16.0, -4.0],
                 resolution=self.world.resolution,
             )
         )
         # self.world.add_obstacle(Circle(center=[0.0, 2.5], radius=2.0, resolution=self.world.resolution))
-        # self.world.add_obstacle(
+        # self.world.add_obstacle(  
         #     DiamondSquare(
         #         center=[-18.0, -18.0],
         #         radius=1.0 / math.sqrt(2),
@@ -126,8 +126,8 @@ class FakeSimulationNode(Node):
             #     print(self.u)
             self.dynamics()
             min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
-            min_dist += np.random.uniform(-0.05, 0.05)
-            min_dist_angle += np.random.uniform(-0.1, 0.1)
+            # min_dist += np.random.uniform(-0.05, 0.05)
+            # min_dist_angle += np.random.uniform(-0.1, 0.1)
             data_to_send = np.concatenate(
                 (
                     self.pose,

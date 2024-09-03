@@ -208,7 +208,9 @@ class ContiWorld:
             self.x.numpy(),
             self.y.numpy(),
             posterior_mean,
-            np.array([self.constraint, self.constraint + self.epsilon]),
+            # np.array([self.constraint, self.constraint + self.epsilon]),
+            np.array([self.constraint]),
+            linewidth=1.5
         )
 
         (start_loc,) = self.ax.plot(
