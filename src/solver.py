@@ -290,210 +290,88 @@ class SEMPC_solver(object):
                     )
                 ),
             )
-        # for sqp_iter in range(self.max_sqp_iter):
-        #     self.ocp_solver.options_set("rti_phase", 1)
-        #     if (
-        #         self.params["algo"]["type"] == "ret"
-        #         or self.params["algo"]["type"] == "ret_expander"
-        #     ):
-        #         if player.goal_in_pessi:
-        #             x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
+        status = self.ocp_solver.solve()
+
+        self.ocp_solver.options_set("rti_phase", 2)
+        t_0 = timeit.default_timer()
+        status = self.ocp_solver.solve()
+        t_1 = timeit.default_timer()
+        # self.ocp_solver.print_statistics()
+        # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
+        print("cost", self.ocp_solver.get_cost())
+        residuals = self.ocp_solver.get_residuals()
+
+        X, U, Sl = self.get_solution()
+        sqp_iter = 0
+        self.max_sqp_iter = 1
+        if (
+            self.params["algo"]["type"] == "ret_expander"
+            or self.params["algo"]["type"] == "MPC_expander"
+            or self.params["algo"]["type"] == "MPC_expander_V0"
+        ):
+            self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
+        else:
+            self.plot_sqp_sol(sqp_iter, X)
+        # print(X)
+        # for stage in range(self.H):
+        #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
+        # if sqp_iter == (self.max_sqp_iter - 1):
+        #     if self.params["visu"]["show"]:
+        #         plt.figure(2)
+        #         if (
+        #             self.params["algo"]["type"] == "ret_expander"
+        #             or self.params["algo"]["type"] == "MPC_expander"
+        #             or self.params["algo"]["type"] == "MPC_expander_V0"
+        #         ):
+        #             plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
+        #             plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
         #         else:
-        #             for stage in range(self.H):
-        #                 # current stage values
-        #                 x_h[stage, :] = self.ocp_solver.get(stage, "x")
-        #                 u_h[stage, :] = self.ocp_solver.get(stage, "u")
-        #             x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
-        #     else:
-        #         #    pass
-        #         x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
-        #         # if sqp_iter == 0:
-        #         #     print(x_h, u_h)
-        #         if self.params["algo"]["init"] == "discrete":
-        #             self.path_init(player.solver_init_path)
-
-        #     gp_val, gp_grad = player.get_gp_sensitivities(
-        #         x_h[:, : self.x_dim], "LB", "Cx"
-        #     )  # pessimitic safe location
-        #     UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
-        #         x_h[:, : self.x_dim], "UB", "Cx"
-        #     )  # optimistic safe location
-        #     if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-        #         sqp_iter == (self.max_sqp_iter - 1)
-        #     ):
-        #         self.plot_3D(player)
-        #         self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
-        #     if (
-        #         self.params["algo"]["type"] == "ret_expander"
-        #         or self.params["algo"]["type"] == "MPC_expander"
-        #         or self.params["algo"]["type"] == "MPC_expander_V0"
-        #     ):
-        #         LB_cz_val, LB_cz_grad = player.get_gp_sensitivities(
-        #             u_h[:, -self.x_dim :], "LB", "Cx"
+        #             plt.plot(X[:, 0], X[:, 1], color="tab:green")
+        #         plt.xlim(
+        #             self.params["env"]["start"],
+        #             self.params["env"]["start"]
+        #             + self.params["visu"]["step_size"]
+        #             * self.params["env"]["shape"]["x"],
         #         )
-        #         for stage in range(self.H):
-        #             self.ocp_solver.set(
-        #                 stage,
-        #                 "p",
-        #                 np.hstack(
-        #                     (
-        #                         gp_val[stage],
-        #                         gp_grad[stage],
-        #                         x_h[stage, : self.state_dim],
-        #                         xg[stage],
-        #                         w[stage],
-        #                         x_terminal,
-        #                         UB_cx_val[stage],
-        #                         UB_cx_grad[stage],
-        #                         cw[stage],
-        #                         u_h[stage, -self.x_dim :],
-        #                         LB_cz_val[stage],
-        #                         LB_cz_grad[stage],
-        #                     )
-        #                 ),
-        #             )
-        #         stage = self.H  # stage already is at self.H
-        #         self.ocp_solver.set(
-        #             stage,
-        #             "p",
-        #             np.hstack(
-        #                 (
-        #                     gp_val[stage],
-        #                     gp_grad[stage],
-        #                     x_h[stage, : self.state_dim],
-        #                     xg[stage],
-        #                     w[stage],
-        #                     x_terminal,
-        #                     UB_cx_val[stage],
-        #                     UB_cx_grad[stage],
-        #                     cw[stage],
-        #                     u_h[stage - 1, -self.x_dim :],
-        #                     LB_cz_val[stage - 1],
-        #                     LB_cz_grad[stage - 1],
-        #                 )
-        #             ),
-        #         )  # last 3 "stage-1" are dummy values
-        #     elif self.params["algo"]["type"] == "MPC_Xn":
-        #         for stage in range(self.H + 1):
-        #             self.ocp_solver.set(
-        #                 stage,
-        #                 "p",
-        #                 np.hstack(
-        #                     (
-        #                         gp_val[stage],
-        #                         gp_grad[stage],
-        #                         x_h[stage, : self.state_dim],
-        #                         xg[stage],
-        #                         w[stage],
-        #                         x_terminal,
-        #                         UB_cx_val[stage],
-        #                         UB_cx_grad[stage],
-        #                         cw[stage],
-        #                         we[stage],
-        #                     )
-        #                 ),
-        #             )
-        #     else:
-        #         for stage in range(self.H + 1):
-        #             self.ocp_solver.set(
-        #                 stage,
-        #                 "p",
-        #                 np.hstack(
-        #                     (
-        #                         gp_val[stage],
-        #                         gp_grad[stage],
-        #                         x_h[stage, : self.state_dim],
-        #                         xg[stage],
-        #                         w[stage],
-        #                         x_terminal,
-        #                         UB_cx_val[stage],
-        #                         UB_cx_grad[stage],
-        #                         cw[stage],
-        #                     )
-        #                 ),
-        #             )
-            status = self.ocp_solver.solve()
+        #         plt.ylim(
+        #             self.params["env"]["start"],
+        #             self.params["env"]["start"]
+        #             + self.params["visu"]["step_size"]
+        #             * self.params["env"]["shape"]["y"],
+        #         )
+        #         # plt.axes().set_aspect('equal')
+        #         plt.savefig("temp.png")
+        # # print("statistics", self.ocp_solver.get_stats("statistics"))
+        # if max(residuals) < self.tol_nlp:
+        #     print("Residual less than tol", max(residuals), " ", self.tol_nlp)
+        #     break
+        # if self.ocp_solver.status != 0:
+        #     print(
+        #         "acados returned status {} in closed loop solve".format(
+        #             self.ocp_solver.status
+        #         )
+        #     )
+        #     self.ocp_solver.reset()
+        #     self.ocp_solver.load_iterate(
+        #         self.name_prefix + "ocp_initialization.json"
+        #     )
 
-            self.ocp_solver.options_set("rti_phase", 2)
-            t_0 = timeit.default_timer()
-            status = self.ocp_solver.solve()
-            t_1 = timeit.default_timer()
-            # self.ocp_solver.print_statistics()
-            # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
-            print("cost", self.ocp_solver.get_cost())
-            residuals = self.ocp_solver.get_residuals()
+        import os
 
-            X, U, Sl = self.get_solution()
-            sqp_iter = 0
-            self.max_sqp_iter = 1
-            if (
-                self.params["algo"]["type"] == "ret_expander"
-                or self.params["algo"]["type"] == "MPC_expander"
-                or self.params["algo"]["type"] == "MPC_expander_V0"
-            ):
-                self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
-            else:
-                self.plot_sqp_sol(sqp_iter, X)
-            # print(X)
-            # for stage in range(self.H):
-            #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
-            if sqp_iter == (self.max_sqp_iter - 1):
-                if self.params["visu"]["show"]:
-                    plt.figure(2)
-                    if (
-                        self.params["algo"]["type"] == "ret_expander"
-                        or self.params["algo"]["type"] == "MPC_expander"
-                        or self.params["algo"]["type"] == "MPC_expander_V0"
-                    ):
-                        plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
-                        plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
-                    else:
-                        plt.plot(X[:, 0], X[:, 1], color="tab:green")
-                    plt.xlim(
-                        self.params["env"]["start"],
-                        self.params["env"]["start"]
-                        + self.params["visu"]["step_size"]
-                        * self.params["env"]["shape"]["x"],
-                    )
-                    plt.ylim(
-                        self.params["env"]["start"],
-                        self.params["env"]["start"]
-                        + self.params["visu"]["step_size"]
-                        * self.params["env"]["shape"]["y"],
-                    )
-                    # plt.axes().set_aspect('equal')
-                    plt.savefig("temp.png")
-            # print("statistics", self.ocp_solver.get_stats("statistics"))
-            if max(residuals) < self.tol_nlp:
-                print("Residual less than tol", max(residuals), " ", self.tol_nlp)
-                break
-            if self.ocp_solver.status != 0:
-                print(
-                    "acados returned status {} in closed loop solve".format(
-                        self.ocp_solver.status
-                    )
-                )
-                self.ocp_solver.reset()
-                self.ocp_solver.load_iterate(
-                    self.name_prefix + "ocp_initialization.json"
-                )
-
-            import os
-
-            sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
-            if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
-                os.makedirs(sqp_plot_dir)
-                self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
-            # if sqp_iter != self.max_sqp_iter - 1:
-            #     len_plot_tmps = len(self.plot_tmps)
-            #     len_scatter_tmps = len(self.scatter_tmps)
-            #     len_threeD_tmps = len(self.threeD_tmps)
-            #     for _ in range(len_plot_tmps):
-            #         self.plot_tmps.pop(0).remove()
-            #     for _ in range(len_scatter_tmps):
-            #         self.scatter_tmps.pop(0).set_visible(False)
-            #     for _ in range(len_threeD_tmps):
-            #         self.threeD_tmps.pop(0).remove()
+        sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
+        if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
+            os.makedirs(sqp_plot_dir)
+            self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
+        # if sqp_iter != self.max_sqp_iter - 1:
+        #     len_plot_tmps = len(self.plot_tmps)
+        #     len_scatter_tmps = len(self.scatter_tmps)
+        #     len_threeD_tmps = len(self.threeD_tmps)
+        #     for _ in range(len_plot_tmps):
+        #         self.plot_tmps.pop(0).remove()
+        #     for _ in range(len_scatter_tmps):
+        #         self.scatter_tmps.pop(0).set_visible(False)
+        #     for _ in range(len_threeD_tmps):
+        #         self.threeD_tmps.pop(0).remove()
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
         if sqp_iter == self.max_sqp_iter - 1:

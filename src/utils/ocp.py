@@ -350,14 +350,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         )
         model.con_h_expr = (model_x - x_lin)[:x_dim].T@(model_x - x_lin)[:x_dim] - (lb_cx_lin - q_th)**2
         model.con_h_expr_e = (model_x - x_lin)[:x_dim].T@(model_x - x_lin)[:x_dim] - (lb_cx_lin - q_th)**2
-        # model.con_h_expr = ca.vertcat(
-        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th, cw * var
-        # )
-        # model.con_h_expr_e = ca.vertcat(
-        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        # )
     model.p = p_lin
-    # return_tuple = (model, w, xg, var)
     return_tuple = (model, w, xg)
     if (
         params["algo"]["type"] == "ret_expander"
@@ -404,11 +397,12 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, params):
         # ocp.cost.Zl = 1e1 * np.array([1])
         # ocp.cost.Zu = 1e1 * np.array([1])
     else:
-        ocp.constraints.idxsh = np.array([1])
-        ocp.cost.zl = 1e2 * np.array([1])
-        ocp.cost.zu = 1e1 * np.array([1])
-        ocp.cost.Zl = 1e1 * np.array([1])
-        ocp.cost.Zu = 1e1 * np.array([1])
+        pass
+        # ocp.constraints.idxsh = np.array([1])
+        # ocp.cost.zl = 1e2 * np.array([1])
+        # ocp.cost.zu = 1e1 * np.array([1])
+        # ocp.cost.Zl = 1e1 * np.array([1])
+        # ocp.cost.Zu = 1e1 * np.array([1])
 
     # ocp.cost.cost_type = 'NONLINEAR_LS'
     # ocp.cost.cost_type_e = 'NONLINEAR_LS'
@@ -496,10 +490,10 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     else:
         # ocp.constraints.lh = np.array([0, eps])
         # ocp.constraints.uh = np.array([10.0, 1e8])
-        ocp.constraints.lh = np.array([0.0])
-        ocp.constraints.uh = np.array([10.0])
-    ocp.constraints.lh_e = np.array([0.0])
-    ocp.constraints.uh_e = np.array([10.0])
+        ocp.constraints.lh = np.array([-100.0])
+        ocp.constraints.uh = np.array([0.0])
+    ocp.constraints.lh_e = np.array([-100.0])
+    ocp.constraints.uh_e = np.array([0.0])
 
     # ocp.constraints.lh = np.array([0, eps])
     # ocp.constraints.uh = np.array([10.0, 1.0e9])
