@@ -81,4 +81,4 @@ experiment:
   batch_update: True
   batch_size: 5
   config_space_formulation: True
-  angle_samples: 2000
+  angle_samples: 36

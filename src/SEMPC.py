@@ -611,6 +611,7 @@ class SEMPC(Node):
             s.close()
 
             self.x_curr = data[: self.state_dim]
+            self.t_curr = data[-1]
             if self.params["experiment"]["config_space_formulation"]:
                 range_samples = data[self.state_dim : -1]
                 range_angles = np.linspace(-math.pi, math.pi, len(range_samples))
@@ -624,11 +625,11 @@ class SEMPC(Node):
                             j * delta_d * np.cos(range_angles[i]),
                             self.x_curr[1] + j * delta_d * \
                                 np.sin(range_angles[i])]))
+                self.query_pts = np.array(self.query_pts)
                 self.query_meas = np.ones(self.query_pts.shape[0])
             else:
                 min_dist_angle = data[self.state_dim]
                 min_dist = data[self.state_dim + 1]
-                self.t_curr = data[-1]
 
                 query_pts_x_start = self.x_curr[0]
                 query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
