@@ -100,14 +100,19 @@ class MeasurementNode(Node):
         if self.min_dist != -1.0:
             try:
                 self.pose_3D = self.get_pose_3D()
-                data_to_send = np.concatenate(
-                    (
-                        self.pose_3D,
-                        np.array([self.min_dist_angle]),
-                        np.array([self.min_dist]),
-                        np.array([sim_time]),
+                if params_0["experiment"]["config_space_formulation"]:
+                    data_to_send = np.concatenate((self.pose_3D, 
+                                                   self.range_samples, 
+                                                   np.array([sim_time])))
+                else:
+                    data_to_send = np.concatenate(
+                        (
+                            self.pose_3D,
+                            np.array([self.min_dist_angle]),
+                            np.array([self.min_dist]),
+                            np.array([sim_time]),
+                        )
                     )
-                )
 
                 print(f"To send {data_to_send}")
 
@@ -122,16 +127,16 @@ class MeasurementNode(Node):
     def min_dist_listener_callback(self, msg):
         try:
             ranges = np.array(msg.ranges)
-            # choice = np.round(np.linspace(1, len(ranges)-1, num=36)).astype(int)
-            # print(ranges[choice], "\n\n")
-            ranges[ranges==0.0] += 1e3
-            min_dist_idx = np.argmin(ranges)
-            self.min_dist = ranges[min_dist_idx]
-            self.min_dist_angle = (
-                -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
-                # -math.pi + msg.angle_increment * min_dist_idx
-            )
-            self.min_dist_angle = self._angle_helper(self.min_dist_angle)
+            choice = np.round(np.linspace(1, 
+                len(ranges)-1, num=params_0["experiment"]["angle_samples"])).astype(int)
+            self.range_samples = ranges[choice]
+            self.min_dist = np.min(ranges)
+            # self.min_dist = ranges[min_dist_idx]
+            # self.min_dist_angle = (
+            #     -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
+            #     # -math.pi + msg.angle_increment * min_dist_idx
+            # )
+            # self.min_dist_angle = self._angle_helper(self.min_dist_angle)
 
         except Exception as e:
             print(e)

@@ -160,8 +160,8 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/include/python3.10 \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
@@ -187,8 +187,8 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/include/python3.10 \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
 	acados_sim_solver_pyx.c \
 
 sim_cython: sim_cython_o

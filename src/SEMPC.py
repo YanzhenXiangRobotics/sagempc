@@ -611,31 +611,46 @@ class SEMPC(Node):
             s.close()
 
             self.x_curr = data[: self.state_dim]
-            min_dist_angle = data[self.state_dim]
-            min_dist = data[self.state_dim + 1]
-            self.t_curr = data[-1]
+            if self.params["experiment"]["config_space_formulation"]:
+                range_samples = data[self.state_dim : -1]
+                range_angles = np.linspace(-math.pi, math.pi, len(range_samples))
+                range_angles += self.x_curr[-1]
+                self.query_pts = []
+                num_pts = self.params["experiment"]["batch_size"]
+                for (i, d) in enumerate(range_samples):
+                    delta_d = d / (num_pts + 1)
+                    for j in range(1, num_pts + 1):
+                        self.query_pts.append(np.array([self.x_curr[0] + \
+                            j * delta_d * np.cos(range_angles[i]),
+                            self.x_curr[1] + j * delta_d * \
+                                np.sin(range_angles[i])]))
+                self.query_meas = np.ones(self.query_pts.shape[0])
+            else:
+                min_dist_angle = data[self.state_dim]
+                min_dist = data[self.state_dim + 1]
+                self.t_curr = data[-1]
 
-            query_pts_x_start = self.x_curr[0]
-            query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
-            # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
-            num_pts = self.params["experiment"]["batch_size"]
-            query_pts_x = np.linspace(
-                query_pts_x_start,
-                query_pts_x_end,
-                num_pts,
-            )
-            query_pts_y = np.linspace(
-                self.x_curr[1],
-                self.x_curr[1]
-                + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
-                len(query_pts_x),
-            )
-            self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
-            self.query_meas = np.linspace(
-                min_dist,
-                min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
-                len(query_pts_x),
-            )
+                query_pts_x_start = self.x_curr[0]
+                query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
+                # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
+                num_pts = self.params["experiment"]["batch_size"]
+                query_pts_x = np.linspace(
+                    query_pts_x_start,
+                    query_pts_x_end,
+                    num_pts,
+                )
+                query_pts_y = np.linspace(
+                    self.x_curr[1],
+                    self.x_curr[1]
+                    + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
+                    len(query_pts_x),
+                )
+                self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
+                self.query_meas = np.linspace(
+                    min_dist,
+                    min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
+                    len(query_pts_x),
+                )
             self.obtained_init_state = True
 
             self.players[self.pl_idx].update_current_state(self.x_curr)
