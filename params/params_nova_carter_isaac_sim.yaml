@@ -29,7 +29,7 @@ visu:
 
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
-  Cx_lengthscale: 1.5 # Lenghtscale used by the agent for belief of the environment
+  Cx_lengthscale: 0.7 # Lenghtscale used by the agent for belief of the environment
   Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
   Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.01
@@ -37,6 +37,7 @@ agent:
   Fx_beta: 2.0 #1.5
   mean_shift_val: 2 # shift the mean of GP
   cov_module: "Matern" # kernel used by the agent : 'Matern', Sq_exp
+  robot_radius: 0.6
 
 optimizer:
   H: 25 # Horizon
@@ -62,7 +63,7 @@ optimizer:
 
 common:
   dim: 2
-  constraint: 0.6 # Constraint threshold for safety function
+  constraint: 0.0 # Constraint threshold for safety function
   epsilon: 0.2 # user defined accuracy
   Lc: 1.0 # Lipschitz constant of the constraint function
   expander_offset: 0.1

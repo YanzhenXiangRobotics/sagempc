@@ -603,6 +603,12 @@ class SEMPC(Node):
         self.prev
         # apply this input to your environment
 
+    def apply_sigmoid(self, x):
+        if x < 0.0:
+            return 0.0
+        else:
+            return 2.0 / (1.0 + math.exp(-5.0 * x)) - 1.0
+    
     def get_current_state_measurement(self):
         try:
             s = MLSocket()
@@ -614,19 +620,39 @@ class SEMPC(Node):
             self.t_curr = data[-1]
             if self.params["experiment"]["config_space_formulation"]:
                 range_samples = data[self.state_dim : -1]
-                range_angles = np.linspace(-math.pi, math.pi, len(range_samples))
+                range_samples -= self.params["agent"]["robot_radius"]
+                angle_increment = 2 * math.pi / len(range_samples)
+                range_angles = np.linspace(-math.pi, math.pi - angle_increment, len(range_samples))
                 range_angles += self.x_curr[-1]
-                self.query_pts = []
+                self.query_pts, self.query_meas, self.obsc_edge = [], [], []
                 num_pts = self.params["experiment"]["batch_size"]
-                for (i, d) in enumerate(range_samples):
-                    delta_d = d / (num_pts + 1)
-                    for j in range(1, num_pts + 1):
-                        self.query_pts.append(np.array([self.x_curr[0] + \
-                            j * delta_d * np.cos(range_angles[i]),
-                            self.x_curr[1] + j * delta_d * \
-                                np.sin(range_angles[i])]))
+                for (i, dist) in enumerate(range_samples):
+                    if dist > 0.0:
+                        delta_dist = dist / (num_pts + 1)
+                        for j in range(1, num_pts + 1):
+                            self.query_pts.append(np.array([self.x_curr[0] + \
+                                j * delta_dist * np.cos(range_angles[i]),
+                                self.x_curr[1] + j * delta_dist * \
+                                    np.sin(range_angles[i])]))
+                            self.query_meas.append(self.apply_sigmoid((num_pts - j) * delta_dist))
+                        self.obsc_edge.append(np.array(\
+                            [self.x_curr[0] + (dist + self.params["agent"]["robot_radius"]) * np.cos(range_angles[i]), 
+                             self.x_curr[1] + (dist + self.params["agent"]["robot_radius"]) * np.sin(range_angles[i])]))
                 self.query_pts = np.array(self.query_pts)
-                self.query_meas = np.ones(self.query_pts.shape[0])
+                self.query_meas = np.array(self.query_meas)
+                self.obsc_edge = np.array(self.obsc_edge)
+                self.sempc_solver.scatter_tmps.append(\
+                    self.env.ax.scatter(self.query_pts[:, 0], 
+                        self.query_pts[:, 1], 
+                        s=30,
+                        marker="x",
+                        c="green"))
+                self.sempc_solver.scatter_tmps.append(\
+                    self.env.ax.scatter(self.obsc_edge[:, 0], 
+                        self.obsc_edge[:, 1], 
+                        s=30,
+                        marker="x",
+                        c="purple"))
             else:
                 min_dist_angle = data[self.state_dim]
                 min_dist = data[self.state_dim + 1]
@@ -658,37 +684,6 @@ class SEMPC(Node):
 
         except Exception as e:
             print(e)
-
-    def _angle_helper(self, angle):
-        if angle > math.pi:
-            angle -= 2 * math.pi
-        elif angle < -math.pi:
-            angle += 2 * math.pi
-        return angle
-
-    def _compute_pid_error(self, x_desire):
-        error_pos_global = x_desire - self.x_curr[: self.x_dim]
-        actual_angle = self._angle_helper(self.x_curr[-1])
-        # actual_angle = self.x_curr[-1]
-        R = np.array(
-            [
-                [np.cos(actual_angle), -np.sin(actual_angle)],
-                [np.sin(actual_angle), np.cos(actual_angle)],
-            ]
-        )
-        error_pos_robot = R.T @ error_pos_global
-        error_angle = np.arctan2(error_pos_robot[1], error_pos_robot[0])
-        if error_angle < -0.5 * math.pi:
-            error_angle += math.pi
-        elif error_angle > 0.5 * math.pi:
-            error_angle -= math.pi
-        return error_pos_robot, error_angle
-
-    def _pos_pid_ctrl(self, error_pos_x, last_error_pos_x):
-        return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
-
-    def _angle_pid_ctrl(self, error_angle, last_error_angle):
-        return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
 
     def apply_control(self, U):
         msg = Twist()

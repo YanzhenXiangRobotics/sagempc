@@ -66,7 +66,7 @@ def TrainAndUpdateConstraint(query_pt, agent_key, players, params, env):
 def TrainAndUpdateConstraint_isaac_sim(
     query_pt, query_meas, agent_key, players, params
 ):  
-    print("query_pts: ", query_pt)
+    # print("query_pts: ", query_pt)
     print("query_meas: ", query_meas)
     if not torch.is_tensor(query_pt):
         query_pt = torch.from_numpy(query_pt).float()
