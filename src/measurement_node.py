@@ -97,40 +97,41 @@ class MeasurementNode(Node):
 
     def sim_time_listener_callback(self, msg):
         sim_time = msg.data
-        if self.min_dist != -1.0:
-            try:
-                self.pose_3D = self.get_pose_3D()
-                if params_0["experiment"]["config_space_formulation"]:
-                    data_to_send = np.concatenate((self.pose_3D, 
-                                                   self.range_samples, 
-                                                   np.array([sim_time])))
-                else:
-                    data_to_send = np.concatenate(
-                        (
-                            self.pose_3D,
-                            np.array([self.min_dist_angle]),
-                            np.array([self.min_dist]),
-                            np.array([sim_time]),
-                        )
+        # if self.min_dist != -1.0:
+        try:
+            self.pose_3D = self.get_pose_3D()
+            if params_0["experiment"]["config_space_formulation"]:
+                data_to_send = np.concatenate((self.pose_3D, 
+                                                self.range_samples, 
+                                                np.array([sim_time])))
+            else:
+                data_to_send = np.concatenate(
+                    (
+                        self.pose_3D,
+                        np.array([self.min_dist_angle]),
+                        np.array([self.min_dist]),
+                        np.array([sim_time]),
                     )
+                )
 
-                print(f"To send {data_to_send}")
+            print(f"To send {data_to_send}")
 
-                conn, _ = self.s.accept()
-                conn.sendall(data_to_send)
-                print(f"Sent {data_to_send}")
-                # print(data_to_send)
-                conn.close()
-            except Exception as e:
-                print(e)
+            conn, _ = self.s.accept()
+            conn.sendall(data_to_send)
+            print(f"Sent {data_to_send}")
+            # print(data_to_send)
+            conn.close()
+        except Exception as e:
+            print(e)
 
     def min_dist_listener_callback(self, msg):
         try:
             ranges = np.array(msg.ranges)
+            ranges[ranges==-1.0] = 0.0
             choice = np.round(np.linspace(1, 
                 len(ranges)-1, num=params_0["experiment"]["angle_samples"])).astype(int)
             self.range_samples = ranges[choice]
-            self.min_dist = np.min(ranges)
+            # self.min_dist = np.min(ranges)
             # self.min_dist = ranges[min_dist_idx]
             # self.min_dist_angle = (
             #     -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
