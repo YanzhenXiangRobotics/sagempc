@@ -108,11 +108,18 @@ class FakeSimulationNode(Node):
         print(self.u)
 
     def dynamics(self):
+        # self.pose = np.array(
+        #     [
+        #         self.pose[0] + self.u[0] * np.cos(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
+        #         self.pose[1] + self.u[0] * np.sin(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
+        #         self.pose[2] + self.u[1] * self.dt,
+        #     ]
+        # )
         self.pose = np.array(
             [
-                self.pose[0] + self.u[0] * np.cos(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
-                self.pose[1] + self.u[0] * np.sin(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
-                self.pose[2] + self.u[1] * self.dt,
+                self.pose[0] + self.u[0] * np.cos(self.u[1]) * self.dt,
+                self.pose[1] + self.u[0] * np.sin(self.u[1]) * self.dt,
+                self.pose[2],
             ]
         )
 
@@ -126,8 +133,8 @@ class FakeSimulationNode(Node):
             #     print(self.u)
             self.dynamics()
             min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
-            min_dist += np.random.uniform(-0.05, 0.05)
-            min_dist_angle += np.random.uniform(-0.1, 0.1)
+            # min_dist += np.random.uniform(-0.05, 0.05)
+            # min_dist_angle += np.random.uniform(-0.1, 0.1)
             data_to_send = np.concatenate(
                 (
                     self.pose,

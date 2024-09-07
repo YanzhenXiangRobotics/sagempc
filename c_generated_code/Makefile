@@ -36,48 +36,48 @@
 
 # model
 MODEL_SRC=
-MODEL_SRC+= nova_carter_discrete_model/nova_carter_discrete_dyn_disc_phi_fun.c
-MODEL_SRC+= nova_carter_discrete_model/nova_carter_discrete_dyn_disc_phi_fun_jac.c
+MODEL_SRC+= nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.c
+MODEL_SRC+= nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
 
 
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
-OCP_SRC+= nova_carter_discrete_constraints/nova_carter_discrete_constr_h_fun_jac_uxt_zt.c
-OCP_SRC+= nova_carter_discrete_constraints/nova_carter_discrete_constr_h_fun.c
-OCP_SRC+= nova_carter_discrete_constraints/nova_carter_discrete_constr_h_e_fun_jac_uxt_zt.c
-OCP_SRC+= nova_carter_discrete_constraints/nova_carter_discrete_constr_h_e_fun.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_0_fun.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_0_fun_jac.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_0_fun_jac_hess.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
 
 
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_fun.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_fun_jac.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_fun_jac_hess.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.c
 
 
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_e_fun.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_e_fun_jac.c
-OCP_SRC+= nova_carter_discrete_cost/nova_carter_discrete_cost_ext_cost_e_fun_jac_hess.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.c
+OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.c
 
 
 
-OCP_SRC+= acados_solver_nova_carter_discrete.c
+OCP_SRC+= acados_solver_nova_carter_discrete_Lc.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
 # for sim solver
-SIM_SRC= acados_sim_solver_nova_carter_discrete.c
+SIM_SRC= acados_sim_solver_nova_carter_discrete_Lc.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
 
 # for target example
-EX_SRC= main_nova_carter_discrete.c
+EX_SRC= main_nova_carter_discrete_Lc.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
 
 # for target example_sim
-EX_SIM_SRC= main_sim_nova_carter_discrete.c
+EX_SIM_SRC= main_sim_nova_carter_discrete_Lc.c
 EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
 EX_SIM_EXE := $(EX_SIM_SRC:.c=)
 
@@ -117,8 +117,8 @@ LDLIBS+= -lm
 LDLIBS+= 
 
 # libraries
-LIBACADOS_SOLVER=libacados_solver_nova_carter_discrete.so
-LIBACADOS_OCP_SOLVER=libacados_ocp_solver_nova_carter_discrete.so
+LIBACADOS_SOLVER=libacados_solver_nova_carter_discrete_Lc.so
+LIBACADOS_OCP_SOLVER=libacados_ocp_solver_nova_carter_discrete_Lc.so
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c=.so)
 
 # virtual targets
@@ -160,8 +160,8 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/include/python3.10 \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
@@ -169,7 +169,7 @@ ocp_cython: ocp_cython_o
 	-o acados_ocp_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
-	$(abspath .)/libacados_ocp_solver_nova_carter_discrete.so \
+	$(abspath .)/libacados_ocp_solver_nova_carter_discrete_Lc.so \
 	$(LDFLAGS) $(LDLIBS)
 
 # Sim Cython targets
@@ -187,8 +187,8 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.0.0/kit/python/include/python3.10 \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
+	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
 	acados_sim_solver_pyx.c \
 
 sim_cython: sim_cython_o
@@ -196,7 +196,7 @@ sim_cython: sim_cython_o
 	-o acados_sim_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_sim_solver_pyx.o \
-	$(abspath .)/libacados_sim_solver_nova_carter_discrete.so \
+	$(abspath .)/libacados_sim_solver_nova_carter_discrete_Lc.so \
 	$(LDFLAGS) $(LDLIBS)
 
 clean:
@@ -209,13 +209,13 @@ clean_ocp_shared_lib:
 	$(RM) $(OCP_OBJ)
 
 clean_ocp_cython:
-	$(RM) libacados_ocp_solver_nova_carter_discrete.so
-	$(RM) acados_solver_nova_carter_discrete.o
+	$(RM) libacados_ocp_solver_nova_carter_discrete_Lc.so
+	$(RM) acados_solver_nova_carter_discrete_Lc.o
 	$(RM) acados_ocp_solver_pyx.so
 	$(RM) acados_ocp_solver_pyx.o
 
 clean_sim_cython:
-	$(RM) libacados_sim_solver_nova_carter_discrete.so
-	$(RM) acados_sim_solver_nova_carter_discrete.o
+	$(RM) libacados_sim_solver_nova_carter_discrete_Lc.so
+	$(RM) acados_sim_solver_nova_carter_discrete_Lc.o
 	$(RM) acados_sim_solver_pyx.so
 	$(RM) acados_sim_solver_pyx.o

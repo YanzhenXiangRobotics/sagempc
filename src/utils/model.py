@@ -450,12 +450,24 @@ def export_nova_carter_discrete_Lc():
     z = ca.SX.sym("z", 2)
     model.u = ca.vertcat(model.u, z)
 
+    # model.disc_dyn_expr = ca.vertcat(
+    #     model.x[0]
+    #     + model.u[0]
+    #     * np.cos(model.x[2] + 0.5 * model.u[1] * model.u[2])
+    #     * model.u[2],
+    #     model.x[1]
+    #     + model.u[0]
+    #     * np.sin(model.x[2] + 0.5 * model.u[1] * model.u[2])
+    #     * model.u[2],
+    #     model.x[2] + model.u[1] * model.u[2],
+    #     model.x[-1] + model.u[2],
+    # )
     model.disc_dyn_expr = ca.vertcat(
-        model.x[0] + model.u[0] * np.cos(model.x[2]) * model.u[2],
-        model.x[1] + model.u[0] * np.sin(model.x[2]) * model.u[2],
-        model.x[2] + model.u[1] * model.u[2],
-        model.x[-1] + model.u[2],
-    )
+        model.x[0] + model.u[0] * np.cos(model.u[1]) * model.u[2],
+        model.x[1] + model.u[0] * np.sin(model.u[1]) * model.u[2],
+        model.x[2],
+        model.x[-1] + model.u[2]
+    ) 
 
     return model
 
