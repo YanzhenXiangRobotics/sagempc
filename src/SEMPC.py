@@ -889,7 +889,7 @@ class SEMPC(Node):
                 ]
             )
             self.env.ax.set_ylim(
-                [self.params["env"]["start_loc"][1], self.params["env"]["goal_loc"][1]]
+                [self.params["env"]["start_loc"][1] - 1.0, self.params["env"]["goal_loc"][1]]
             )
             self.env.ax.grid()
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))

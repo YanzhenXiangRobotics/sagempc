@@ -289,7 +289,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
             - q_th,
             cw * var,
-            w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
+            # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
         )
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
         model.con_h_expr_e = ca.vertcat(
@@ -462,12 +462,12 @@ def sempc_const_val(ocp, params, x_dim, n_order):
             if params["agent"]["dynamics"] == "nova_carter"
             else params["common"]["expander_offset"]
         )
-        # ocp.constraints.lh = np.array([0, eps])
-        # ocp.constraints.uh = np.array([10.0, 1e8])
+        ocp.constraints.lh = np.array([0, eps])
+        ocp.constraints.uh = np.array([10.0, 1e8])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
         # ocp.constraints.uh = np.array([10.0, 1e8, l_max, 10.0])
-        ocp.constraints.lh = np.array([0, eps, -1e8])
-        ocp.constraints.uh = np.array([10.0, 1e8, l_max])
+        # ocp.constraints.lh = np.array([0, eps, -1e8])
+        # ocp.constraints.uh = np.array([10.0, 1e8, l_max])
     else:
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])

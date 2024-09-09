@@ -61,7 +61,7 @@ class SEMPC_solver(object):
         self.fig_dir = fig_dir
         self.plot_per_sqp_iter = params["experiment"]["plot_per_sqp_iter"]
         self.publisher = publisher
-        
+
         self.last_X = np.zeros((self.H + 1, self.state_dim + 1))
         self.last_U = np.zeros((self.H, self.x_dim + 1 + self.x_dim))
         for stage in range(self.H):
@@ -312,10 +312,10 @@ class SEMPC_solver(object):
                     stage,
                     "p",
                     np.hstack(
-                        (   
+                        (
                             x_h[stage, :],
-                            x_h[stage, :], #unused
-                            u_h[stage - 1, : -self.x_dim], #unused
+                            x_h[stage, :],  # unused
+                            u_h[stage - 1, : -self.x_dim],  # unused
                             gp_val[stage],
                             gp_grad[stage],
                             xg[stage],
@@ -382,17 +382,28 @@ class SEMPC_solver(object):
 
             X, U, Sl = self.get_solution()
             alpha = 1.0
-            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            print("GP val next: ", gp_val_next[self.Hm], "Step size: ", (X - x_h)[self.Hm, :])
-            while (any(gp_val_next < self.params["common"]["constraint"])) and (
-                alpha >= 0.0
-            ):
+            LB_cz_val_next, _ = player.get_gp_sensitivities(
+                U[:, -self.x_dim :], "LB", "Cx"
+            )
+            print(
+                "GP val next: ",
+                LB_cz_val_next[self.Hm]
+                - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
+            )
+            while (
+                any(
+                    LB_cz_val_next
+                    - np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                    < self.params["common"]["constraint"]
+                )
+            ) and (alpha >= 0.0):
                 print(f"Backtracking... alpha={alpha}")
                 alpha -= 0.1
                 X = alpha * X + (1 - alpha) * x_h
                 U = alpha * U + (1 - alpha) * u_h
-                gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-                print("GP val next: ", gp_val_next[self.Hm])
+                LB_cz_val_next, _ = player.get_gp_sensitivities(
+                    U[:, -self.x_dim :], "LB", "Cx"
+                )
             self.last_X = X.copy()
             self.last_U = U.copy()
             if (
