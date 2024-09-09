@@ -47,7 +47,7 @@ class SEMPC_solver(object):
         if params["agent"]["dynamics"] == "robot":
             self.state_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.state_dim = self.x_dim
         else:
             self.state_dim = self.n_order * self.x_dim
         self.grids_coupled = grids_coupled
@@ -318,9 +318,11 @@ class SEMPC_solver(object):
                         "p",
                         np.hstack(
                             (
+                                x_h[stage, :],
+                                x_h[stage + 1, :],
+                                u_h[stage, : -self.x_dim],
                                 gp_val[stage],
                                 gp_grad[stage],
-                                x_h[stage, : self.state_dim],
                                 xg[stage],
                                 w[stage],
                                 x_terminal,
@@ -338,10 +340,12 @@ class SEMPC_solver(object):
                     stage,
                     "p",
                     np.hstack(
-                        (
+                        (   
+                            x_h[stage, :],
+                            x_h[stage, :], #unused
+                            u_h[stage - 1, : -self.x_dim], #unused
                             gp_val[stage],
                             gp_grad[stage],
-                            x_h[stage, : self.state_dim],
                             xg[stage],
                             w[stage],
                             x_terminal,
@@ -404,6 +408,17 @@ class SEMPC_solver(object):
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
+            alpha = 1.0
+            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+            print("GP val next: ", gp_val_next[self.Hm], "Step size: ", X[self.Hm, :] - x_h)
+            # while (any(gp_val_next < self.params["common"]["constraint"])) and (
+            #     alpha > 0.0
+            # ):
+            #     alpha -= 0.1
+            #     X = alpha * X + (1 - alpha) * x_h
+            #     U = alpha * U + (1 - alpha) * u_h
+            #     gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+            #     print("GP val next: ", gp_val_next[self.Hm, :])
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"

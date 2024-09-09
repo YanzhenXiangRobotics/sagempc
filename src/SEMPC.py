@@ -70,7 +70,7 @@ class SEMPC(Node):
         if params["agent"]["dynamics"] == "robot":
             self.state_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.state_dim = self.x_dim
         else:
             self.state_dim = self.n_order * self.x_dim
         self.obtained_init_state = False

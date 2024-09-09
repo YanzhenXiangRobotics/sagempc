@@ -51,9 +51,7 @@ class FakeSimulationNode(Node):
             Twist, "/cmd_vel", self.listener_callback, 10
         )
         self.timer = self.create_timer(1 / 100, self.on_timer)
-        self.pose = np.append(
-            np.array(params["start_loc"]), params_0["env"]["start_angle"]
-        )
+        self.pose = np.array(params["start_loc"])
         self.u = np.zeros(
             2,
         )
@@ -108,18 +106,10 @@ class FakeSimulationNode(Node):
         print(self.u)
 
     def dynamics(self):
-        # self.pose = np.array(
-        #     [
-        #         self.pose[0] + self.u[0] * np.cos(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
-        #         self.pose[1] + self.u[0] * np.sin(self.pose[2] + 0.5 * self.u[1] * self.dt) * self.dt,
-        #         self.pose[2] + self.u[1] * self.dt,
-        #     ]
-        # )
         self.pose = np.array(
             [
                 self.pose[0] + self.u[0] * np.cos(self.u[1]) * self.dt,
                 self.pose[1] + self.u[0] * np.sin(self.u[1]) * self.dt,
-                self.pose[2],
             ]
         )
 

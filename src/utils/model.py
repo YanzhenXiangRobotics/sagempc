@@ -445,31 +445,57 @@ def export_unicycle_model_with_discrete_rk4_LC(name):
 def export_nova_carter_discrete_Lc():
     model = AcadosModel()
     model.name = "nova_carter_discrete_Lc"
-    model.x = ca.SX.sym("x", 4)
-    model.u = ca.SX.sym("u", 3)
-    z = ca.SX.sym("z", 2)
+
+    x = ca.SX.sym("x", 1)
+    y = ca.SX.sym("y", 1)
+    T = ca.SX.sym("T", 1)
+    model.x = ca.vertcat(x, y, T)
+
+    v = ca.SX.sym("v", 1)
+    theta = ca.SX.sym("theta", 1)
+    dT = ca.SX.sym("dT", 1)
+    model.u = ca.vertcat(v, theta, dT)
+    z = ca.SX.sym("z", model.x.shape[0] - 1)
     model.u = ca.vertcat(model.u, z)
 
-    # model.disc_dyn_expr = ca.vertcat(
-    #     model.x[0]
-    #     + model.u[0]
-    #     * np.cos(model.x[2] + 0.5 * model.u[1] * model.u[2])
-    #     * model.u[2],
-    #     model.x[1]
-    #     + model.u[0]
-    #     * np.sin(model.x[2] + 0.5 * model.u[1] * model.u[2])
-    #     * model.u[2],
-    #     model.x[2] + model.u[1] * model.u[2],
-    #     model.x[-1] + model.u[2],
-    # )
-    model.disc_dyn_expr = ca.vertcat(
-        model.x[0] + model.u[0] * np.cos(model.u[1]) * model.u[2],
-        model.x[1] + model.u[0] * np.sin(model.u[1]) * model.u[2],
-        model.x[2],
-        model.x[-1] + model.u[2]
-    ) 
+    x_lin = ca.SX.sym("x_lin", 1)
+    y_lin = ca.SX.sym("y_lin", 1)
+    T_lin = ca.SX.sym("T_lin", 1)
+    x_next_lin = ca.SX.sym("x_next_lin", 1)
+    y_next_lin = ca.SX.sym("y_next_lin", 1)
+    T_next_lin = ca.SX.sym("T_next_lin", 1)
+    v_lin = ca.SX.sym("v_lin", 1)
+    theta_lin = ca.SX.sym("theta_lin", 1)
+    dT_lin = ca.SX.sym("dT_lin", 1)
+    model.p = ca.vertcat(
+        x_lin,
+        y_lin,
+        T_lin,
+        x_next_lin,
+        y_next_lin,
+        T_next_lin,
+        v_lin,
+        theta_lin,
+        dT_lin,
+    )
 
-    return model
+    model.disc_dyn_expr = ca.vertcat(
+        x - x_lin + x_next_lin, y - y_lin + y_next_lin, T - T_lin + T_next_lin
+    ) + ca.vertcat(
+        ca.horzcat(
+            ca.cos(theta_lin) * dT_lin,
+            -v_lin * ca.sin(theta_lin) * dT_lin,
+            v_lin * ca.cos(theta_lin),
+        ),
+        ca.horzcat(
+            ca.sin(theta_lin) * dT_lin,
+            v_lin * ca.cos(theta_lin) * dT_lin,
+            v_lin * ca.sin(theta_lin),
+        ),
+        ca.horzcat(0, 0, 1),
+    ) @ ca.vertcat(v - v_lin, theta - theta_lin, dT - dT_lin)
+
+    return model, ca.vertcat(x_lin, y_lin)
 
 
 def export_bicycle_model_with_discrete_rk4_Lc(name):
