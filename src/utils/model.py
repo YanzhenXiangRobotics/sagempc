@@ -479,21 +479,28 @@ def export_nova_carter_discrete_Lc():
         dT_lin,
     )
 
-    model.disc_dyn_expr = ca.vertcat(
-        x - x_lin + x_next_lin, y - y_lin + y_next_lin, T - T_lin + T_next_lin
-    ) + ca.vertcat(
-        ca.horzcat(
-            ca.cos(theta_lin) * dT_lin,
-            -v_lin * ca.sin(theta_lin) * dT_lin,
-            v_lin * ca.cos(theta_lin),
-        ),
-        ca.horzcat(
-            ca.sin(theta_lin) * dT_lin,
+    model.disc_dyn_expr = (
+        ca.vertcat(x, y, T)
+        + ca.vertcat(
             v_lin * ca.cos(theta_lin) * dT_lin,
-            v_lin * ca.sin(theta_lin),
-        ),
-        ca.horzcat(0, 0, 1),
-    ) @ ca.vertcat(v - v_lin, theta - theta_lin, dT - dT_lin)
+            v_lin * ca.sin(theta_lin) * dT_lin,
+            dT_lin,
+        )
+        + ca.vertcat(
+            ca.horzcat(
+                ca.cos(theta_lin) * dT_lin,
+                -v_lin * ca.sin(theta_lin) * dT_lin,
+                v_lin * ca.cos(theta_lin),
+            ),
+            ca.horzcat(
+                ca.sin(theta_lin) * dT_lin,
+                v_lin * ca.cos(theta_lin) * dT_lin,
+                v_lin * ca.sin(theta_lin),
+            ),
+            ca.horzcat(0, 0, 1),
+        )
+        @ ca.vertcat(v - v_lin, theta - theta_lin, dT - dT_lin)
+    )
 
     return model, ca.vertcat(x_lin, y_lin)
 

@@ -405,12 +405,13 @@ class SEMPC_solver(object):
             t_1 = timeit.default_timer()
             # self.ocp_solver.print_statistics()
             # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
+            print("cost: ", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
             alpha = 1.0
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            print("GP val next: ", gp_val_next[self.Hm], "Step size: ", X[self.Hm, :] - x_h)
+            # print("GP val next: ", gp_val_next[self.Hm], "Step size: ", (X - x_h)[self.Hm, :])
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha > 0.0
             # ):

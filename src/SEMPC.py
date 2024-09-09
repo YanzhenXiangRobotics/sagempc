@@ -800,7 +800,6 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            print("sum t: ", np.sum(U[:, -1]))
             self.apply_control(U[: self.Hm, :])
         val = (
             2
