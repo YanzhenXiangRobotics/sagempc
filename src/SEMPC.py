@@ -685,9 +685,9 @@ class SEMPC(Node):
                 msg.angular.z = U[i, 1]
                 self.publisher.publish(msg)
                 self.get_current_state_measurement()
-                print(
-                    f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
-                )
+                # print(
+                #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
+                # )
             uncertainty = self.players[self.pl_idx].get_width_at_curr_loc()
             print("uncertainty: ", uncertainty)
             # if uncertainty > 2.0 * self.params["common"]["epsilon"]:
@@ -795,10 +795,10 @@ class SEMPC(Node):
 
         # set objective as per desired goal
         start_time = time.time()
-        self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
+        X, U = self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
         self.visu.time_record(end_time - start_time)
-        X, U, Sl = self.sempc_solver.get_solution()
+        # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
             self.apply_control(U[: self.Hm, :])
         val = (
@@ -892,8 +892,8 @@ class SEMPC(Node):
                 [self.params["env"]["start_loc"][1], self.params["env"]["goal_loc"][1]]
             )
             self.env.ax.grid()
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)

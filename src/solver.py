@@ -61,13 +61,18 @@ class SEMPC_solver(object):
         self.fig_dir = fig_dir
         self.plot_per_sqp_iter = params["experiment"]["plot_per_sqp_iter"]
         self.publisher = publisher
-
-    def initilization(self, sqp_iter, x_h, u_h):
+        
+        self.last_X = np.zeros((self.H + 1, self.state_dim + 1))
+        self.last_U = np.zeros((self.H, self.x_dim + 1 + self.x_dim))
         for stage in range(self.H):
             # current stage values
-            x_h[stage, :] = self.ocp_solver.get(stage, "x")
-            u_h[stage, :] = self.ocp_solver.get(stage, "u")
-        x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
+            self.last_X[stage, :] = self.ocp_solver.get(stage, "x")
+            self.last_U[stage, :] = self.ocp_solver.get(stage, "u")
+        self.last_X[self.H, :] = self.ocp_solver.get(self.H, "x")
+
+    def initilization(self, sqp_iter):
+        x_h = self.last_X.copy()
+        u_h = self.last_U.copy()
         if sqp_iter == 0:
             x_h_old = x_h.copy()
             u_h_old = u_h.copy()
@@ -245,20 +250,6 @@ class SEMPC_solver(object):
         # )
 
     def solve(self, player, sim_iter):
-        # #publish msg of all 0
-        # msg = Twist()
-        # self.publisher.publish(msg)
-
-        x_h = np.zeros((self.H + 1, self.state_dim + 1))
-        z_h = np.zeros((self.H + 1, self.x_dim))
-        if (
-            self.params["algo"]["type"] == "ret_expander"
-            or self.params["algo"]["type"] == "MPC_expander"
-            or self.params["algo"]["type"] == "MPC_expander_V0"
-        ):
-            u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
-        else:
-            u_h = np.zeros((self.H, self.x_dim + 1))  # u_dim
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
         we[int(self.H - 1)] = 10000
@@ -273,26 +264,7 @@ class SEMPC_solver(object):
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
         for sqp_iter in range(self.max_sqp_iter):
             self.ocp_solver.options_set("rti_phase", 1)
-            if (
-                self.params["algo"]["type"] == "ret"
-                or self.params["algo"]["type"] == "ret_expander"
-            ):
-                if player.goal_in_pessi:
-                    x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
-                else:
-                    for stage in range(self.H):
-                        # current stage values
-                        x_h[stage, :] = self.ocp_solver.get(stage, "x")
-                        u_h[stage, :] = self.ocp_solver.get(stage, "u")
-                    x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
-            else:
-                #    pass
-                x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
-                # if sqp_iter == 0:
-                #     print(x_h, u_h)
-                if self.params["algo"]["init"] == "discrete":
-                    self.path_init(player.solver_init_path)
-
+            x_h, u_h = self.initilization(sqp_iter)
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
@@ -411,15 +383,18 @@ class SEMPC_solver(object):
             X, U, Sl = self.get_solution()
             alpha = 1.0
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            # print("GP val next: ", gp_val_next[self.Hm], "Step size: ", (X - x_h)[self.Hm, :])
-            # while (any(gp_val_next < self.params["common"]["constraint"])) and (
-            #     alpha > 0.0
-            # ):
-            #     alpha -= 0.1
-            #     X = alpha * X + (1 - alpha) * x_h
-            #     U = alpha * U + (1 - alpha) * u_h
-            #     gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            #     print("GP val next: ", gp_val_next[self.Hm, :])
+            print("GP val next: ", gp_val_next[self.Hm], "Step size: ", (X - x_h)[self.Hm, :])
+            while (any(gp_val_next < self.params["common"]["constraint"])) and (
+                alpha >= 0.0
+            ):
+                print(f"Backtracking... alpha={alpha}")
+                alpha -= 0.1
+                X = alpha * X + (1 - alpha) * x_h
+                U = alpha * U + (1 - alpha) * u_h
+                gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+                print("GP val next: ", gp_val_next[self.Hm])
+            self.last_X = X.copy()
+            self.last_U = U.copy()
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -488,6 +463,7 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
+        return X, U
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
         if sqp_iter == self.max_sqp_iter - 1:
