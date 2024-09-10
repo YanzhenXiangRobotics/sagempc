@@ -278,7 +278,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             lb_cz_grad,
         )
         Lc = params["common"]["Lc"]
-        tol = 1.0e-3
+        tol = params["common"]["Lc_lin_tol"]
         model.con_h_expr = ca.vertcat(
             lb_cz_lin
             + lb_cz_grad.T @ (model_z - z_lin)
