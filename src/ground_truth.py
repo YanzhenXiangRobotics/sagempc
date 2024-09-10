@@ -20,7 +20,6 @@ class GroundTruth():
         self.optimal_graphs_eps = []
         self.optimal_graphs0 = []
         self.env_data = env.env_data
-        self.true_density = env.get_true_objective_func()
         self.true_constraint_function = env.get_true_safety_func()
         self.init_safe = env.get_safe_init()
         self.params = params

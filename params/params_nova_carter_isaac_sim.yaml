@@ -1,8 +1,8 @@
 env: # Env parameters mainly used for env generation
-  start: [-21.8, -21.8] # origin of domain
+  start: [-21.8, -17.8] # origin of domain
   shape:
-    x: 350 # Number of grid points
-    y: 350
+    x: 175 # Number of grid points
+    y: 175
   start_loc: [-20.0, -20.0] # Agent start location, overwritten by params_env.yaml
   start_angle: 3.14159
   goal_loc: [-10.0, -5.0] # Agent goal location, overwritten by params_env.yaml
@@ -22,7 +22,7 @@ env: # Env parameters mainly used for env generation
 visu:
   show: False # Turn on the visualization
   show_current_loc: False # Show current location of the agent
-  step_size: 0.02 # Step size for the visualization
+  step_size: 0.04 # Step size for the visualization
   opti_path: True # Show the optimistic path generate by Problem 18/ discrete path in optimistic set
   show_path: True # Show the path travelled by the agent
   show_opti_set: False # Show the optimistic set

@@ -501,7 +501,6 @@ class ContiWorld:
         init_xy["Cx_X"] = self.__init_safe["loc"]
         init_xy["Fx_X"] = self.__init_safe["loc"]
         init_xy["Cx_Y"] = self.get_multi_constraint_observation(init_xy["Cx_X"])
-        init_xy["Fx_Y"] = self.get_multi_density_observation(init_xy["Fx_X"])
         return init_xy
 
     def step(self, action_u):
