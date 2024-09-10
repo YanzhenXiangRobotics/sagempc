@@ -403,9 +403,9 @@ def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
     # penalty_sqp_stepsize = 10.0 * (model_x - x_lin).T @ (model_x - x_lin) + 10.0 * (
     #     model_z - z_lin
     # ).T @ (model_z - z_lin)
-    penalty_sqp_stepsize = 0.0 * (model_x - x_lin).T @ (model_x - x_lin)
+    penalty_sqp_stepsize = 0.0 * (model_z - z_lin).T @ (model_z - z_lin)
     ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
-    ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
+    # ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
     return ocp
 
 

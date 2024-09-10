@@ -382,7 +382,21 @@ class SEMPC_solver(object):
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
-            X, U = self.backtrack(X, U, x_h, u_h, player)
+            
+            if self.params["common"]["backtrack"]:
+                X, U = self.backtrack(X, U, x_h, u_h, player)
+            LB_cz_val_next, _ = player.get_gp_sensitivities(
+                U[:, -self.x_dim :], "LB", "Cx"
+            )
+            print(
+                "GP val next: ",
+                LB_cz_val_next[self.Hm]
+                - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
+                "Step x: ",
+                X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
+                "Step z: ",
+                U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
+            )
             self.last_X, self.last_U = X.copy(), U.copy()
 
             if (
@@ -466,11 +480,6 @@ class SEMPC_solver(object):
             u_h[:, -self.x_dim :],
             player,
         )
-        # print(
-        #     "GP val next: ",
-        #     LB_cz_val_next[self.Hm]
-        #     - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
-        # )
         backtracking_printed = False
         Lc = self.params["common"]["Lc"]
         while (
@@ -481,11 +490,12 @@ class SEMPC_solver(object):
                 < self.params["common"]["constraint"]
             )
         ) and (alpha >= 0.0):
-        # while (any(gp_val_next < self.params["common"]["constraint"])) and (
-        #     alpha >= 0.0
-        # ):
+            # while (any(gp_val_next < self.params["common"]["constraint"])) and (
+            #     alpha >= 0.0
+            # ):
             if not backtracking_printed:
-                print("Backtracking")
+                # print("Backtracking")
+                pass
             backtracking_printed = True
             # print(f"Backtracking... alpha={alpha}")
             alpha -= 0.1
