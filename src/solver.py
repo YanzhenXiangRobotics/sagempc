@@ -382,34 +382,25 @@ class SEMPC_solver(object):
 
             X, U, Sl = self.get_solution()
             alpha = 1.0
-            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
-            # print(
-            #     "GP val next: ",
-            #     LB_cz_val_next[self.Hm]
-            #     - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
-            # )
-            # while (
-            #     any(
-            #         LB_cz_val_next
-            #         - np.linalg.norm(
-            #             X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
-            #         )
-            #         < self.params["common"]["constraint"]
-            #     )
-            # ) and (alpha >= 0.0):
-            while (any(gp_val_next < self.params["common"]["constraint"])) and (
-                alpha >= 0.0
-            ):
-                # print(f"Backtracking... alpha={alpha}")
+            print(
+                "GP val next: ",
+                LB_cz_val_next[self.Hm]
+                - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
+            )
+            while (
+                any(
+                    LB_cz_val_next
+                    - np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                    < self.params["common"]["constraint"]
+                )
+            ) and (alpha >= 0.0):
+                print(f"Backtracking... alpha={alpha}")
                 alpha -= 0.1
                 X = alpha * X + (1 - alpha) * x_h
                 U = alpha * U + (1 - alpha) * u_h
-                gp_val_next, _ = player.get_gp_sensitivities(
-                    X[:, : self.x_dim], "LB", "Cx"
-                )
                 LB_cz_val_next, _ = player.get_gp_sensitivities(
                     U[:, -self.x_dim :], "LB", "Cx"
                 )
