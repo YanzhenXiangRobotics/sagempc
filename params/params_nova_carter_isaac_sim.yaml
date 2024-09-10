@@ -66,7 +66,7 @@ common:
   epsilon: 0.2 # user defined accuracy
   Lc: 1.0 # Lipschitz constant of the constraint function
   expander_offset: 0.1
-  Lc_lin_tol: 0.001
+  Lc_lin_tol: 0.00001
 
 algo:
   objective: "GO" # Objective of the algorithm, options: "GO", "SE" (goal-oriented, maximum domain safe exploration)
