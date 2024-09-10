@@ -15,7 +15,9 @@ world = sim.world
 
 # fig, ax = world.plot(show=False)
 min_dist_list = []
-for grid in world.grids_2d():
+for (i, grid) in enumerate(world.grids_2d()):
+    if i % 100 == 0:
+        print(i)
     min_dist, _ = world.min_dist_to_obsc(grid)
     min_dist_list.append(min_dist)
 

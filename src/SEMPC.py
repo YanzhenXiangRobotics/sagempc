@@ -207,9 +207,6 @@ class SEMPC(Node):
                 opti_path, goal_node = self.get_optimistic_path(
                     curr_node, goal_node, init_node
                 )
-                opti_path, goal_node = self.get_optimistic_path(
-                    curr_node, goal_node, init_node
-                )
             else:
                 opti_path, goal_node = self.get_optimistic_path(
                     init_node, goal_node, init_node

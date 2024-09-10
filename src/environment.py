@@ -90,19 +90,21 @@ class ContiWorld:
                 self.__Cx = torch.tensor(self.__Cx)
             else:
                 self.__Cx = self.true_constraint_sampling()
-            self.__Fx = self.true_density_sampling()
-            a, b = self.__Cx, self.__Fx
+            if not self.block_env:
+                self.__Fx = self.true_density_sampling()
             self.__init_safe = {}
             init = self.__get_safe_init()
             self.__init_safe["loc"] = init[0]
             self.__init_safe["idx"] = init[1]
             self.env_data["Cx"] = self.__Cx
-            self.env_data["Fx"] = self.__Fx
+            if not self.block_env:
+                self.env_data["Fx"] = self.__Fx
             if self.block_env:
                 self.env_data["Cx_gt"] = self.__Cx
             else:
                 self.env_data["Cx_model"] = self.Cx_model_cont
-            self.env_data["Fx_model"] = self.Fx_model_cont
+            if not self.block_env:
+                self.env_data["Fx_model"] = self.Fx_model_cont
             self.env_data["init_safe"] = self.__init_safe
             a_file = open(env_file_path, "wb")
             pickle.dump(self.env_data, a_file)
