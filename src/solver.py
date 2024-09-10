@@ -271,11 +271,12 @@ class SEMPC_solver(object):
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
-            if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-                sqp_iter == (self.max_sqp_iter - 1)
-            ):
-                self.plot_3D(player)
-                self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
+            if self.params["experiment"]["plot_contour"]:
+                if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
+                    sqp_iter == (self.max_sqp_iter - 1)
+                ):
+                    self.plot_3D(player)
+                    # self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -382,6 +383,7 @@ class SEMPC_solver(object):
 
             X, U, Sl = self.get_solution()
             X, U = self.backtrack(X, U, x_h, u_h, player)
+            self.last_X, self.last_U = X.copy(), U.copy()
 
             if (
                 self.params["algo"]["type"] == "ret_expander"
@@ -394,32 +396,32 @@ class SEMPC_solver(object):
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
-            if sqp_iter == (self.max_sqp_iter - 1):
-                if self.params["visu"]["show"]:
-                    plt.figure(2)
-                    if (
-                        self.params["algo"]["type"] == "ret_expander"
-                        or self.params["algo"]["type"] == "MPC_expander"
-                        or self.params["algo"]["type"] == "MPC_expander_V0"
-                    ):
-                        plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
-                        plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
-                    else:
-                        plt.plot(X[:, 0], X[:, 1], color="tab:green")
-                    plt.xlim(
-                        self.params["env"]["start"],
-                        self.params["env"]["start"]
-                        + self.params["visu"]["step_size"]
-                        * self.params["env"]["shape"]["x"],
-                    )
-                    plt.ylim(
-                        self.params["env"]["start"],
-                        self.params["env"]["start"]
-                        + self.params["visu"]["step_size"]
-                        * self.params["env"]["shape"]["y"],
-                    )
-                    # plt.axes().set_aspect('equal')
-                    plt.savefig("temp.png")
+            # if sqp_iter == (self.max_sqp_iter - 1):
+            #     if self.params["visu"]["show"]:
+            #         plt.figure(2)
+            #         if (
+            #             self.params["algo"]["type"] == "ret_expander"
+            #             or self.params["algo"]["type"] == "MPC_expander"
+            #             or self.params["algo"]["type"] == "MPC_expander_V0"
+            #         ):
+            #             plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
+            #             plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
+            #         else:
+            #             plt.plot(X[:, 0], X[:, 1], color="tab:green")
+            #         plt.xlim(
+            #             self.params["env"]["start"],
+            #             self.params["env"]["start"]
+            #             + self.params["visu"]["step_size"]
+            #             * self.params["env"]["shape"]["x"],
+            #         )
+            #         plt.ylim(
+            #             self.params["env"]["start"],
+            #             self.params["env"]["start"]
+            #             + self.params["visu"]["step_size"]
+            #             * self.params["env"]["shape"]["y"],
+            #         )
+            #         # plt.axes().set_aspect('equal')
+            #         plt.savefig("temp.png")
             # print("statistics", self.ocp_solver.get_stats("statistics"))
             if max(residuals) < self.tol_nlp:
                 print("Residual less than tol", max(residuals), " ", self.tol_nlp)
@@ -493,8 +495,6 @@ class SEMPC_solver(object):
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
-        self.last_X = X.copy()
-        self.last_U = U.copy()
         return X, U
 
     def compute_LB_cv_val_lin(self, X, U, x_h, z_h, player):

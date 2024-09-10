@@ -174,20 +174,21 @@ class SEMPC(Node):
             intersect_pessi_opti_plot = (
                 intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
             )
-            tmp_0 = self.env.ax.contour(
-                X1,
-                X2,
-                intersect_pessi_opti_plot,
-                levels=[self.params["common"]["constraint"]],
-                colors="green",
-                linewidths=0.5,
-            )
-            # tmp_0.collections[0].set_label("optimistic contour")
-            (artists,), _ = tmp_0.legend_elements()
-            artists.set_label(
-                "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
-            )
-            self.env.legend_handles.append(artists)
+            if self.params["experiment"]["plot_contour"]:
+                tmp_0 = self.env.ax.contour(
+                    X1,
+                    X2,
+                    intersect_pessi_opti_plot,
+                    levels=[self.params["common"]["constraint"]],
+                    colors="green",
+                    linewidths=0.5,
+                )
+                # tmp_0.collections[0].set_label("optimistic contour")
+                (artists,), _ = tmp_0.legend_elements()
+                artists.set_label(
+                    "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
+                )
+                self.env.legend_handles.append(artists)
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -889,8 +890,8 @@ class SEMPC(Node):
                 [self.params["env"]["start_loc"][1] - 1.0, self.params["env"]["goal_loc"][1]]
             )
             self.env.ax.grid()
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)

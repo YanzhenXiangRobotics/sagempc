@@ -78,6 +78,7 @@ experiment:
   generate_regret_plot: True # Set True to generate the regret plot
   folder: "nova_carter_isaac_sim" # Folder to pick up the environment type and save the results
   use_isaac_sim: True
+  plot_contour: True
   plot_per_sqp_iter: False
   batch_update: True
   batch_size: 5
