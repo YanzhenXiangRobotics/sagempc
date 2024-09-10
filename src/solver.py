@@ -381,8 +381,31 @@ class SEMPC_solver(object):
             residuals = self.ocp_solver.get_residuals()
 
             X, U, Sl = self.get_solution()
-            X, U = self.backtrack(X, U, x_h, u_h, player)
-
+            alpha = 1.0
+            LB_cz_val_next, _ = player.get_gp_sensitivities(
+                U[:, -self.x_dim :], "LB", "Cx"
+            )
+            print(
+                "GP val next: ",
+                LB_cz_val_next[self.Hm]
+                - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
+            )
+            while (
+                any(
+                    LB_cz_val_next
+                    - np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                    < self.params["common"]["constraint"]
+                )
+            ) and (alpha >= 0.0):
+                print(f"Backtracking... alpha={alpha}")
+                alpha -= 0.1
+                X = alpha * X + (1 - alpha) * x_h
+                U = alpha * U + (1 - alpha) * u_h
+                LB_cz_val_next, _ = player.get_gp_sensitivities(
+                    U[:, -self.x_dim :], "LB", "Cx"
+                )
+            self.last_X = X.copy()
+            self.last_U = U.copy()
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -452,73 +475,6 @@ class SEMPC_solver(object):
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
         return X, U
-
-    def backtrack(self, X, U, x_h, u_h, player):
-        alpha = 1.0
-        gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-        LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
-        LB_cv_val_next_lin = self.compute_LB_cv_val_lin(
-            X[:-1, : self.x_dim],
-            U[:, -self.x_dim :],
-            x_h[:-1, : self.x_dim],
-            u_h[:, -self.x_dim :],
-            player,
-        )
-        # print(
-        #     "GP val next: ",
-        #     LB_cz_val_next[self.Hm]
-        #     - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
-        # )
-        backtracking_printed = False
-        Lc = self.params["common"]["Lc"]
-        while (
-            any(
-                LB_cz_val_next
-                - Lc
-                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
-                < self.params["common"]["constraint"]
-            )
-        ) and (alpha >= 0.0):
-            # while (any(gp_val_next < self.params["common"]["constraint"])) and (
-            #     alpha >= 0.0
-            # ):
-            if not backtracking_printed:
-                print("Backtracking")
-            backtracking_printed = True
-            # print(f"Backtracking... alpha={alpha}")
-            alpha -= 0.1
-            X = alpha * X + (1 - alpha) * x_h
-            U = alpha * U + (1 - alpha) * u_h
-            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            LB_cz_val_next, _ = player.get_gp_sensitivities(
-                U[:, -self.x_dim :], "LB", "Cx"
-            )
-        self.last_X = X.copy()
-        self.last_U = U.copy()
-        return X, U
-
-    def compute_LB_cv_val_lin(self, X, U, x_h, z_h, player):
-        lb_cz_lins, lb_cz_grads = player.get_gp_sensitivities(z_h, "LB", "Cx")
-        Lc = self.params["common"]["Lc"]
-        q_th = self.params["common"]["constraint"]
-        tol = self.params["common"]["Lc_lin_tol"]
-        LB_cv_val_lins = []
-        for model_x, model_z, x_lin, z_lin, lb_cz_lin, lb_cz_grad in zip(
-            X, U, x_h, z_h, lb_cz_lins, lb_cz_grads
-        ):
-            LB_cv_val_lin = (
-                lb_cz_lin
-                + lb_cz_grad @ (model_z - z_lin).T
-                - (Lc / (np.linalg.norm(x_lin - z_lin) + tol))
-                * ((x_lin - z_lin) @ (model_x - x_lin).T)
-                - (Lc / (np.linalg.norm(x_lin - z_lin) + tol))
-                * ((z_lin - x_lin) @ (model_z - z_lin).T)
-                - Lc * np.linalg.norm(x_lin - z_lin)
-                - q_th,
-            )
-            LB_cv_val_lins.append(LB_cv_val_lin[0])
-        LB_cv_val_lins = np.array(LB_cv_val_lins)
-        return LB_cv_val_lins
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
         if sqp_iter == self.max_sqp_iter - 1:
