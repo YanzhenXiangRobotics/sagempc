@@ -471,17 +471,17 @@ class SEMPC_solver(object):
         # )
         backtracking_printed = False
         Lc = self.params["common"]["Lc"]
-        # while (
-        #     any(
-        #         LB_cz_val_next
-        #         - Lc
-        #         * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
-        #         < self.params["common"]["constraint"]
-        #     )
-        # ) and (alpha >= 0.0):
-        while (any(gp_val_next < self.params["common"]["constraint"])) and (
-            alpha >= 0.0
-        ):
+        while (
+            any(
+                LB_cz_val_next
+                - Lc
+                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                < self.params["common"]["constraint"]
+            )
+        ) and (alpha >= 0.0):
+        # while (any(gp_val_next < self.params["common"]["constraint"])) and (
+        #     alpha >= 0.0
+        # ):
             if not backtracking_printed:
                 print("Backtracking")
             backtracking_printed = True
