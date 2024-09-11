@@ -131,6 +131,8 @@ class SEMPC_solver(object):
             #     u_h[stage, :] = u_init
             # x_h[self.H, :] = x_init
             # self.ocp_solver.set(self.H, "x", x_init)
+        # if sqp_iter == 0:
+        #     print("Diff: ", x_h[:-1, : self.x_dim] - u_h[:, -self.x_dim :])
         return x_h, u_h
 
     def path_init(self, path):
@@ -265,6 +267,11 @@ class SEMPC_solver(object):
         for sqp_iter in range(self.max_sqp_iter):
             self.ocp_solver.options_set("rti_phase", 1)
             x_h, u_h = self.initilization(sqp_iter)
+            if sqp_iter == 0:
+                tmp, _ = player.get_gp_sensitivities(self.last_X[:, : self.x_dim], "LB", "Cx")
+                print(f"tmp: {tmp}")
+            if sqp_iter == 0:
+                x_h_0, u_h_0 = x_h.copy(), u_h.copy()
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
@@ -396,11 +403,17 @@ class SEMPC_solver(object):
             GP_val_next = GP_vals_next[self.Hm]
             if any(GP_vals_next < self.params["common"]["constraint"]):
                 print(f"GP_vals_next: {GP_vals_next}")
+                diff_init = np.linalg.norm(
+                    X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
+                )
+                GP_vals_init = LB_cz_val_next - diff_init
+                print(f"GP_vals_init: {GP_vals_init}, diff_init: {diff_init}")
                 # print(
                 #     f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
                 # )
             if sqp_iter == (self.max_sqp_iter - 1):
                 pass
+                # print(f"GP_VALS: {GP_vals_next}")
                 # print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
             # print(
             #     "GP val next: ",
@@ -481,15 +494,18 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
+            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+            if sqp_iter == (self.max_sqp_iter - 1):
+                print(f"X GP val next", gp_val_next)
         return X, U
 
     def backtrack(self, X, U, x_h, u_h, player, sqp_iter):
-        if sqp_iter == 0:
-            x_old = self.last_X.copy()
-            u_old = self.last_U.copy()
-        else:
-            x_old = x_h
-            u_old = u_h
+        # if sqp_iter == 0:
+        #     x_old = self.last_X.copy()
+        #     u_old = self.last_U.copy()
+        # else:
+        x_old = x_h
+        u_old = u_h
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
