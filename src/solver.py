@@ -268,7 +268,9 @@ class SEMPC_solver(object):
             self.ocp_solver.options_set("rti_phase", 1)
             x_h, u_h = self.initilization(sqp_iter)
             if sqp_iter == 0:
-                tmp, _ = player.get_gp_sensitivities(self.last_X[:, : self.x_dim], "LB", "Cx")
+                tmp, _ = player.get_gp_sensitivities(
+                    self.last_X[:, : self.x_dim], "LB", "Cx"
+                )
                 print(f"After updating GP, gp val: {tmp}")
             if sqp_iter == 0:
                 x_h_0, u_h_0 = x_h.copy(), u_h.copy()
@@ -495,14 +497,23 @@ class SEMPC_solver(object):
             #         self.threeD_tmps.pop(0).remove()
             if sqp_iter == (self.max_sqp_iter - 1):
                 tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-                tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(self.last_X[:, : self.x_dim], "LB", "Cx")
-                step_size = (X - self.last_X)[:, :self.x_dim]
+                tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(
+                    self.last_X[:, : self.x_dim], "LB", "Cx"
+                )
+                step_size = (X - self.last_X)[:, : self.x_dim]
                 lin_gp_vals = []
-                for val, grad, x, x_lin in zip(tmp_2_vals, tmp_2_grads, X[:, :self.x_dim], self.last_X[:, :self.x_dim]):
+                for val, grad, x, x_lin in zip(
+                    tmp_2_vals,
+                    tmp_2_grads,
+                    X[:, : self.x_dim],
+                    self.last_X[:, : self.x_dim],
+                ):
                     lin_gp_val = val + grad @ (x - x_lin).T
                     lin_gp_vals.append(lin_gp_val)
                 tmp_2_vals = np.array(lin_gp_vals)
-                print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}, step size: {step_size}")
+                print(
+                    f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}, step size: {step_size}"
+                )
             self.last_X, self.last_U = X.copy(), U.copy()
         return X, U
 
@@ -528,17 +539,23 @@ class SEMPC_solver(object):
         #     )
         # ) and (alpha > 0.02):
         while (
+            (
                 LB_cz_val_next[self.Hm]
                 - Lc
-                * np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :], axis=-1)
+                * np.linalg.norm(
+                    X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :], axis=-1
+                )
                 < self.params["common"]["constraint"]
+            )
+            or (gp_val_next[-1] < self.params["common"]["constraint"])
         ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
             # ):
-            if not backtracking_printed:
-                # print("Backtracking")
-                pass
+            # if not backtracking_printed:
+            #     if backtrack_H:
+            #         print("backtrack_H")
+            # print("Backtracking")
             backtracking_printed = True
             # print(f"Backtracking... alpha={alpha}")
             alpha -= 0.1
