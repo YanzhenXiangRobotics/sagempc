@@ -425,8 +425,6 @@ class SEMPC_solver(object):
             #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
             # )
 
-            self.last_X, self.last_U = X.copy(), U.copy()
-
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -505,6 +503,7 @@ class SEMPC_solver(object):
                     lin_gp_vals.append(lin_gp_val)
                 tmp_2_vals = np.array(lin_gp_vals)
                 print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}, step size: {step_size}")
+            self.last_X, self.last_U = X.copy(), U.copy()
         return X, U
 
     def backtrack(self, X, U, x_h, u_h, player, sqp_iter):
