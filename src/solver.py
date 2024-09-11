@@ -269,7 +269,7 @@ class SEMPC_solver(object):
             x_h, u_h = self.initilization(sqp_iter)
             if sqp_iter == 0:
                 tmp, _ = player.get_gp_sensitivities(self.last_X[:, : self.x_dim], "LB", "Cx")
-                print(f"tmp: {tmp}")
+                print(f"After updating GP, gp val: {tmp}")
             if sqp_iter == 0:
                 x_h_0, u_h_0 = x_h.copy(), u_h.copy()
             gp_val, gp_grad = player.get_gp_sensitivities(
@@ -401,8 +401,9 @@ class SEMPC_solver(object):
                 X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
             )
             GP_val_next = GP_vals_next[self.Hm]
-            if any(GP_vals_next < self.params["common"]["constraint"]):
-                print(f"GP_vals_next: {GP_vals_next}")
+            if GP_val_next < self.params["common"]["constraint"]:
+                print("Unsafe !!!")
+                print(f"GP_val_next: {GP_val_next}")
                 diff_init = np.linalg.norm(
                     X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
                 )
@@ -494,37 +495,44 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
-            gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
             if sqp_iter == (self.max_sqp_iter - 1):
-                print(f"X GP val next", gp_val_next)
+                tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+                tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(self.last_X[:, : self.x_dim], "LB", "Cx")
+                step_size = (X - self.last_X)[:, :self.x_dim]
+                lin_gp_vals = []
+                for val, grad, x, x_lin in zip(tmp_2_vals, tmp_2_grads, X[:, :self.x_dim], self.last_X[:, :self.x_dim]):
+                    lin_gp_val = val + grad @ (x - x_lin).T
+                    lin_gp_vals.append(lin_gp_val)
+                tmp_2_vals = np.array(lin_gp_vals)
+                print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}, step size: {step_size}")
         return X, U
 
     def backtrack(self, X, U, x_h, u_h, player, sqp_iter):
-        # if sqp_iter == 0:
-        #     x_old = self.last_X.copy()
-        #     u_old = self.last_U.copy()
-        # else:
-        x_old = x_h
-        u_old = u_h
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
         Lc_constr_next_lin = self.compute_Lc_constr_next_lin(
             X[:-1, : self.x_dim],
             U[:, -self.x_dim :],
-            x_old[:-1, : self.x_dim],
-            u_old[:, -self.x_dim :],
+            x_h[:-1, : self.x_dim],
+            u_h[:, -self.x_dim :],
             player,
         )
         backtracking_printed = False
         Lc = self.params["common"]["Lc"]
+        # while (
+        #     any(
+        #         LB_cz_val_next
+        #         - Lc
+        #         * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+        #         < self.params["common"]["constraint"]
+        #     )
+        # ) and (alpha > 0.02):
         while (
-            any(
-                LB_cz_val_next
+                LB_cz_val_next[self.Hm]
                 - Lc
-                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                * np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :], axis=-1)
                 < self.params["common"]["constraint"]
-            )
         ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
@@ -535,8 +543,8 @@ class SEMPC_solver(object):
             backtracking_printed = True
             # print(f"Backtracking... alpha={alpha}")
             alpha -= 0.1
-            X = alpha * X + (1 - alpha) * x_old
-            U = alpha * U + (1 - alpha) * u_old
+            X = alpha * X + (1 - alpha) * x_h
+            U = alpha * U + (1 - alpha) * u_h
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
