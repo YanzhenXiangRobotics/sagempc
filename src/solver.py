@@ -381,22 +381,34 @@ class SEMPC_solver(object):
             print("cost: ", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
 
-            X, U, Sl = self.get_solution()
-            
+            X_raw, U_raw, Sl = self.get_solution()
+
             if self.params["common"]["backtrack"]:
-                X, U = self.backtrack(X, U, x_h, u_h, player)
+                X, U, alpha = self.backtrack(X_raw, U_raw, x_h, u_h, player, sqp_iter)
+            else:
+                X, U = X_raw.copy(), U_raw.copy()
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
-            print(
-                "GP val next: ",
-                LB_cz_val_next[self.Hm]
-                - np.linalg.norm(X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :]),
-                "Step x: ",
-                X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
-                "Step z: ",
-                U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
+            GP_vals_next = LB_cz_val_next - np.linalg.norm(
+                X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
             )
+            GP_val_next = GP_vals_next[self.Hm]
+            if any(GP_vals_next < self.params["common"]["constraint"]):
+                print(
+                    f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
+                )
+            if sqp_iter == (self.max_sqp_iter - 1):
+                print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
+            # print(
+            #     "GP val next: ",
+            #     GP_val_next,
+            #     "Step x: ",
+            #     X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
+            #     "Step z: ",
+            #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
+            # )
+
             self.last_X, self.last_U = X.copy(), U.copy()
 
             if (
@@ -469,15 +481,21 @@ class SEMPC_solver(object):
             #         self.threeD_tmps.pop(0).remove()
         return X, U
 
-    def backtrack(self, X, U, x_h, u_h, player):
+    def backtrack(self, X, U, x_h, u_h, player, sqp_iter):
+        if sqp_iter == 0:
+            x_old = self.last_X.copy()
+            u_old = self.last_U.copy()
+        else:
+            x_old = x_h
+            u_old = u_h
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
-        LB_cv_val_next_lin = self.compute_LB_cv_val_lin(
+        Lc_constr_next_lin = self.compute_Lc_constr_next_lin(
             X[:-1, : self.x_dim],
             U[:, -self.x_dim :],
-            x_h[:-1, : self.x_dim],
-            u_h[:, -self.x_dim :],
+            x_old[:-1, : self.x_dim],
+            u_old[:, -self.x_dim :],
             player,
         )
         backtracking_printed = False
@@ -489,7 +507,7 @@ class SEMPC_solver(object):
                 * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
                 < self.params["common"]["constraint"]
             )
-        ) and (alpha >= 0.0):
+        ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
             # ):
@@ -499,15 +517,15 @@ class SEMPC_solver(object):
             backtracking_printed = True
             # print(f"Backtracking... alpha={alpha}")
             alpha -= 0.1
-            X = alpha * X + (1 - alpha) * x_h
-            U = alpha * U + (1 - alpha) * u_h
+            X = alpha * X + (1 - alpha) * x_old
+            U = alpha * U + (1 - alpha) * u_old
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
-        return X, U
+        return X, U, alpha
 
-    def compute_LB_cv_val_lin(self, X, U, x_h, z_h, player):
+    def compute_Lc_constr_next_lin(self, X, U, x_h, z_h, player):
         lb_cz_lins, lb_cz_grads = player.get_gp_sensitivities(z_h, "LB", "Cx")
         Lc = self.params["common"]["Lc"]
         q_th = self.params["common"]["constraint"]

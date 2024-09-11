@@ -22,7 +22,6 @@ from src.ground_truth import GroundTruth
 from src.SEMPC import SEMPC
 from src.utils.helper import (
     TrainAndUpdateConstraint,
-    TrainAndUpdateDensity,
     get_frame_writer,
     oracle,
 )

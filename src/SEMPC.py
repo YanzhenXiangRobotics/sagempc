@@ -11,9 +11,6 @@ from src.solver import Oracle_solver, SEMPC_solver
 from src.utils.helper import (
     TrainAndUpdateConstraint,
     TrainAndUpdateConstraint_isaac_sim,
-    TrainAndUpdateDensity,
-    get_frame_writer,
-    oracle,
 )
 from src.utils.initializer import (
     get_players_initialized,
@@ -319,43 +316,6 @@ class SEMPC(Node):
             else:
                 raise NameError("Objective is not clear")
         print("Number of samples", self.players[self.pl_idx].Cx_X_train.shape)
-        # while (self.max_density_sigma > self.params["algo"]["eps_density_thresh"]) and self.iter < self.params["algo"]["n_iter"]:
-        #     # while (not self.flag_reached_xt_goal) and (not self.players[self.pl_idx].infeasible):
-        #     #     # recursively run MPC until the goal is reached (also collect constraint measurement meanwhile)
-        #     self.not_reached_and_prob_feasible()
-
-        #     # Collect density measurement if your goal is reached
-        #     if self.flag_reached_xt_goal:
-        #         # player.planned_measure_loc[0], player.current_location[0][0], self.players[self.pl_idx].safe_meas_loc
-        #         TrainAndUpdateDensity(
-        #             self.players[self.pl_idx].safe_meas_loc, self.pl_idx, self.players, self.params, self.env)
-
-        #     # decide on a new goal
-        #     # or player.infeasible:
-        #     # if self.flag_reached_xt_goal or self.players[self.pl_idx].infeasible:
-        #     self.goal_reached_or_prob_infeasible()
-        # print("Max density uncertainity", self.max_density_sigma, " iter: ", self.iter)
-
-    # def sempc_main(self):
-    #     """_summary_ Responsible for initialization, logic for when to collect sample vs explore
-    #     """
-    #     while (self.max_density_sigma > self.params["algo"]["eps_density_thresh"]) and self.iter < self.params["algo"]["n_iter"]:
-    #         while (not self.flag_reached_xt_goal) and (not self.players[self.pl_idx].infeasible):
-    #             # recursively run MPC until the goal is reached (also collect constraint measurement meanwhile)
-    #             self.not_reached_and_prob_feasible()
-
-    #         # Collect density measurement if your goal is reached
-    #         if self.flag_reached_xt_goal:
-    #             # player.planned_measure_loc[0], player.current_location[0][0], self.players[self.pl_idx].safe_meas_loc
-    #             TrainAndUpdateDensity(
-    #                 self.players[self.pl_idx].safe_meas_loc, self.pl_idx, self.players, self.params, self.env)
-
-    #         # decide on a new goal
-    #         # or player.infeasible:
-    #         if self.flag_reached_xt_goal or self.players[self.pl_idx].infeasible:
-    #             self.goal_reached_or_prob_infeasible()
-    #     print("Max density uncertainity",
-    #           self.max_density_sigma, " iter: ", self.iter)
 
     def sempc_initialization(self):
         if self.use_isaac_sim:
@@ -382,8 +342,6 @@ class SEMPC(Node):
 
         for it, player in enumerate(self.players):
             player.update_Cx_gp_with_current_data()
-            player.update_Fx_gp_with_current_data()
-            player.save_posterior_normalization_const()
             init = self.env.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
@@ -675,7 +633,7 @@ class SEMPC(Node):
     def apply_control(self, U):
         msg = Twist()
         for i in range(U.shape[0] - 1):
-        # for i in range(U.shape[0]):
+            # for i in range(U.shape[0]):
             self.get_current_state_measurement()
             start = self.t_curr
             while self.t_curr - start < U[i, 2]:
@@ -847,6 +805,12 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
+                # self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                x_curr = (
+                    self.players[self.pl_idx]
+                    .current_state[: self.state_dim]
+                    .reshape(self.state_dim)
+                )
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)
         # self.visu.UpdateSafeVisu(0, self.players, self.env)
@@ -861,14 +825,14 @@ class SEMPC(Node):
                     self.x_curr[0],
                     self.x_curr[1],
                     color="red",
-                    s=3,
+                    s=6,
                     label="actual trajectory",
                 )
             )
         else:
             self.env.legend_handles.append(
                 self.env.ax.scatter(
-                    x_curr[0], x_curr[1], color="red", s=3, label="actual trajectory"
+                    x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
                 )
             )
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
@@ -882,12 +846,15 @@ class SEMPC(Node):
 
             self.env.ax.set_xlim(
                 [
-                    self.params["env"]["start"][0],
-                    self.params["env"]["goal_loc"][0] + 2.0,
+                    self.params["env"]["start_loc"][0] - 0.5,
+                    self.params["env"]["start_loc"][0] + 3.0,
                 ]
             )
             self.env.ax.set_ylim(
-                [self.params["env"]["start_loc"][1] - 1.0, self.params["env"]["goal_loc"][1]]
+                [
+                    self.params["env"]["start_loc"][1] - 0.5,
+                    self.params["env"]["start_loc"][1] + 3.0,
+                ]
             )
             self.env.ax.grid()
         self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
