@@ -395,11 +395,13 @@ class SEMPC_solver(object):
             )
             GP_val_next = GP_vals_next[self.Hm]
             if any(GP_vals_next < self.params["common"]["constraint"]):
-                print(
-                    f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
-                )
+                print(f"GP_vals_next: {GP_vals_next}")
+                # print(
+                #     f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
+                # )
             if sqp_iter == (self.max_sqp_iter - 1):
-                print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
+                pass
+                # print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
             # print(
             #     "GP val next: ",
             #     GP_val_next,
