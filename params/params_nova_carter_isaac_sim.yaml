@@ -52,7 +52,7 @@ optimizer:
     max_sqp_iter: 10
     tol_nlp: 1.0e-6
   SEMPC: # Parameters for the SageMPC
-    max_sqp_iter: 20  # Maximum number of SQP iterations
+    max_sqp_iter: 5  # Maximum number of SQP iterations
     tol_nlp: 1.0e-4 # Tolerance for the NLP solver
   Tf: 5.0 # sampling time = Tf/H
   order: 1
@@ -78,7 +78,7 @@ experiment:
   name: "goMPC" # Random name of the experiment
   generate_regret_plot: True # Set True to generate the regret plot
   folder: "nova_carter_isaac_sim" # Folder to pick up the environment type and save the results
-  use_isaac_sim: False
+  use_isaac_sim: True
   plot_contour: True
   plot_per_sqp_iter: False
   batch_update: True
