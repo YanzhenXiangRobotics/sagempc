@@ -84,17 +84,3 @@ def TrainAndUpdateConstraint_isaac_sim(
         if i is not agent_key:
             players[i].communicate_constraint([train["Cx_X"]], [train["Cx_Y"]])
 
-
-def TrainAndUpdateDensity(query_pt, agent_key, players, params, env):
-    if not torch.is_tensor(query_pt):
-        query_pt = torch.from_numpy(query_pt).float()
-    # 1) Fit a model on the available data based
-    train = {}
-    train["Fx_X"] = query_pt.reshape(-1, params["common"]["dim"])
-    train["Fx_Y"] = env.get_density_observation(train["Fx_X"])
-
-    players[agent_key].update_Fx_gp(train["Fx_X"], train["Fx_Y"])
-
-    for i in range(params["env"]["n_players"]):
-        if i is not agent_key:
-            players[i].communicate_density([train["Fx_X"]], [train["Fx_Y"]])

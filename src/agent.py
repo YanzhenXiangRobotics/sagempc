@@ -31,7 +31,7 @@ def get_idx_from_grid(position, grid_V):
 
 class Agent(object):
     def __init__(
-        self, my_key, X_train, Cx_Y_train, Fx_Y_train, params, grid_V, origin=None
+        self, my_key, X_train, Cx_Y_train, params, grid_V, origin=None
     ) -> None:
         self.my_key = my_key
         self.max_density_sigma = 10
@@ -39,7 +39,6 @@ class Agent(object):
         self.env_dim = params["common"]["dim"]
         self.Fx_X_train = X_train.reshape(-1, self.env_dim)
         self.Cx_X_train = X_train.reshape(-1, self.env_dim)
-        self.Fx_Y_train = Fx_Y_train.reshape(-1, 1)
         self.Cx_Y_train = Cx_Y_train.reshape(-1, 1)
         self.mean_shift_val = params["agent"]["mean_shift_val"]
         self.converged = False
@@ -91,8 +90,7 @@ class Agent(object):
         self.optimistic_graph = diag_grid_world_graph((self.Nx, self.Ny))
         self.pessimistic_graph = nx.empty_graph(n=0, create_using=nx.DiGraph())
         self.centralized_safe_graph = diag_grid_world_graph((self.Nx, self.Ny))
-
-        self.Fx_model = self.__update_Fx()
+        
         self.Cx_model = self.__update_Cx()
         self.planned_disk_center = self.Fx_X_train
         self.all_safe_nodes = self.base_graph.nodes
@@ -117,6 +115,8 @@ class Agent(object):
         self.safe_meas_loc = self.origin.reshape(-1, 2)
         self.planned_measure_loc = self.origin
         self.get_utility_minimizer = np.array(params["env"]["goal_loc"])
+        
+        self.pose = np.array(params["env"]["start_loc"])
 
     def get_gp_sensitivities(self, x_hat, bound, gp):
         self.st_bound = bound
@@ -146,16 +146,6 @@ class Agent(object):
             self.Cx_model.eval()
             return self.Cx_model(X.float()).mean + self.Cx_beta * 2 * torch.sqrt(
                 self.Cx_model(X.float()).variance
-            )
-        if self.st_bound == "UB" and self.st_gp == "Fx":
-            self.Fx_model.eval()
-            return self.Fx_model(X.float()).mean + self.Fx_beta * 2 * torch.sqrt(
-                self.Fx_model(X.float()).variance
-            )
-        if self.st_bound == "LB" and self.st_gp == "Fx":
-            self.Fx_model.eval()
-            return self.Fx_model(X.float()).mean - self.Fx_beta * 2 * torch.sqrt(
-                self.Fx_model(X.float()).variance
             )
 
     def get_lb_at_curr_loc(self):
@@ -191,19 +181,6 @@ class Agent(object):
         K = 1
         u = K * state
         return u
-
-    def opti_UCB(self):
-        self.Cx_model.eval()
-        X = self.grid_V
-        Cx_ucb = self.Cx_model(X.float()).mean + self.Cx_beta * 2 * torch.sqrt(
-            self.Cx_model(X.float()).variance
-        )
-        opti_safe = self.grid_V[Cx_ucb > 0]
-        self.Fx_model.eval()
-        Fx_ucb = self.Fx_model(opti_safe.float()).mean + self.Fx_beta * 2 * torch.sqrt(
-            self.Fx_model(opti_safe.float()).variance
-        )
-        return opti_safe[Fx_ucb.argmax().item()].numpy()
 
     def uncertainity_sampling(self, const_set="pessi"):
         """_summary_: The function will return the point with the highest uncertainty in the pessimistic set
@@ -296,6 +273,16 @@ class Agent(object):
     def update_current_state(self, state):
         self.current_state = state
         self.update_current_location(state[: self.x_dim])
+        
+    def rollout(self, U):
+        for i in range(U.shape[0]):
+            self.pose = np.array(
+                [
+                    self.pose[0] + U[i, 0] * np.cos(U[i, 1]) * U[i, 2],
+                    self.pose[1] + U[i, 0] * np.sin(U[i, 1]) * U[i, 2],
+                ]
+            )
+        self.update_current_state(self.pose)
 
     def update_current_state_t(self, x_curr, t_curr):
         self.current_state = np.append(x_curr, t_curr)
@@ -327,10 +314,6 @@ class Agent(object):
         for newX, newY in zip(X_set, Cx_set):
             self.__update_Cx_set(newX, newY)
 
-    def communicate_density(self, X_set, Fx_set):
-        for newX, newY in zip(X_set, Fx_set):
-            self.__update_Fx_set(newX, newY)
-
     def update_Cx_gp(self, newX, newY):
         self.__update_Cx_set(newX, newY)
         self.__update_Cx()
@@ -339,15 +322,6 @@ class Agent(object):
     def update_Cx_gp_with_current_data(self):
         self.__update_Cx()
         return self.Cx_model
-
-    def update_Fx_gp(self, newX, newY):
-        self.__update_Fx_set(newX, newY)
-        self.__update_Fx()
-        return self.Fx_model
-
-    def update_Fx_gp_with_current_data(self):
-        self.__update_Fx()
-        return self.Fx_model
 
     def __update_Cx_set(self, newX, newY):
         newX = newX.reshape(-1, self.env_dim)
@@ -365,52 +339,8 @@ class Agent(object):
         # fit_gpytorch_model(mll)
         return self.Cx_model
 
-    def __update_Fx_set(self, newX, newY):
-        newX = newX.reshape(-1, self.env_dim)
-        newY = newY.reshape(-1, 1)
-        self.Fx_X_train = torch.cat([self.Fx_X_train, newX]).reshape(-1, self.env_dim)
-        self.Fx_Y_train = torch.cat([self.Fx_Y_train, newY]).reshape(-1, 1)
-
-    def __update_Fx(self):
-        Fx_Y_train = self.__mean_corrected(self.Fx_Y_train)
-        self.Fx_model = SingleTaskGP(self.Fx_X_train, Fx_Y_train)
-        self.Fx_model.covar_module.base_kernel.lengthscale = self.Fx_lengthscale
-        self.Fx_model.likelihood.noise = self.Fx_noise
-        # mll = ExactMarginalLogLikelihood(model.likelihood, model)
-        # fit_gpytorch_model(mll)
-        return self.Fx_model
-
-    def __predict_Fx(self, newX):
-        newX = newX.reshape(-1, self.env_dim)
-        newY = self.Fx_model.posterior(newX).mean
-        Fx_Y_train = self.__mean_corrected(self.Fx_Y_train)
-        Fx_X_train = torch.cat([self.Fx_X_train, newX]).reshape(-1, self.env_dim)
-        Fx_Y_train = torch.cat([Fx_Y_train, newY]).reshape(-1, 1)
-        Fx_model = SingleTaskGP(Fx_X_train, Fx_Y_train)
-        Fx_model.covar_module.base_kernel.lengthscale = self.Fx_lengthscale
-        Fx_model.likelihood.noise = self.Fx_noise
-        return Fx_model
-
     def __mean_corrected(self, variable):
         return variable - self.mean_shift_val
-
-    def get_Fx_bounds(self, V):
-        lower_Fx, upper_Fx = self.Fx_model.posterior(V).mvn.confidence_region()
-        lower_Fx, upper_Fx = scale_with_beta(lower_Fx, upper_Fx, self.Fx_beta)
-        self.lower_Fx = torch.max(self.lower_Fx, lower_Fx)
-        self.upper_Fx = torch.min(self.upper_Fx, upper_Fx)
-        return self.lower_Fx, self.upper_Fx
-
-    def save_posterior_normalization_const(
-        self,
-    ):
-        lower_Fx, upper_Fx = self.Fx_model.posterior(
-            self.grid_V
-        ).mvn.confidence_region()
-        lower_Fx, upper_Fx = scale_with_beta(lower_Fx, upper_Fx, self.Fx_beta)
-        # acq_density = self.Fx_beta*upper_Fx  # acq without mean shift
-        diff = upper_Fx - lower_Fx
-        self.posterior_normalization_const = diff.max().detach()
 
     def UpdateConvergence(self, converged):
         self.converged = converged
@@ -517,16 +447,6 @@ class Agent(object):
         self.optim_getu = optim.getu()
         return reached
 
-    def get_maxCI_point(self, V):
-        # 2.1) Get the density function \mu to optimize
-        lower_Fx, upper_Fx = self.Fx_model.posterior(V).mvn.confidence_region()
-        # acq_density = self.Fx_beta*upper_Fx  # acq without mean shift
-        lower_Fx, upper_Fx = scale_with_beta(lower_Fx, upper_Fx, self.Fx_beta)
-        diff = upper_Fx - lower_Fx
-        xn_star = torch.Tensor([V[diff.argmax()], V[diff.argmax()]]).reshape(-1)
-        acq_density = diff
-        return xn_star, acq_density, self.V
-
     def get_uncertain_points(self, V, model_Fx):
         # 2.1) Get the density function \mu to optimize
         lower_Fx, upper_Fx = model_Fx.posterior(V).mvn.confidence_region()
@@ -535,38 +455,6 @@ class Agent(object):
         diff = upper_Fx - lower_Fx
         x1_star = V[diff.argmax()]
         return x1_star
-
-    def get_2maxCI_points(self, V, n_soln):
-        model_Fx = self.Fx_model
-        xn_star = torch.empty(0)
-        for _ in range(n_soln):
-            x1_star = self.get_uncertain_points(V, model_Fx)
-            xn_star = torch.cat([xn_star, x1_star.reshape(-1)])
-            model_Fx = self.__predict_Fx(xn_star)
-
-        lower_Fx, upper_Fx = self.Fx_model.posterior(V).mvn.confidence_region()
-        # acq_density = self.Fx_beta*upper_Fx  # acq without mean shift
-        lower_Fx, upper_Fx = scale_with_beta(lower_Fx, upper_Fx, self.Fx_beta)
-        acq_density = (upper_Fx + lower_Fx) / 2 + self.mean_shift_val
-        return xn_star, acq_density.detach(), self.V
-
-    def get_lcb_density(self):
-        # 2.1) Get the density function \mu to optimize
-        lower_Fx, upper_Fx = self.Fx_model.posterior(
-            self.grid_V
-        ).mvn.confidence_region()
-        # acq_density = self.Fx_beta*upper_Fx  # acq without mean shift
-        lower_Fx, upper_Fx = scale_with_beta(lower_Fx, upper_Fx, self.Fx_beta)
-        acq_density = lower_Fx + self.mean_shift_val
-        return acq_density
-
-    # def get_maximizer_point(self, n_soln):
-    # self.UCB = UpperConfidenceBound(self.Fx_model, beta=2*self.Fx_beta)
-    # candidate, acq_value = optimize_acqf(
-    #     self.UCB, bounds=self.bounds, q=1, num_restarts=5, raw_samples=20,
-    # )
-    # print(candidate, acq_value)
-    #     return candidate.detach(), acq_value.detach()
 
     def get_maximizer_point(self, n_soln):
         # self.obj_optim.setstartparam(self.origin[0])
