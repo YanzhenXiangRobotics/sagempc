@@ -453,7 +453,7 @@ def export_nova_carter_discrete_Lc():
     model.x = ca.vertcat(x, y, theta, T)
 
     v = ca.SX.sym("v", 1)
-    omega = ca.SX.sym("omega", 1)  
+    omega = ca.SX.sym("omega", 1)
     dT = ca.SX.sym("dT", 1)
     model.u = ca.vertcat(v, omega, dT)
     z = ca.SX.sym("z", model.x.shape[0] - 1)
@@ -483,30 +483,21 @@ def export_nova_carter_discrete_Lc():
     )
 
     K0 = ca.vertcat(v * ca.cos(theta), v * ca.sin(theta), omega, 1)
-    K1 = ca.vertcat(v * ca.cos(theta + 0.5 * dT * omega), )
-    
-    model.disc_dyn_expr = (
-        ca.vertcat(x, y, T)
-        + ca.vertcat(
-            v_lin * ca.cos(theta_lin) * dT_lin,
-            v_lin * ca.sin(theta_lin) * dT_lin,
-            dT_lin,
-        )
-        + ca.vertcat(
-            ca.horzcat(
-                ca.cos(theta_lin) * dT_lin,
-                -v_lin * ca.sin(theta_lin) * dT_lin,
-                v_lin * ca.cos(theta_lin),
-            ),
-            ca.horzcat(
-                ca.sin(theta_lin) * dT_lin,
-                v_lin * ca.cos(theta_lin) * dT_lin,
-                v_lin * ca.sin(theta_lin),
-            ),
-            ca.horzcat(0, 0, 1),
-        )
-        @ ca.vertcat(v - v_lin, theta - theta_lin, dT - dT_lin)
+    K1 = ca.vertcat(
+        v * ca.cos(theta + 0.5 * dT * omega),
+        v * ca.sin(theta + 0.5 * dT * omega),
+        omega,
+        1,
     )
+    K2 = K1.copy()
+    K3 = ca.vertcat(
+        v * ca.cos(theta + dT * omega),
+        v * ca.sin(theta + dT * omega),
+        omega,
+        1,
+    )
+
+    model.disc_dyn_expr = model.x + (dT / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
 
     return model, ca.vertcat(x_lin, y_lin)
 
