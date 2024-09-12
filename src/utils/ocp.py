@@ -345,8 +345,8 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
 
 def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     q = 1e-3 * np.diag(np.ones(x_dim))
-    # qx = np.diag(np.ones(x_dim))
-    qx = 1e3 * np.diag(np.ones(x_dim))
+    qx = np.diag(np.ones(x_dim))
+    # qx = 1e3 * np.diag(np.ones(x_dim))
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
@@ -400,10 +400,10 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
 
 
 def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
-    # penalty_sqp_stepsize = 10.0 * (model_x - x_lin).T @ (model_x - x_lin) + 10.0 * (
-    #     model_z - z_lin
-    # ).T @ (model_z - z_lin)
-    penalty_sqp_stepsize = 0.0 * (model_z - z_lin).T @ (model_z - z_lin)
+    penalty_sqp_stepsize = (model_x - x_lin).T @ (model_x - x_lin) + (
+        model_z - z_lin
+    ).T @ (model_z - z_lin)
+    # penalty_sqp_stepsize = 0.0 * (model_z - z_lin).T @ (model_z - z_lin)
     ocp.model.cost_expr_ext_cost += penalty_sqp_stepsize
     # ocp.model.cost_expr_ext_cost_e += penalty_sqp_stepsize
     return ocp
@@ -573,7 +573,9 @@ def export_sempc_ocp(params):
     model_x = model.x[:-1]
     model_z = model.u[-x_dim:]
 
-    return_tuple = sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin)
+    return_tuple = sempc_const_expr(
+        model, x_dim, n_order, params, model_x, model_z, x_lin
+    )
 
     if (
         params["algo"]["type"] == "ret_expander"

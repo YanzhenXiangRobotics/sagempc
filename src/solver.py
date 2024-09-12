@@ -426,14 +426,16 @@ class SEMPC_solver(object):
                 pass
                 # print(f"GP_VALS: {GP_vals_next}")
                 # print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
-            # print(
-            #     "GP val next: ",
-            #     GP_val_next,
-            #     "Step x: ",
-            #     X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
-            #     "Step z: ",
-            #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
-            # )
+            print(
+                "Sim iter: ",
+                sim_iter,
+                "GP val next: ",
+                GP_val_next,
+                "Step x: ",
+                X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
+                "Step z: ",
+                U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
+            )
 
             if (
                 self.params["algo"]["type"] == "ret_expander"
@@ -520,7 +522,7 @@ class SEMPC_solver(object):
                     lin_gp_vals.append(lin_gp_val)
                 tmp_2_vals = np.array(lin_gp_vals)
                 print(
-                    f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}, step size: {step_size}"
+                    f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}"
                 )
             self.last_X, self.last_U = X.copy(), U.copy()
         return X, U

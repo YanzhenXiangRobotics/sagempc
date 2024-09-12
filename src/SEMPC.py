@@ -345,6 +345,7 @@ class SEMPC(Node):
             init = self.env.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
+            state[self.x_dim] = self.params["env"]["start_angle"]
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
