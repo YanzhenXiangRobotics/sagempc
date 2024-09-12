@@ -67,9 +67,9 @@ class SEMPC(Node):
         if params["agent"]["dynamics"] == "robot":
             self.state_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.x_dim
+            self.state_dim = self.n_order * self.x_dim + 1
         else:
-            self.state_dim = self.n_order * self.x_dim
+            self.state_dim = self.n_orer * self.x_dim
         self.obtained_init_state = False
         self.sempc_initialization()
         self.sim_iter = 0
@@ -804,8 +804,8 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
-                self.players[self.pl_idx].update_current_state(X[self.Hm])
-                # self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                # self.players[self.pl_idx].update_current_state(X[self.Hm])
+                self.players[self.pl_idx].rollout(U[: self.Hm, :])
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]

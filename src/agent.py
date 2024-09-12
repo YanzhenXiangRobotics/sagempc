@@ -29,6 +29,33 @@ def get_idx_from_grid(position, grid_V):
     return idx
 
 
+def dynamics(x, u):
+    v, omega, theta, dT = u[0], u[1], x[2], u[2]
+    K0 = torch.stack(
+        (v * torch.cos(theta), v * torch.sin(theta), omega, torch.tensor(1.0))
+    )
+    K1 = torch.stack(
+        (
+            v * torch.cos(theta + 0.5 * dT * omega),
+            v * torch.sin(theta + 0.5 * dT * omega),
+            omega,
+            torch.tensor(1.0),
+        )
+    )
+    K2 = K1.clone()
+    K3 = torch.stack(
+        (
+            v * torch.cos(theta + dT * omega),
+            v * torch.sin(theta + dT * omega),
+            omega,
+            torch.tensor(1.0),
+        )
+    )
+
+    f = x + (dT / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
+    return f
+
+
 class Agent(object):
     def __init__(
         self, my_key, X_train, Cx_Y_train, params, grid_V, origin=None
@@ -90,7 +117,7 @@ class Agent(object):
         self.optimistic_graph = diag_grid_world_graph((self.Nx, self.Ny))
         self.pessimistic_graph = nx.empty_graph(n=0, create_using=nx.DiGraph())
         self.centralized_safe_graph = diag_grid_world_graph((self.Nx, self.Ny))
-        
+
         self.Cx_model = self.__update_Cx()
         self.planned_disk_center = self.Fx_X_train
         self.all_safe_nodes = self.base_graph.nodes
@@ -115,8 +142,10 @@ class Agent(object):
         self.safe_meas_loc = self.origin.reshape(-1, 2)
         self.planned_measure_loc = self.origin
         self.get_utility_minimizer = np.array(params["env"]["goal_loc"])
-        
-        self.pose = np.array(params["env"]["start_loc"])
+
+        self.state_sim = np.append(
+            np.array(params["env"]["start_loc"]), (params["env"]["start_angle"], 0.0)
+        )
 
     def get_gp_sensitivities(self, x_hat, bound, gp):
         self.st_bound = bound
@@ -132,6 +161,19 @@ class Agent(object):
         return lb.detach().numpy(), dlb_dx.detach().numpy()[
             :, : self.params["optimizer"]["x_dim"]
         ]
+
+    def get_dyn_sensitivities(self, x_hat, u_hat):
+        f, df_dx, df_du = [], [], []
+        x_hat, u_hat = torch.from_numpy(x_hat), torch.from_numpy(u_hat)
+        assert x_hat.shape[0] == u_hat.shape[0]
+        for x_k, u_k in zip(x_hat, u_hat):
+            f_k = dynamics(x_k, u_k)
+            df_dx_k, df_du_k = torch.autograd.functional.jacobian(dynamics, (x_k, u_k))
+            f.append(f_k.detach().numpy())
+            df_dx.append(df_dx_k.detach().numpy())
+            df_du.append(df_du_k.detach().numpy())
+        f, df_dx, df_du = np.array(f), np.array(df_dx), np.array(df_du)
+        return f, df_dx, df_du
 
     def funct_sum(self, X):
         return self.funct(X).sum()
@@ -273,16 +315,16 @@ class Agent(object):
     def update_current_state(self, state):
         self.current_state = state
         self.update_current_location(state[: self.x_dim])
-        
+
     def rollout(self, U):
+        print(f"Apply: {U}")
         for i in range(U.shape[0]):
-            self.pose = np.array(
-                [
-                    self.pose[0] + U[i, 0] * np.cos(U[i, 1]) * U[i, 2],
-                    self.pose[1] + U[i, 0] * np.sin(U[i, 1]) * U[i, 2],
-                ]
+            self.state_sim = (
+                dynamics(torch.from_numpy(self.state_sim), torch.from_numpy(U[i, :]))
+                .detach()
+                .numpy()
             )
-        self.update_current_state(self.pose)
+        self.update_current_state(self.state_sim[:-1])
 
     def update_current_state_t(self, x_curr, t_curr):
         self.current_state = np.append(x_curr, t_curr)

@@ -241,7 +241,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
         x_lin = ca.SX.sym("x_lin", n_order * x_dim + 1)
         x_terminal = ca.SX.sym("x_terminal", n_order * x_dim + 1)
     elif params["agent"]["dynamics"] == "nova_carter":
-        x_terminal = ca.SX.sym("x_terminal", x_dim)
+        x_terminal = ca.SX.sym("x_terminal", x_dim + 1)
     else:
         x_lin = ca.SX.sym("x_lin", n_order * x_dim)
         x_terminal = ca.SX.sym("x_terminal", n_order * x_dim)

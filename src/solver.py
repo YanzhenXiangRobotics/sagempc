@@ -6,6 +6,9 @@ import torch
 import matplotlib.pyplot as plt
 from acados_template import AcadosOcpSolver, AcadosSimSolver
 
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from src.utils.ocp import export_oracle_ocp, export_sempc_ocp, export_sim
 
 from geometry_msgs.msg import Twist
@@ -47,7 +50,7 @@ class SEMPC_solver(object):
         if params["agent"]["dynamics"] == "robot":
             self.state_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.x_dim
+            self.state_dim = self.n_order * self.x_dim + 1
         else:
             self.state_dim = self.n_order * self.x_dim
         self.grids_coupled = grids_coupled
@@ -277,6 +280,7 @@ class SEMPC_solver(object):
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
+            f, df_dx, df_du = player.get_dyn_sensitivities(x_h[:-1, :], u_h[:, : -self.x_dim])
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
@@ -300,8 +304,10 @@ class SEMPC_solver(object):
                         "p",
                         np.hstack(
                             (
+                                f[stage, :],
+                                df_dx[stage, ::].flatten(),                                
                                 x_h[stage, :],
-                                x_h[stage + 1, :],
+                                df_du[stage, ::].flatten(),
                                 u_h[stage, : -self.x_dim],
                                 gp_val[stage],
                                 gp_grad[stage],
@@ -323,9 +329,11 @@ class SEMPC_solver(object):
                     "p",
                     np.hstack(
                         (
+                            f[stage - 1, :], #unused 
+                            df_dx[stage - 1, ::].flatten(), #unused                             
                             x_h[stage, :],
-                            x_h[stage, :],  # unused
-                            u_h[stage - 1, : -self.x_dim],  # unused
+                            df_du[stage - 1, ::].flatten(), #unused
+                            u_h[stage - 1, : -self.x_dim], #unused
                             gp_val[stage],
                             gp_grad[stage],
                             xg[stage],

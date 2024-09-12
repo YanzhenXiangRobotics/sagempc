@@ -446,60 +446,34 @@ def export_nova_carter_discrete_Lc():
     model = AcadosModel()
     model.name = "nova_carter_discrete_Lc"
 
-    x = ca.SX.sym("x", 1)
-    y = ca.SX.sym("y", 1)
-    T = ca.SX.sym("T", 1)
-    theta = ca.SX.sym("theta", 1)
-    model.x = ca.vertcat(x, y, theta, T)
-
-    v = ca.SX.sym("v", 1)
-    omega = ca.SX.sym("omega", 1)
-    dT = ca.SX.sym("dT", 1)
-    model.u = ca.vertcat(v, omega, dT)
-    z = ca.SX.sym("z", model.x.shape[0] - 1)
-    model.u = ca.vertcat(model.u, z)
-
-    x_lin = ca.SX.sym("x_lin", 1)
-    y_lin = ca.SX.sym("y_lin", 1)
-    theta_lin = ca.SX.sym("theta_lin", 1)
-    T_lin = ca.SX.sym("T_lin", 1)
-    x_next_lin = ca.SX.sym("x_next_lin", 1)
-    y_next_lin = ca.SX.sym("y_next_lin", 1)
-    T_next_lin = ca.SX.sym("T_next_lin", 1)
-    v_lin = ca.SX.sym("v_lin", 1)
-    omega_lin = ca.SX.sym("omega_lin", 1)
-    dT_lin = ca.SX.sym("dT_lin", 1)
-    model.p = ca.vertcat(
-        x_lin,
-        y_lin,
-        theta_lin,
-        T_lin,
-        x_next_lin,
-        y_next_lin,
-        T_next_lin,
-        v_lin,
-        omega_lin,
-        dT_lin,
-    )
-
-    K0 = ca.vertcat(v * ca.cos(theta), v * ca.sin(theta), omega, 1)
-    K1 = ca.vertcat(
-        v * ca.cos(theta + 0.5 * dT * omega),
-        v * ca.sin(theta + 0.5 * dT * omega),
-        omega,
-        1,
-    )
-    K2 = K1.copy()
-    K3 = ca.vertcat(
-        v * ca.cos(theta + dT * omega),
-        v * ca.sin(theta + dT * omega),
-        omega,
-        1,
-    )
-
-    model.disc_dyn_expr = model.x + (dT / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
-
-    return model, ca.vertcat(x_lin, y_lin)
+    x = ca.SX.sym("x", 4)
+    u = ca.SX.sym("u", 3)
+    z = ca.SX.sym("z", 2)
+    model.x, model.u = x, ca.vertcat(u, z)
+    
+    x_lin = ca.SX.sym("x_lin", x.shape[0])
+    u_lin = ca.SX.sym("u_lin", u.shape[0])
+    f = ca.SX.sym("f", x.shape[0])
+    df_dx = ca.SX.sym("df_dx", x.shape[0], x.shape[0])
+    df_du = ca.SX.sym("df_du", x.shape[0], u.shape[0])
+    
+    def flatten(M):
+        for i in range(M.shape[0]):
+            for j in range(M.shape[1]):
+                if (i, j) == (0, 0):
+                    M_flattened = M[i, j]
+                else:
+                    M_flattened = ca.vertcat(M_flattened, M[i, j])
+        return M_flattened
+    
+    df_dx_flattened = flatten(df_dx)
+    df_du_flattened = flatten(df_du)
+    
+    model.p = ca.vertcat(f, df_dx_flattened, x_lin, df_du_flattened, u_lin)
+    
+    model.disc_dyn_expr = f + df_dx @ (x - x_lin) + df_du @ (u - u_lin)
+    
+    return model, x_lin[:-1]
 
 
 def export_bicycle_model_with_discrete_rk4_Lc(name):
