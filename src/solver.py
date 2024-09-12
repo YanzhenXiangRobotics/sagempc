@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from acados_template import AcadosOcpSolver, AcadosSimSolver
 
 import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from src.utils.ocp import export_oracle_ocp, export_sempc_ocp, export_sim
@@ -280,7 +281,9 @@ class SEMPC_solver(object):
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
-            f, df_dx, df_du = player.get_dyn_sensitivities(x_h[:-1, :], u_h[:, : -self.x_dim])
+            f, df_dx, df_du = player.get_dyn_sensitivities(
+                x_h[:-1, :], u_h[:, : -self.x_dim]
+            )
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
@@ -305,7 +308,7 @@ class SEMPC_solver(object):
                         np.hstack(
                             (
                                 f[stage, :],
-                                df_dx[stage, ::].flatten(),                                
+                                df_dx[stage, ::].flatten(),
                                 x_h[stage, :],
                                 df_du[stage, ::].flatten(),
                                 u_h[stage, : -self.x_dim],
@@ -329,11 +332,11 @@ class SEMPC_solver(object):
                     "p",
                     np.hstack(
                         (
-                            f[stage - 1, :], #unused 
-                            df_dx[stage - 1, ::].flatten(), #unused                             
+                            f[stage - 1, :],  # unused
+                            df_dx[stage - 1, ::].flatten(),  # unused
                             x_h[stage, :],
-                            df_du[stage - 1, ::].flatten(), #unused
-                            u_h[stage - 1, : -self.x_dim], #unused
+                            df_du[stage - 1, ::].flatten(),  # unused
+                            u_h[stage - 1, : -self.x_dim],  # unused
                             gp_val[stage],
                             gp_grad[stage],
                             xg[stage],
@@ -395,15 +398,40 @@ class SEMPC_solver(object):
             t_1 = timeit.default_timer()
             # self.ocp_solver.print_statistics()
             # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
-            print("cost: ", self.ocp_solver.get_cost())
-            residuals = self.ocp_solver.get_residuals()
 
             X_raw, U_raw, Sl = self.get_solution()
+
+            print(
+                "cost ",
+                self.ocp_solver.get_cost(),
+                "cost Xm ",
+                (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]).T
+                @ (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]),
+                "cost Um ",
+                1e-3 * U_raw[self.Hm, : self.x_dim].T @ U_raw[self.Hm, : self.x_dim],
+                "cost Tm ",
+                X_raw[self.Hm, -1] / 1000,
+                "cost step ",
+                np.sum(
+                    [
+                        0.1
+                        * (
+                            (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim]).T
+                            @ (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim])
+                            + (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :]).T
+                            @ (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :])
+                        )
+                        for k in range(self.H)
+                    ]
+                ),
+            )
 
             if self.params["common"]["backtrack"]:
                 X, U, alpha = self.backtrack(X_raw, U_raw, x_h, u_h, player, sqp_iter)
             else:
                 X, U = X_raw.copy(), U_raw.copy()
+
+            residuals = self.ocp_solver.get_residuals()
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
@@ -521,9 +549,7 @@ class SEMPC_solver(object):
                     lin_gp_val = val + grad @ (x - x_lin).T
                     lin_gp_vals.append(lin_gp_val)
                 tmp_2_vals = np.array(lin_gp_vals)
-                print(
-                    f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}"
-                )
+                print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
             self.last_X, self.last_U = X.copy(), U.copy()
         return X, U
 
@@ -759,7 +785,6 @@ class Oracle_solver(object):
             status = self.ocp_solver.solve()
             t_1 = timeit.default_timer()
             # self.ocp_solver.print_statistics()
-            print("cost", self.ocp_solver.get_cost())
             residuals = self.ocp_solver.get_residuals()
             if max(residuals) < self.tol_nlp:
                 print("Residual less than tol", max(residuals), " ", self.tol_nlp)

@@ -41,8 +41,8 @@ agent:
 optimizer:
   H: 25 # Horizon
   Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
-  u_min: [-0.5, -0.5] # Constraints on action space, Minimum control input
-  u_max: [0.5, 0.5] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  u_min: [-0.5, -1.0] # Constraints on action space, Minimum control input
+  u_max: [0.5, 1.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   # u_min: [-1.0, -1.0] # Constraints on action space, Minimum control input
   # u_max: [1.0, 1.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   x_min: [-21.8, -21.8] # Constraints on state space, Minimum state value
@@ -52,7 +52,7 @@ optimizer:
     max_sqp_iter: 10
     tol_nlp: 1.0e-6
   SEMPC: # Parameters for the SageMPC
-    max_sqp_iter: 20  # Maximum number of SQP iterations
+    max_sqp_iter: 5  # Maximum number of SQP iterations
     tol_nlp: 1.0e-4 # Tolerance for the NLP solver
   Tf: 5.0 # sampling time = Tf/H
   order: 1
