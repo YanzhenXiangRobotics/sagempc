@@ -632,8 +632,8 @@ class SEMPC(Node):
 
     def apply_control(self, U):
         msg = Twist()
-        for i in range(U.shape[0] - 1):
-            # for i in range(U.shape[0]):
+        # for i in range(U.shape[0] - 1):
+        for i in range(U.shape[0]):
             self.get_current_state_measurement()
             start = self.t_curr
             while self.t_curr - start < U[i, 2]:

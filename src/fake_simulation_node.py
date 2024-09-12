@@ -103,9 +103,10 @@ class FakeSimulationNode(Node):
 
     def listener_callback(self, msg):
         self.u = np.array([msg.linear.x, msg.angular.z])
-        print(self.u)
+        # print(self.u)
 
     def dynamics(self):
+        print(self.u, self.dt)
         self.pose = np.array(
             [
                 self.pose[0] + self.u[0] * np.cos(self.u[1]) * self.dt,
@@ -133,11 +134,11 @@ class FakeSimulationNode(Node):
                     np.array([self.t]),
                 )
             )
-            print(f"To send {data_to_send}")
+            # print(f"To send {data_to_send}")
             conn, _ = self.s.accept()
             conn.sendall(data_to_send)
             conn.close()
-            print(f"Sent {data_to_send}")
+            # print(f"Sent {data_to_send}")
 
 
 if __name__ == "__main__":
