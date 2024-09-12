@@ -846,14 +846,14 @@ class SEMPC(Node):
 
             self.env.ax.set_xlim(
                 [
-                    self.params["env"]["start_loc"][0] - 0.5,
-                    self.params["env"]["start_loc"][0] + 3.0,
+                    self.params["env"]["start"][0],
+                    self.params["env"]["goal_loc"][0] + 3.0,
                 ]
             )
             self.env.ax.set_ylim(
                 [
-                    self.params["env"]["start_loc"][1] - 0.5,
-                    self.params["env"]["start_loc"][1] + 3.0,
+                    self.params["env"]["start"][1],
+                    self.params["env"]["goal_loc"][1] + 0.5,
                 ]
             )
             self.env.ax.grid()
