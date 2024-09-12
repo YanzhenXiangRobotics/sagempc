@@ -1,0 +1,5 @@
+Warning: running in conda env, please deactivate before executing this script
+If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
+Warning: running in conda env, please deactivate before executing this script
+If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
+There was an error running python
