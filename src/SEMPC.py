@@ -672,6 +672,7 @@ class SEMPC(Node):
                 .current_state[: self.state_dim]
                 .reshape(self.state_dim)
             )  # 3D
+        self.sempc_solver.update_x_curr(x_curr)
         x_origin = self.players[
             self.pl_idx
         ].origin.numpy()  # origin: related to X_train, thus 2-dims
@@ -812,6 +813,7 @@ class SEMPC(Node):
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
+                
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)
         # self.visu.UpdateSafeVisu(0, self.players, self.env)
@@ -858,7 +860,7 @@ class SEMPC(Node):
                 ]
             )
             self.env.ax.grid()
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
