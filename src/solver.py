@@ -585,11 +585,11 @@ class SEMPC_solver(object):
         #     )
         # ) and (alpha > 0.02):
         while (
-            (
+            any(
                 LB_cz_val_next[self.Hm]
                 - Lc
                 * np.linalg.norm(
-                    X[self.Hm, : self.x_dim] - U[self.Hm, -self.x_dim :], axis=-1
+                    X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
                 )
                 < self.params["common"]["constraint"]
             )
