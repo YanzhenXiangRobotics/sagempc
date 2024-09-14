@@ -74,6 +74,9 @@ class SEMPC_solver(object):
             self.last_U[stage, :] = self.ocp_solver.get(stage, "u")
         self.last_X[self.H, :] = self.ocp_solver.get(self.H, "x")
 
+    def update_x_curr(self, x_curr):
+        self.x_curr = x_curr
+
     def initilization(self, sqp_iter):
         x_h = self.last_X.copy()
         u_h = self.last_U.copy()
@@ -269,8 +272,21 @@ class SEMPC_solver(object):
         x_terminal = np.zeros(self.state_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
         for sqp_iter in range(self.max_sqp_iter):
+            if self.params["experiment"]["plot_contour"]:
+                if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
+                    sqp_iter == 0
+                ):
+                    self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
+                    self.plot_3D(player)
             self.ocp_solver.options_set("rti_phase", 1)
             x_h, u_h = self.initilization(sqp_iter)
+            if sqp_iter == 0:
+                self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
+                self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
+                self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+                if not os.path.exists("sqp_sols"):
+                    os.makedirs("sqp_sols")
+                self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png"))
             if sqp_iter == 0:
                 tmp, _ = player.get_gp_sensitivities(
                     self.last_X[:, : self.x_dim], "LB", "Cx"
@@ -421,7 +437,9 @@ class SEMPC_solver(object):
             # )
 
             if self.params["common"]["backtrack"]:
-                X, U, alpha = self.backtrack(X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter)
+                X, U, alpha, max_step_size = self.backtrack(
+                    X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
+                )
             else:
                 X, U = X_raw.copy(), U_raw.copy()
             self.set_solution(X, U)
@@ -460,7 +478,7 @@ class SEMPC_solver(object):
             #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
             # )
 
-            if alpha < 0.02:
+            if max_step_size < 0.04:
                 print(f"Break at sqp iter {sqp_iter}, \n\n")
                 self.early_term = True
             else:
@@ -474,13 +492,18 @@ class SEMPC_solver(object):
                 self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
             else:
                 self.plot_sqp_sol(sqp_iter, X)
-            if self.params["experiment"]["plot_contour"]:
-                if (
-                    (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter)
-                    or (sqp_iter == (self.max_sqp_iter - 1))
-                    or self.early_term
-                ):
-                    self.plot_3D(player)
+            self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
+            self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+            if not os.path.exists("sqp_sols"):
+                os.makedirs("sqp_sols")
+            self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png"))
+            if (sqp_iter == self.max_sqp_iter) or self.early_term:
+                len_plot_tmps = len(self.plot_tmps)
+                len_scatter_tmps = len(self.scatter_tmps)
+                for _ in range(len_plot_tmps):
+                    self.plot_tmps.pop(0).remove()
+                for _ in range(len_scatter_tmps):
+                    self.scatter_tmps.pop(0).set_visible(False)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -524,8 +547,6 @@ class SEMPC_solver(object):
                 self.ocp_solver.load_iterate(
                     self.name_prefix + "ocp_initialization.json"
                 )
-
-            import os
 
             sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
             if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
@@ -588,9 +609,7 @@ class SEMPC_solver(object):
             any(
                 LB_cz_val_next[self.Hm]
                 - Lc
-                * np.linalg.norm(
-                    X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
-                )
+                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
                 < self.params["common"]["constraint"]
             )
             or (gp_val_next[-1] < self.params["common"]["constraint"])
@@ -611,15 +630,18 @@ class SEMPC_solver(object):
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
+        max_step_size = np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h))))
         print(
             "Sim iter, ",
             sim_iter,
+            "SQP iter: ",
+            sqp_iter,
             "Alpha, ",
             alpha,
             "Max step size, ",
-            np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h)))),
+            max_step_size,
         )
-        return X, U, alpha
+        return X, U, alpha, max_step_size
 
     def compute_Lc_constr_next_lin(self, X, U, x_h, z_h, player):
         lb_cz_lins, lb_cz_grads = player.get_gp_sensitivities(z_h, "LB", "Cx")
@@ -644,24 +666,22 @@ class SEMPC_solver(object):
         LB_cv_val_lins = np.array(LB_cv_val_lins)
         return LB_cv_val_lins
 
-    def plot_sqp_sol(self, sqp_iter, X, zm=None):
-        if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
-            (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5)
-            tmp_1 = self.ax.scatter(
-                X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30
-            )
-            self.plot_tmps.append(tmp_0)
-            self.scatter_tmps.append(tmp_1)
+    def plot_sqp_sol(self, sqp_iter, X, zm=None, c="black"):
+        # if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
+        (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c=c, linewidth=0.5)
+        tmp_1 = self.ax.scatter(X[self.Hm, 0], X[self.Hm, 1], c=c, marker="x", s=30)
+        self.plot_tmps.append(tmp_0)
+        self.scatter_tmps.append(tmp_1)
+        # if sqp_iter == self.max_sqp_iter - 1:
+        tmp_0.set_label("X solution")
+        tmp_1.set_label("X solution at Hm")
+        self.legend_handles += [tmp_0, tmp_1]
+        if zm is not None:
+            tmp_2 = self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
+            self.scatter_tmps.append(tmp_2)
             # if sqp_iter == self.max_sqp_iter - 1:
-            tmp_0.set_label("X solution")
-            tmp_1.set_label("X solution at Hm")
-            self.legend_handles += [tmp_0, tmp_1]
-            if zm is not None:
-                tmp_2 = self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
-                self.scatter_tmps.append(tmp_2)
-                # if sqp_iter == self.max_sqp_iter - 1:
-                tmp_2.set_label("Z solution at Hm")
-                self.legend_handles.append(tmp_2)
+            tmp_2.set_label("Z solution at Hm")
+            self.legend_handles.append(tmp_2)
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim
