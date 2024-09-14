@@ -284,6 +284,8 @@ class SEMPC_solver(object):
                 self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
                 self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
                 self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+                # self.ax.set_xlim([self.x_curr[0] - 3.0, self.x_curr[0] + 3.0])
+                # self.ax.set_ylim([self.x_curr[1] - 3.0, self.x_curr[1] + 3.0])
                 if not os.path.exists("sqp_sols"):
                     os.makedirs("sqp_sols")
                 self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png"))
