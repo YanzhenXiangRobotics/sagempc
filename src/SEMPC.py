@@ -860,7 +860,7 @@ class SEMPC(Node):
                 ]
             )
             self.env.ax.grid()
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)

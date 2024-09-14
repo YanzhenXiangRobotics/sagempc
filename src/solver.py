@@ -437,11 +437,24 @@ class SEMPC_solver(object):
             # )
 
             if self.params["common"]["backtrack"]:
-                X, U, alpha, max_step_size = self.backtrack(
+                X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
             else:
+                alpha = 1.0
                 X, U = X_raw.copy(), U_raw.copy()
+            max_step_size = np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h))))
+            print(
+                "Sim iter, ",
+                sim_iter,
+                "SQP iter, ",
+                sqp_iter,
+                "Alpha, ",
+                alpha,
+                "Max step size, ",
+                max_step_size,
+            )    
+                
             self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
@@ -630,18 +643,7 @@ class SEMPC_solver(object):
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
-        max_step_size = np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h))))
-        print(
-            "Sim iter, ",
-            sim_iter,
-            "SQP iter: ",
-            sqp_iter,
-            "Alpha, ",
-            alpha,
-            "Max step size, ",
-            max_step_size,
-        )
-        return X, U, alpha, max_step_size
+        return X, U, alpha
 
     def compute_Lc_constr_next_lin(self, X, U, x_h, z_h, player):
         lb_cz_lins, lb_cz_grads = player.get_gp_sensitivities(z_h, "LB", "Cx")
