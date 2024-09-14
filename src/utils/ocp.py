@@ -400,7 +400,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
 
 
 def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
-    penalty_sqp_stepsize = 0.1 * (
+    penalty_sqp_stepsize = 1.0 * (
         (model_x - x_lin).T @ (model_x - x_lin)
         + (model_z - z_lin).T @ (model_z - z_lin)
     )
