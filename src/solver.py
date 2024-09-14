@@ -491,6 +491,7 @@ class SEMPC_solver(object):
             #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
             # )
 
+            # self.early_term = False
             if max_step_size < 0.04:
                 print(f"Break at sqp iter {sqp_iter}, \n\n")
                 self.early_term = True
