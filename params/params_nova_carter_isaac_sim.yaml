@@ -52,7 +52,7 @@ optimizer:
     max_sqp_iter: 10
     tol_nlp: 1.0e-6
   SEMPC: # Parameters for the SageMPC
-    max_sqp_iter: 50  # Maximum number of SQP iterations
+    max_sqp_iter: 20  # Maximum number of SQP iterations
     tol_nlp: 1.0e-4 # Tolerance for the NLP solver
   Tf: 5.0 # sampling time = Tf/H
   order: 1
@@ -67,7 +67,7 @@ common:
   Lc: 1.0 # Lipschitz constant of the constraint function
   expander_offset: 0.1
   Lc_lin_tol: 0.001
-  backtrack: True
+  backtrack: False
 
 algo:
   objective: "GO" # Objective of the algorithm, options: "GO", "SE" (goal-oriented, maximum domain safe exploration)
