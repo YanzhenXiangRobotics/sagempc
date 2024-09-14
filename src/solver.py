@@ -275,7 +275,7 @@ class SEMPC_solver(object):
                 tmp, _ = player.get_gp_sensitivities(
                     self.last_X[:, : self.x_dim], "LB", "Cx"
                 )
-                print(f"After updating GP, gp val: {tmp}")
+                # print(f"After updating GP, gp val: {tmp}")
             if sqp_iter == 0:
                 x_h_0, u_h_0 = x_h.copy(), u_h.copy()
             gp_val, gp_grad = player.get_gp_sensitivities(
@@ -287,12 +287,6 @@ class SEMPC_solver(object):
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
-            if self.params["experiment"]["plot_contour"]:
-                if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-                    sqp_iter == (self.max_sqp_iter - 1)
-                ):
-                    self.plot_3D(player)
-                    # self.plot_safe_set(gp_val, gp_grad, x_h[:, : self.x_dim])
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -401,35 +395,36 @@ class SEMPC_solver(object):
 
             X_raw, U_raw, Sl = self.get_solution()
 
-            print(
-                "cost ",
-                self.ocp_solver.get_cost(),
-                "cost Xm ",
-                (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]).T
-                @ (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]),
-                "cost Um ",
-                1e-3 * U_raw[self.Hm, : self.x_dim].T @ U_raw[self.Hm, : self.x_dim],
-                "cost Tm ",
-                X_raw[self.Hm, -1] / 1000,
-                "cost step ",
-                np.sum(
-                    [
-                        0.1
-                        * (
-                            (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim]).T
-                            @ (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim])
-                            + (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :]).T
-                            @ (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :])
-                        )
-                        for k in range(self.H)
-                    ]
-                ),
-            )
+            # print(
+            #     "cost ",
+            #     self.ocp_solver.get_cost(),
+            #     "cost Xm ",
+            #     (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]).T
+            #     @ (X_raw[self.Hm, : self.x_dim] - xg[self.Hm]),
+            #     "cost Um ",
+            #     1e-3 * U_raw[self.Hm, : self.x_dim].T @ U_raw[self.Hm, : self.x_dim],
+            #     "cost Tm ",
+            #     X_raw[self.Hm, -1] / 1000,
+            #     "cost step ",
+            #     np.sum(
+            #         [
+            #             0.1
+            #             * (
+            #                 (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim]).T
+            #                 @ (X_raw[k, : self.x_dim] - x_h[k, : self.x_dim])
+            #                 + (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :]).T
+            #                 @ (U_raw[k, -self.x_dim :] - u_h[k, -self.x_dim :])
+            #             )
+            #             for k in range(self.H)
+            #         ]
+            #     ),
+            # )
 
             if self.params["common"]["backtrack"]:
-                X, U, alpha = self.backtrack(X_raw, U_raw, x_h, u_h, player, sqp_iter)
+                X, U, alpha = self.backtrack(X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter)
             else:
                 X, U = X_raw.copy(), U_raw.copy()
+            self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
             LB_cz_val_next, _ = player.get_gp_sensitivities(
@@ -454,16 +449,22 @@ class SEMPC_solver(object):
                 pass
                 # print(f"GP_VALS: {GP_vals_next}")
                 # print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
-            print(
-                "Sim iter: ",
-                sim_iter,
-                "GP val next: ",
-                GP_val_next,
-                "Step x: ",
-                X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
-                "Step z: ",
-                U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
-            )
+            # print(
+            #     "Sim iter: ",
+            #     sim_iter,
+            #     "GP val next: ",
+            #     GP_val_next,
+            #     "Step x: ",
+            #     X[self.Hm, : self.x_dim] - x_h[self.Hm, : self.x_dim],
+            #     "Step z: ",
+            #     U[self.Hm, -self.x_dim :] - u_h[self.Hm, -self.x_dim :],
+            # )
+
+            if alpha < 0.02:
+                print(f"Break at sqp iter {sqp_iter}, \n\n")
+                self.early_term = True
+            else:
+                self.early_term = False
 
             if (
                 self.params["algo"]["type"] == "ret_expander"
@@ -473,6 +474,13 @@ class SEMPC_solver(object):
                 self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
             else:
                 self.plot_sqp_sol(sqp_iter, X)
+            if self.params["experiment"]["plot_contour"]:
+                if (
+                    (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter)
+                    or (sqp_iter == (self.max_sqp_iter - 1))
+                    or self.early_term
+                ):
+                    self.plot_3D(player)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -549,11 +557,13 @@ class SEMPC_solver(object):
                     lin_gp_val = val + grad @ (x - x_lin).T
                     lin_gp_vals.append(lin_gp_val)
                 tmp_2_vals = np.array(lin_gp_vals)
-                print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
+                # print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
             self.last_X, self.last_U = X.copy(), U.copy()
+            if self.early_term:
+                break
         return X, U
 
-    def backtrack(self, X, U, x_h, u_h, player, sqp_iter):
+    def backtrack(self, X, U, x_h, u_h, player, sqp_iter, sim_iter):
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
@@ -601,6 +611,14 @@ class SEMPC_solver(object):
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
+        print(
+            "Sim iter, ",
+            sim_iter,
+            "Alpha, ",
+            alpha,
+            "Max step size, ",
+            np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h)))),
+        )
         return X, U, alpha
 
     def compute_Lc_constr_next_lin(self, X, U, x_h, z_h, player):
@@ -627,7 +645,7 @@ class SEMPC_solver(object):
         return LB_cv_val_lins
 
     def plot_sqp_sol(self, sqp_iter, X, zm=None):
-        if sqp_iter == self.max_sqp_iter - 1:
+        if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
             (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c="black", linewidth=0.5)
             tmp_1 = self.ax.scatter(
                 X[self.Hm, 0], X[self.Hm, 1], c="black", marker="x", s=30
@@ -676,6 +694,12 @@ class SEMPC_solver(object):
 
         X[self.H, :] = self.ocp_solver.get(self.H, "x")
         return X, U, Sl
+
+    def set_solution(self, X, U):
+        for i in range(self.H):
+            self.ocp_solver.set(i, "x", X[i, :])
+            self.ocp_solver.set(i, "u", U[i, :])
+        self.ocp_solver.set(i, "x", X[self.H, :])
 
     def get_solver_status():
         return None
