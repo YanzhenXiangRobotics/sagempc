@@ -345,7 +345,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
 
 def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     q = 1e-3 * np.diag(np.ones(x_dim))
-    qx = np.diag(np.ones(x_dim))
+    qx = 1e3 * np.diag(np.ones(x_dim))
     # qx = 1e3 * np.diag(np.ones(x_dim))
     # cost
     ocp.cost.cost_type = "EXTERNAL"
