@@ -837,10 +837,10 @@ class SEMPC(Node):
                 )
             )
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        if not self.has_legend:
-            # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
-            self.env.ax.legend(handles=self.env.legend_handles)
-            self.has_legend = True
+        # if not self.has_legend:
+        #     # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
+        #     self.env.ax.legend(handles=self.env.legend_handles)
+        #     self.has_legend = True
         if self.params["agent"]["dynamics"] == "nova_carter":
             # self.env.ax.set_xlim([-21.8, -9.0])
             # self.env.ax.set_ylim([-21.8, -4.0])
