@@ -295,12 +295,12 @@ class SEMPC_solver(object):
                     u_h[:, -self.x_dim :], "LB", "Cx"
                 )
                 for stage in range(self.H):
-                    lbu = np.array(self.params["optimizer"]["u_min"])
-                    ubu = np.array(self.params["optimizer"]["u_max"])
-                    if stage <= self.Hm:
-                        lbu[0] = 0
-                    else:
-                        ubu[0] = 0
+                    # lbu = np.array(self.params["optimizer"]["u_min"])
+                    # ubu = np.array(self.params["optimizer"]["u_max"])
+                    # if stage <= self.Hm:
+                    #     lbu[0] = 0
+                    # else:
+                    #     ubu[0] = 0
                     self.ocp_solver.set(
                         stage,
                         "p",
@@ -322,8 +322,8 @@ class SEMPC_solver(object):
                                 u_h[stage, -self.x_dim :],
                                 LB_cz_val[stage],
                                 LB_cz_grad[stage],
-                                lbu,
-                                ubu,
+                                # lbu,
+                                # ubu,
                             )
                         ),
                     )
@@ -349,8 +349,8 @@ class SEMPC_solver(object):
                             u_h[stage - 1, -self.x_dim :],
                             LB_cz_val[stage - 1],
                             LB_cz_grad[stage - 1],
-                            lbu,
-                            ubu,
+                            # lbu,
+                            # ubu,
                         )
                     ),
                 )  # last 3 "stage-1" are dummy values

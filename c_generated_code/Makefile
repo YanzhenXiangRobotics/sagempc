@@ -30,8 +30,6 @@
 
 
 
-
-
 # define sources and use make's implicit rules to generate object files (*.o)
 
 # model
@@ -41,7 +39,6 @@ MODEL_SRC+= nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_f
 
 
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
-
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
 OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
@@ -66,22 +63,13 @@ OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_f
 
 OCP_SRC+= acados_solver_nova_carter_discrete_Lc.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
-
-# for sim solver
-SIM_SRC= acados_sim_solver_nova_carter_discrete_Lc.c
-SIM_OBJ := $(SIM_SRC:.c=.o)
-
 # for target example
 EX_SRC= main_nova_carter_discrete_Lc.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
 
-# for target example_sim
-EX_SIM_SRC= main_sim_nova_carter_discrete_Lc.c
-EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
-EX_SIM_EXE := $(EX_SIM_SRC:.c=)
 
-# combine model, sim and ocp object files
+# combine model, (potentially) sim and ocp object files
 OBJ=
 OBJ+= $(MODEL_OBJ)
 OBJ+= $(OCP_OBJ)
@@ -89,8 +77,8 @@ OBJ+= $(OCP_OBJ)
 EXTERNAL_DIR=
 EXTERNAL_LIB=
 
-INCLUDE_PATH = /home/xyz/ETH/acados/include
-LIB_PATH = /home/xyz/ETH/acados/lib
+INCLUDE_PATH = /home/xyz/acados/include
+LIB_PATH = /home/xyz/acados/lib
 
 # preprocessor flags for make's implicit rules
 CPPFLAGS+= -I$(INCLUDE_PATH)
@@ -119,12 +107,9 @@ LDLIBS+=
 # libraries
 LIBACADOS_SOLVER=libacados_solver_nova_carter_discrete_Lc.so
 LIBACADOS_OCP_SOLVER=libacados_ocp_solver_nova_carter_discrete_Lc.so
-LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c=.so)
 
 # virtual targets
 .PHONY : all clean
-
-#all: clean example_sim example shared_lib
 all: clean example
 shared_lib: ocp_shared_lib
 
@@ -132,17 +117,13 @@ shared_lib: ocp_shared_lib
 example: $(EX_OBJ) $(OBJ)
 	$(CC) $^ -o $(EX_EXE) $(LDFLAGS) $(LDLIBS)
 
-example_sim: $(EX_SIM_OBJ) $(MODEL_OBJ) $(SIM_OBJ)
-	$(CC) $^ -o $(EX_SIM_EXE) $(LDFLAGS) $(LDLIBS)
 
-
+bundled_shared_lib: $(OBJ)
+	$(CC) -shared $^ -o $(LIBACADOS_SOLVER) $(LDFLAGS) $(LDLIBS)
 
 ocp_shared_lib: $(OCP_OBJ) $(MODEL_OBJ)
 	$(CC) -shared $^ -o $(LIBACADOS_OCP_SOLVER) $(LDFLAGS) $(LDLIBS) \
 	-L$(EXTERNAL_DIR) -l$(EXTERNAL_LIB)
-
-sim_shared_lib: $(SIM_OBJ) $(MODEL_OBJ)
-	$(CC) -shared $^ -o $(LIBACADOS_SIM_SOLVER) $(LDFLAGS) $(LDLIBS)
 
 
 # Cython targets
@@ -151,7 +132,7 @@ ocp_cython_c: ocp_shared_lib
 	-o acados_ocp_solver_pyx.c \
 	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
 	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_ocp_solver_pyx.pyx \
-	-I /home/xyz/ETH/sagempc/c_generated_code \
+	-I /home/xyz/sagempc/c_generated_code \
 
 ocp_cython_o: ocp_cython_c
 	$(CC) $(ACADOS_FLAGS) -c -O2 \
@@ -160,8 +141,8 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
+	-I /home/xyz/.local/lib/python3.8/site-packages/numpy/core/include \
+	-I /usr/include/python3.8 \
 	acados_ocp_solver_pyx.c \
 
 ocp_cython: ocp_cython_o
@@ -172,38 +153,13 @@ ocp_cython: ocp_cython_o
 	$(abspath .)/libacados_ocp_solver_nova_carter_discrete_Lc.so \
 	$(LDFLAGS) $(LDLIBS)
 
-# Sim Cython targets
-sim_cython_c: sim_shared_lib
-	cython \
-	-o acados_sim_solver_pyx.c \
-	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
-	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_sim_solver_pyx.pyx \
-	-I /home/xyz/ETH/sagempc/c_generated_code \
 
-sim_cython_o: sim_cython_c
-	$(CC) $(ACADOS_FLAGS) -c -O2 \
-	-fPIC \
-	-o acados_sim_solver_pyx.o \
-	-I $(INCLUDE_PATH)/blasfeo/include/ \
-	-I $(INCLUDE_PATH)/hpipm/include/ \
-	-I $(INCLUDE_PATH) \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/lib/python3.10/site-packages/numpy/core/include \
-	-I /home/xyz/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/include/python3.10 \
-	acados_sim_solver_pyx.c \
 
-sim_cython: sim_cython_o
-	$(CC) $(ACADOS_FLAGS) -shared \
-	-o acados_sim_solver_pyx.so \
-	-Wl,-rpath=$(LIB_PATH) \
-	acados_sim_solver_pyx.o \
-	$(abspath .)/libacados_sim_solver_nova_carter_discrete_Lc.so \
-	$(LDFLAGS) $(LDLIBS)
 
 clean:
-	$(RM) $(OBJ) $(EX_OBJ) $(EX_SIM_OBJ)
-	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER) $(LIBACADOS_SIM_SOLVER)
-	$(RM) $(EX_EXE) $(EX_SIM_EXE)
-
+	$(RM) $(OBJ) $(EX_OBJ)
+	$(RM) $(LIBACADOS_SOLVER) $(LIBACADOS_OCP_SOLVER)
+	$(RM) $(EX_EXE)
 clean_ocp_shared_lib:
 	$(RM) $(LIBACADOS_OCP_SOLVER)
 	$(RM) $(OCP_OBJ)
@@ -214,8 +170,4 @@ clean_ocp_cython:
 	$(RM) acados_ocp_solver_pyx.so
 	$(RM) acados_ocp_solver_pyx.o
 
-clean_sim_cython:
-	$(RM) libacados_sim_solver_nova_carter_discrete_Lc.so
-	$(RM) acados_sim_solver_nova_carter_discrete_Lc.o
-	$(RM) acados_sim_solver_pyx.so
-	$(RM) acados_sim_solver_pyx.o
+
