@@ -22,6 +22,7 @@ import math
 from src.agent import get_idx_from_grid
 
 from rclpy.node import Node
+from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Twist
 
 from mlsocket import MLSocket
@@ -37,7 +38,10 @@ class SEMPC(Node):
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
-        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.ref_path_publisher = self.create_publisher(
+            Float64MultiArray, "/ref_path", 10
+        )
         self.sempc_solver = SEMPC_solver(
             params,
             env.VisuGrid,
@@ -46,7 +50,7 @@ class SEMPC(Node):
             env.fig,
             visu,
             self.fig_dir,
-            self.publisher,
+            self.cmd_vel_publisher,
         )
         self.visu = visu
         self.params = params
@@ -640,7 +644,7 @@ class SEMPC(Node):
             while self.t_curr - start < U[i, 2]:
                 msg.linear.x = U[i, 0]
                 msg.angular.z = U[i, 1]
-                self.publisher.publish(msg)
+                self.cmd_vel_publisher.publish(msg)
                 self.get_current_state_measurement()
                 # print(
                 #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
@@ -650,7 +654,7 @@ class SEMPC(Node):
             # if uncertainty > 2.0 * self.params["common"]["epsilon"]:
             #     break
         msg = Twist()
-        self.publisher.publish(msg)
+        self.cmd_vel_publisher.publish(msg)
 
     def one_step_planner(self):
         """_summary_: Plans going and coming back all in one trajectory plan
@@ -806,14 +810,17 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
-                # self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                self.players[self.pl_idx].update_current_state(X[self.Hm])
+                # self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                self.ref_path_publisher.publish(
+                    X[: self.Hm + 1, : self.state_dim].tolist()
+                )
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
-                
+
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)
         # self.visu.UpdateSafeVisu(0, self.players, self.env)

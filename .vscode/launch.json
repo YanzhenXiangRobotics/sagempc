@@ -49,5 +49,13 @@
             "program": "${workspaceFolder}/src/measurement_node.py",
             "console": "integratedTerminal"
         },
+        {
+            "name": "mpc_ref_tracker_node",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/utils/mpc_ref_tracker_node.py",
+            "console": "integratedTerminal",
+            "args": [">", "output_mpc_ref_tracker_node.txt"]
+        },
     ]
 }
