@@ -617,7 +617,7 @@ class SEMPC_solver(object):
                         lin_gp_vals.append(lin_gp_val)
                     tmp_2_vals = np.array(lin_gp_vals)
                     # print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
-                self.last_X, self.last_U = X.copy(), U.copy()
+            self.last_X, self.last_U = X.copy(), U.copy()
             if self.early_term:
                 break
         return X, U

@@ -84,4 +84,4 @@ experiment:
   batch_update: True
   batch_size: 5
   max_sim_iter: 5
-  debug: True
+  debug: False
