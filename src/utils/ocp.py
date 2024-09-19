@@ -368,7 +368,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
         + model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
-        + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
+        # + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
     )
     ocp.model.cost_expr_ext_cost_e = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
