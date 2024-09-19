@@ -446,7 +446,7 @@ def export_nova_carter_discrete_Lc():
     model = AcadosModel()
     model.name = "nova_carter_discrete_Lc"
 
-    x = ca.SX.sym("x", 4)
+    x = ca.SX.sym("x", 6)
     u = ca.SX.sym("u", 3)
     z = ca.SX.sym("z", 2)
     model.x, model.u = x, ca.vertcat(u, z)

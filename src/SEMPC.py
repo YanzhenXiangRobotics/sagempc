@@ -684,7 +684,7 @@ class SEMPC(Node):
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
-        self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 = x_curr.copy()
+        # self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 =x_curr x_curr.copy()
         if self.params["algo"]["type"] == "MPC_Xn":
             pass
             # st_lb = np.zeros(self.state_dim+1)
@@ -703,8 +703,6 @@ class SEMPC(Node):
                 st_ub = np.zeros(self.x_dim + 1)
                 st_lb[: self.x_dim] = np.array(self.params["optimizer"]["x_min"])
                 st_ub[: self.x_dim] = np.array(self.params["optimizer"]["x_max"])
-                st_lb[-1] = 0
-                st_ub[-1] = 0
                 # st_lb[:self.x_dim] = -np.ones(self.x_dim)*100
                 # st_ub[:self.x_dim] = np.ones(self.x_dim)*100
             else:
