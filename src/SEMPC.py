@@ -812,8 +812,10 @@ class SEMPC(Node):
             else:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
                 # self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                ref_path_msg = Float64MultiArray()
+                ref_path_msg.data = X[: self.Hm + 1, : self.state_dim].flatten().tolist()
                 self.ref_path_publisher.publish(
-                    X[: self.Hm + 1, : self.state_dim].tolist()
+                    ref_path_msg
                 )
                 x_curr = (
                     self.players[self.pl_idx]

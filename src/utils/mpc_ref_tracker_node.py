@@ -10,6 +10,7 @@ from std_msgs.msg import Float64, Float64MultiArray
 from geometry_msgs.msg import Twist
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+from rosgraph_msgs.msg import Clock
 
 import os
 import yaml
@@ -158,14 +159,15 @@ class MPCRefTracker:
 
     def update_ref_path(self, new_ref_path):
         self.ref_path += new_ref_path
+        print(f"Ref path: {self.ref_path}")
 
 
 class MPCRefTrackerNode(Node):
     def __init__(self):
         super().__init__("mpc_ref_tracker_node")
         self.ctrl = MPCRefTracker()
-        self.sim_time_subscriber = self.create_subscription(
-            Float64, "/sim_time", self.sim_time_listener_callback, 10
+        self.clock_subscriber = self.create_subscription(
+            Clock, "/clock", self.clock_listener_callback, 10
         )
         self.ref_path_subscriber = self.create_subscription(
             Float64MultiArray, "/ref_path", self.ref_path_listener_callback, 10
@@ -188,11 +190,14 @@ class MPCRefTrackerNode(Node):
             return angle
 
     def get_pose_3D(self):
+        map_2_chassis_imu = self.tf_buffer.lookup_transform(
+            "map", "chassis_imu", time=rclpy.time.Time()
+        )
         odom_2_chassis_imu = self.tf_buffer.lookup_transform(
             "odom", "chassis_imu", time=rclpy.time.Time()
         )
         trans = odom_2_chassis_imu.transform.translation
-        orient = odom_2_chassis_imu.transform.rotation
+        orient = map_2_chassis_imu.transform.rotation
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
         self.pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
@@ -200,13 +205,16 @@ class MPCRefTrackerNode(Node):
             np.array(params_additional["start_loc"]), params["env"]["start_angle"]
         )
         self.pose_3D += np.array(start_pose)
-        self.pose_3D[-1] = self._angle_helper(self.pose_3D[-1])
+        self.pose_3D[-1] = self._angle_helper(self.pose_3D[-1] - math.pi)
         self.init_pose_obtained = True
+        
+    def compute_sim_time(self, clock):
+        return clock.sec + 1e-9 * clock.nanosec
 
-    def sim_time_listener_callback(self, msg):
+    def clock_listener_callback(self, msg):
         if self.sim_time == -1.0:
-            self.last_sim_time = msg.data
-        self.sim_time = msg.data
+            self.last_sim_time = self.compute_sim_time(msg.clock)
+        self.sim_time = self.compute_sim_time(msg.clock)
         try:
             self.get_pose_3D()
         except Exception as e:
@@ -239,7 +247,8 @@ class MPCRefTrackerNode(Node):
         self.publisher.publish(cmd_vel)
 
     def ref_path_listener_callback(self, msg):
-        self.ctrl.update_ref_path(msg.data)
+        new_ref_path = np.array(msg.data).reshape(self.ctrl.H + 1, -1).tolist()
+        self.ctrl.update_ref_path(new_ref_path)
 
 
 if __name__ == "__main__":
