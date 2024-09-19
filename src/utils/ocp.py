@@ -353,12 +353,13 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
-    w_du = ca.SX.sym("cw_du", 1, 1)
-    ocp.model.p = ca.vertcat(ocp.model.p, w_du)
+    w_v_omega = ca.SX.sym("cw_du", 1, 1)
+    ocp.model.p = ca.vertcat(ocp.model.p, w_v_omega)
     ocp.model.cost_expr_ext_cost = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
-        + w_du * model_u.T @ (q) @ model_u
+        + model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
+        + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
     )
     ocp.model.cost_expr_ext_cost_e = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
@@ -448,7 +449,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     ocp.constraints.x0 = x0.copy()
 
     ocp.constraints.lbx_e = lbx.copy()
+    # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
     ocp.constraints.ubx_e = ubx.copy()
+    # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
     ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
 
     ocp.constraints.lbx = lbx.copy()
