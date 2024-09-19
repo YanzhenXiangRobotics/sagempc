@@ -290,23 +290,23 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         )
         Lc = params["common"]["Lc"]
         tol = params["common"]["Lc_lin_tol"]
-        # model.con_h_expr = ca.vertcat(
-        #     lb_cz_lin
-        #     + lb_cz_grad.T @ (model_z - z_lin)
-        #     - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-        #     * ((x_lin[:x_dim] - z_lin).T @ (model_x - x_lin)[:x_dim])
-        #     - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-        #     * ((z_lin - x_lin[:x_dim]).T @ (model_z - z_lin))
-        #     - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
-        #     - q_th,
-        #     cw * var,
-        #     # cw_du * model.u[:2]
-        #     # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
-        # )
+        model.con_h_expr = ca.vertcat(
+            lb_cz_lin
+            + lb_cz_grad.T @ (model_z - z_lin)
+            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
+            * ((x_lin[:x_dim] - z_lin).T @ (model_x - x_lin)[:x_dim])
+            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
+            * ((z_lin - x_lin[:x_dim]).T @ (model_z - z_lin))
+            - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
+            - q_th,
+            cw * var,
+            # cw_du * model.u[:2]
+            # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
+        )
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
-        # model.con_h_expr_e = ca.vertcat(
-        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        # )
+        model.con_h_expr_e = ca.vertcat(
+            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
+        )
     elif params["algo"]["type"] == "MPC_Xn":
         p_lin = ca.vertcat(
             lb_cx_lin,
@@ -378,7 +378,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         or params["algo"]["type"] == "MPC_expander"
         or params["algo"]["type"] == "MPC_expander_V0"
     ):
-        pass
+        # pass
         # ocp.constraints.idxsh = np.array([1, 2])
         # ocp.cost.zl = 1e2 * np.array([1, 1])
         # ocp.cost.zu = 1e1 * np.array([1, 0.01])
@@ -389,11 +389,11 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         # ocp.cost.zu = 1e1 * np.array([1, 1e3])
         # ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1e3]])
         # ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1e3]])
-        # ocp.constraints.idxsh = np.array([1])
-        # ocp.cost.zl = 1e2 * np.array([1])
-        # ocp.cost.zu = 1e1 * np.array([1])
-        # ocp.cost.Zl = 1e1 * np.array([1])
-        # ocp.cost.Zu = 1e1 * np.array([1])
+        ocp.constraints.idxsh = np.array([1])
+        ocp.cost.zl = 1e2 * np.array([1])
+        ocp.cost.zu = 1e1 * np.array([1])
+        ocp.cost.Zl = 1e1 * np.array([1])
+        ocp.cost.Zu = 1e1 * np.array([1])
     else:
         ocp.constraints.idxsh = np.array([1])
         ocp.cost.zl = 1e2 * np.array([1])
@@ -481,8 +481,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
             if params["agent"]["dynamics"] == "nova_carter"
             else params["common"]["expander_offset"]
         )
-        # ocp.constraints.lh = np.array([0, eps])
-        # ocp.constraints.uh = np.array([10.0, 1e8])
+        ocp.constraints.lh = np.array([0, eps])
+        ocp.constraints.uh = np.array([10.0, 1e8])
         # ocp.constraints.lh = np.array([0, eps, 0.0, 0.0])
         # ocp.constraints.uh = np.array([10.0, 1e8, 0.0, 0.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
@@ -492,8 +492,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     else:
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
-    # ocp.constraints.lh_e = np.array([0.0])
-    # ocp.constraints.uh_e = np.array([10.0])
+    ocp.constraints.lh_e = np.array([0.0])
+    ocp.constraints.uh_e = np.array([10.0])
 
     # ocp.constraints.lh = np.array([0, eps])
     # ocp.constraints.uh = np.array([10.0, 1.0e9])

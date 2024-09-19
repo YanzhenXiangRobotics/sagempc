@@ -44,6 +44,10 @@ MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.c
+OCP_SRC+= nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.c
 OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
 OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
 OCP_SRC+= nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
