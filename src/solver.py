@@ -238,6 +238,26 @@ class SEMPC_solver(object):
             self.scatter_tmps.append(tmp)
             self.legend_handles.append(tmp)
 
+    def plot_safe_set(self, gp_val, gp_grad, x_h):
+        safe = torch.full((self.grids_coupled.shape[0],), True)
+        for k in range(self.H + 1):
+            for i, x in enumerate(self.grids_coupled.numpy()):
+                const_val = (
+                    gp_val[k]
+                    + gp_grad[k].T @ (x - x_h[k, : self.x_dim])
+                    - self.params["common"]["constraint"]
+                )
+                if (const_val < 0) or (const_val > 10.0):
+                    safe[i] = False
+        # self.scatter_tmps.append(
+        #     self.ax.scatter(
+        #         self.grids_coupled[safe, 0],
+        #         self.grids_coupled[safe, 1],
+        #         color="orange",
+        #         alpha=0.2,
+        #     )
+        # )
+
     def solve(self, player, sim_iter):
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
@@ -295,12 +315,6 @@ class SEMPC_solver(object):
                     u_h[:, -self.x_dim :], "LB", "Cx"
                 )
                 for stage in range(self.H):
-                    lbu = np.array(self.params["optimizer"]["u_min"])
-                    ubu = np.array(self.params["optimizer"]["u_max"])
-                    if stage <= self.Hm:
-                        lbu[0] = 0
-                    else:
-                        ubu[0] = 0
                     self.ocp_solver.set(
                         stage,
                         "p",
@@ -322,8 +336,6 @@ class SEMPC_solver(object):
                                 u_h[stage, -self.x_dim :],
                                 LB_cz_val[stage],
                                 LB_cz_grad[stage],
-                                lbu,
-                                ubu,
                             )
                         ),
                     )
@@ -349,8 +361,6 @@ class SEMPC_solver(object):
                             u_h[stage - 1, -self.x_dim :],
                             LB_cz_val[stage - 1],
                             LB_cz_grad[stage - 1],
-                            lbu,
-                            ubu,
                         )
                     ),
                 )  # last 3 "stage-1" are dummy values
@@ -504,7 +514,7 @@ class SEMPC_solver(object):
             if not os.path.exists("sqp_sols"):
                 os.makedirs("sqp_sols")
             self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png"))
-            if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
+            if (sqp_iter == self.max_sqp_iter) or self.early_term:
                 len_plot_tmps = len(self.plot_tmps)
                 len_scatter_tmps = len(self.scatter_tmps)
                 for _ in range(len_plot_tmps):
@@ -569,7 +579,7 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
-            if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
+            if sqp_iter == (self.max_sqp_iter - 1):
                 tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
                 tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(
                     self.last_X[:, : self.x_dim], "LB", "Cx"
@@ -594,7 +604,6 @@ class SEMPC_solver(object):
     def backtrack(self, X, U, x_h, u_h, player, sqp_iter, sim_iter):
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-        print("Terminal gp val: ", gp_val_next[-1])
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
         Lc_constr_next_lin = self.compute_Lc_constr_next_lin(
             X[:-1, : self.x_dim],
@@ -635,7 +644,6 @@ class SEMPC_solver(object):
             X = alpha * X + (1 - alpha) * x_h
             U = alpha * U + (1 - alpha) * u_h
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-            print("Terminal gp val: ", gp_val_next[-1])
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
@@ -668,20 +676,18 @@ class SEMPC_solver(object):
         # if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
         (tmp_0,) = self.ax.plot(X[:, 0], X[:, 1], c=c, linewidth=0.5)
         tmp_1 = self.ax.scatter(X[self.Hm, 0], X[self.Hm, 1], c=c, marker="x", s=30)
-        tmp_2 = self.ax.scatter(X[-1, 0], X[-1, 1], c="green", marker="x", s=30)
         self.plot_tmps.append(tmp_0)
         self.scatter_tmps.append(tmp_1)
-        self.scatter_tmps.append(tmp_2)
         # if sqp_iter == self.max_sqp_iter - 1:
         tmp_0.set_label("X solution")
         tmp_1.set_label("X solution at Hm")
-        self.legend_handles += [tmp_0, tmp_1, tmp_2]
+        self.legend_handles += [tmp_0, tmp_1]
         if zm is not None:
-            tmp_3 = self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
-            self.scatter_tmps.append(tmp_3)
+            tmp_2 = self.ax.scatter(zm[0], zm[1], c="cyan", marker="x", s=30)
+            self.scatter_tmps.append(tmp_2)
             # if sqp_iter == self.max_sqp_iter - 1:
-            tmp_3.set_label("Z solution at Hm")
-            self.legend_handles.append(tmp_3)
+            tmp_2.set_label("Z solution at Hm")
+            self.legend_handles.append(tmp_2)
 
     def constraint(self, lb_cz_lin, lb_cz_grad, model_z, model_x, z_lin, x_lin, Lc):
         x_dim = self.x_dim

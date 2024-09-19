@@ -45,8 +45,7 @@ import sys, os
 
 dir_project = os.path.abspath(os.path.dirname(__file__))
 import shutil
-if os.path.exists("sqp_sols"):
-    shutil.rmtree(os.path.join(dir_project, "sqp_sols"))
+shutil.rmtree(os.path.join(dir_project, "sqp_sols"))
 
 # 1) Load the config file
 with open(dir_project + "/params/" + args.param + ".yaml") as file:
