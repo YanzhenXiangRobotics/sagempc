@@ -732,10 +732,10 @@ class SEMPC(Node):
                 st_ub[3] = 0.0
             # st_ub[2] = 6.28
             # st_lb[2] = -6.28
-            st_ub[-1] = 1.0
+            st_ub[-1] = self.params["optimizer"]["Tf"]
             # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", st_ub)
-            st_lb[-1] = 1.0
+            st_lb[-1] = self.params["optimizer"]["Tf"]
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         else:

@@ -165,14 +165,14 @@ def concat_const_val(ocp, params):
     # ocp.constraints.x0 = np.concatenate(
     #     [ocp.constraints.x0, np.array([0.0])])
 
-    ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([5.0])])
-    ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([5.0])])
+    ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([params["optimizer"]["Tf"]])])
+    ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([params["optimizer"]["Tf"]])])
     ocp.constraints.idxbx_e = np.concatenate(
         [ocp.constraints.idxbx_e, np.array([ocp.model.x.shape[0] - 1])]
     )
 
     ocp.constraints.lbx = np.concatenate([ocp.constraints.lbx, np.array([0])])
-    ocp.constraints.ubx = np.concatenate([ocp.constraints.ubx, np.array([2])])
+    ocp.constraints.ubx = np.concatenate([ocp.constraints.ubx, np.array([params["optimizer"]["Tf"]])])
     ocp.constraints.idxbx = np.concatenate(
         [ocp.constraints.idxbx, np.array([ocp.model.x.shape[0] - 1])]
     )
@@ -249,6 +249,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
     w = ca.SX.sym("w", 1, 1)
     we = ca.SX.sym("we", 1, 1)
     cw = ca.SX.sym("cw", 1, 1)
+    # cw_du = ca.SX.sym("cw_du", 1, 1)
 
     q_th = params["common"]["constraint"]
     var = (
@@ -264,8 +265,6 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
         lb_cz_lin = ca.SX.sym("lb_cz_lin")
         lb_cz_grad = ca.SX.sym("lb_cz_grad", x_dim, 1)
         z_lin = ca.SX.sym("z_lin", x_dim)
-        # lbu = ca.SX.sym("lbu", 2, 1)
-        # ubu = ca.SX.sym("ubu", 2, 1)
         p_lin = ca.vertcat(
             lb_cx_lin,
             lb_cx_grad,
@@ -275,11 +274,10 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             ub_cx_lin,
             ub_cx_grad,
             cw,
+            # cw_du,
             z_lin,
             lb_cz_lin,
             lb_cz_grad,
-            # lbu,
-            # ubu
         )
         Lc = params["common"]["Lc"]
         tol = params["common"]["Lc_lin_tol"]
@@ -293,8 +291,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
             - q_th,
             cw * var,
-            # model.u[:2] - lbu,
-            # model.u[:2] - ubu,
+            # cw_du * model.u[:2]
             # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
         )
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
@@ -449,7 +446,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     ocp.constraints.x0 = x0.copy()
 
     ocp.constraints.lbx_e = lbx.copy()
+    # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
     ocp.constraints.ubx_e = ubx.copy()
+    # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
     ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
 
     ocp.constraints.lbx = lbx.copy()
@@ -471,8 +470,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         )
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
-        # ocp.constraints.lh = np.array([0, eps, 0.0, 0.0, -1e8, -1e8])
-        # ocp.constraints.uh = np.array([10.0, 1e8, 1e8, 1e8, 0.0, 0.0])
+        # ocp.constraints.lh = np.array([0, eps, 0.0, 0.0])
+        # ocp.constraints.uh = np.array([10.0, 1e8, 0.0, 0.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
         # ocp.constraints.uh = np.array([10.0, 1e8, l_max, 10.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8])
