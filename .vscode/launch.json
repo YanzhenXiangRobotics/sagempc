@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-            "args": [">", "output.log"]
+            "args": [">", "output.txt"]
         },
         {
             "name": "main_cluttered_car",
