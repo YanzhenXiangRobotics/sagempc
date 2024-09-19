@@ -680,7 +680,7 @@ class SEMPC(Node):
         ].origin.numpy()  # origin: related to X_train, thus 2-dims
         if torch.is_tensor(x_curr):
             x_curr = x_curr.numpy()
-        st_curr = np.zeros(self.state_dim + 1)  # 4
+        st_curr = np.zeros(self.state_dim + self.x_dim + 1)  # 4
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
@@ -699,10 +699,10 @@ class SEMPC(Node):
             self.params["algo"]["type"] == "MPC_expander_V0"
         ):
             if self.params["agent"]["dynamics"] == "nova_carter":
-                st_lb = np.zeros(self.x_dim + 1)
-                st_ub = np.zeros(self.x_dim + 1)
-                st_lb[: self.x_dim] = np.array(self.params["optimizer"]["x_min"])
-                st_ub[: self.x_dim] = np.array(self.params["optimizer"]["x_max"])
+                st_lb = np.zeros(2 * self.x_dim + 1)
+                st_ub = np.zeros(2 * self.x_dim + 1)
+                st_lb[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_min"])
+                st_ub[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_max"])
                 # st_lb[:self.x_dim] = -np.ones(self.x_dim)*100
                 # st_ub[:self.x_dim] = np.ones(self.x_dim)*100
             else:
@@ -728,10 +728,10 @@ class SEMPC(Node):
                 st_ub[3] = 0.0
             # st_ub[2] = 6.28
             # st_lb[2] = -6.28
-            st_ub[-1] = 1.0
+            st_ub[-1] = self.params["optimizer"]["Tf"]
             # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", st_ub)
-            st_lb[-1] = 1.0
+            st_lb[-1] = self.params["optimizer"]["Tf"]
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         else:
@@ -806,8 +806,8 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
-                # self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                self.players[self.pl_idx].update_current_state(X[self.Hm])
+                # self.players[self.pl_idx].rollout(U[: self.Hm, :])
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]

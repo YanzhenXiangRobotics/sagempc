@@ -165,14 +165,20 @@ def concat_const_val(ocp, params):
     # ocp.constraints.x0 = np.concatenate(
     #     [ocp.constraints.x0, np.array([0.0])])
 
-    ocp.constraints.lbx_e = np.concatenate([ocp.constraints.lbx_e, np.array([5.0])])
-    ocp.constraints.ubx_e = np.concatenate([ocp.constraints.ubx_e, np.array([5.0])])
+    ocp.constraints.lbx_e = np.concatenate(
+        [ocp.constraints.lbx_e, np.array([params["optimizer"]["Tf"]])]
+    )
+    ocp.constraints.ubx_e = np.concatenate(
+        [ocp.constraints.ubx_e, np.array([params["optimizer"]["Tf"]])]
+    )
     ocp.constraints.idxbx_e = np.concatenate(
         [ocp.constraints.idxbx_e, np.array([ocp.model.x.shape[0] - 1])]
     )
 
     ocp.constraints.lbx = np.concatenate([ocp.constraints.lbx, np.array([0])])
-    ocp.constraints.ubx = np.concatenate([ocp.constraints.ubx, np.array([2])])
+    ocp.constraints.ubx = np.concatenate(
+        [ocp.constraints.ubx, np.array([params["optimizer"]["Tf"]])]
+    )
     ocp.constraints.idxbx = np.concatenate(
         [ocp.constraints.idxbx, np.array([ocp.model.x.shape[0] - 1])]
     )
@@ -230,7 +236,7 @@ def export_oracle_ocp(params):
     return ocp
 
 
-def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
+def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
     lb_cx_lin = ca.SX.sym("lb_cx_lin")
     lb_cx_grad = ca.SX.sym("lb_cx_grad", x_dim, 1)
     ub_cx_lin = ca.SX.sym("ub_cx_lin")
@@ -241,6 +247,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
         x_lin = ca.SX.sym("x_lin", n_order * x_dim + 1)
         x_terminal = ca.SX.sym("x_terminal", n_order * x_dim + 1)
     elif params["agent"]["dynamics"] == "nova_carter":
+        x_lin = ca.SX.sym("x_lin", x_dim + 1)
         x_terminal = ca.SX.sym("x_terminal", x_dim + 1)
     else:
         x_lin = ca.SX.sym("x_lin", n_order * x_dim)
@@ -268,6 +275,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
         p_lin = ca.vertcat(
             lb_cx_lin,
             lb_cx_grad,
+            x_lin,
             xg,
             w,
             x_terminal,
@@ -335,7 +343,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
     #                               lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
     # model.con_h_expr_e = ca.vertcat(lb_cx_lin +
     #                                 lb_cx_grad.T @ (model_x-x_lin)[:x_dim] - q_th)
-    model.p = ca.vertcat(model.p, p_lin)
+    model.p = p_lin
     return_tuple = (model, w, xg, var)
     if (
         params["algo"]["type"] == "ret_expander"
@@ -558,7 +566,7 @@ def export_sempc_ocp(params):
         elif params["agent"]["dynamics"] == "bicycle":
             model = export_bicycle_model_with_discrete_rk4_Lc(name_prefix + "sempc")
         elif params["agent"]["dynamics"] == "nova_carter":
-            model, x_lin = export_nova_carter_discrete_Lc()
+            model = export_nova_carter_discrete_Lc()
         else:
             model = export_pendulum_ode_model_with_discrete_rk4_Lc(
                 name_prefix + "sempc", n_order, x_dim
@@ -581,12 +589,10 @@ def export_sempc_ocp(params):
                 name_prefix + "sempc", n_order, x_dim
             )
     model_u = model.u[:x_dim]
-    model_x = model.x[:-1]
+    model_x = model.x[: x_dim + 1]
     model_z = model.u[-x_dim:]
 
-    return_tuple = sempc_const_expr(
-        model, x_dim, n_order, params, model_x, model_z, x_lin
-    )
+    return_tuple = sempc_const_expr(model, x_dim, n_order, params, model_x, model_z)
 
     if (
         params["algo"]["type"] == "ret_expander"

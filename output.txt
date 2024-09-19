@@ -2,7 +2,7 @@ Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
 Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
-{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-0.1, -0.2], 'u_max': [0.1, 0.2], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 5.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': False, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': True}}
+{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-0.1, -0.2], 'u_max': [0.1, 0.2], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': False, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': True}}
 Namespace(param='params_nova_carter_isaac_sim', env=0, i=8)
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -49,7 +49,7 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-09-19-20:17:13.937945.json
+stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-09-19-21:20:33.230203.json
 initialized location {'Cx_X': [tensor([-18.0000, -14.7000])], 'Fx_X': [tensor([-18.0000, -14.7000])], 'Cx_Y': tensor([[0.7200]], dtype=torch.float64)}
 tensor(0.6562)
 Nodes in optimistic graph: 30625
@@ -58,3 +58,97 @@ init_node 16702 goal_node 25520
 tensor(0.7200, dtype=torch.float64)
 -1 10
 [96mSolving Constrints[0m
+Time between two solving: 6.479064226150513
+
+SQP_RTI: QP solver returned error status 3 QP iteration 0.
+Time solving problem: 1.4216256141662598
+Time for backtracking: 0.01970505714416504
+Sim iter,  0 SQP iter,  0 Alpha,  1.0 Max step size,  0.07692307692307687
+Time before plotting sqp sol: 0.0074613094329833984
+acados returned status 4 in closed loop solve
+loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
+Time plotting sqp sol & save fig: 0.08429765701293945
+
+SQP_RTI: QP solver returned error status 3 QP iteration 0.
+Time solving problem: 0.022360801696777344
+Time for backtracking: 0.1394045352935791
+Sim iter,  0 SQP iter,  1 Alpha,  0.10000000000000014 Max step size,  0.006531839999997402
+Break at sqp iter 1, 
+
+
+Time before plotting sqp sol: 0.007622241973876953
+acados returned status 4 in closed loop solve
+loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
+Time plotting sqp sol & save fig: 0.0884695053100586
+Time taken 1.7913711071014404
+[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
+Time for one step planner: 2.1600534915924072
+Uncertainity at meas_loc [0.04242992]
+tensor(0.7200, dtype=torch.float64)
+Time for GP update: 0.003574371337890625
+Uncertainity at meas_loc [0.03463352]
+tensor(0.6525)
+Nodes in optimistic graph: 30625
+init_node 16702 goal_node 25520
+[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
+Time for finding next goal: 4.160494565963745
+[96mSolving Constrints[0m
+Time between two solving: 4.566053628921509
+
+SQP_RTI: QP solver returned error status 3 QP iteration 1.
+Time solving problem: 0.2798953056335449
+Time for backtracking: 0.023066997528076172
+Sim iter,  1 SQP iter,  0 Alpha,  1.0 Max step size,  0.01185793893491116
+Break at sqp iter 0, 
+
+
+Time before plotting sqp sol: 0.008341312408447266
+acados returned status 4 in closed loop solve
+loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
+Time plotting sqp sol & save fig: 0.0885775089263916
+Time taken 0.400097131729126
+[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
+Time for one step planner: 0.903038740158081
+Uncertainity at meas_loc [0.03463352]
+tensor(0.7200, dtype=torch.float64)
+Time for GP update: 0.0043866634368896484
+Uncertainity at meas_loc [0.03002036]
+tensor(0.6525)
+Nodes in optimistic graph: 30625
+init_node 16702 goal_node 25520
+[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
+Time for finding next goal: 4.093284368515015
+[96mSolving Constrints[0m
+Time between two solving: 4.640089750289917
+
+SQP_RTI: QP solver returned error status 3 QP iteration 1.
+Time solving problem: 0.296144962310791
+Time for backtracking: 0.025092601776123047
+Sim iter,  2 SQP iter,  0 Alpha,  1.0 Max step size,  0.06688943628584432
+Time before plotting sqp sol: 0.008984565734863281
+acados returned status 4 in closed loop solve
+loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
+Time plotting sqp sol & save fig: 0.09267616271972656
+
+SQP_RTI: QP solver returned error status 3 QP iteration 0.
+Time solving problem: 0.026736021041870117
+Time for backtracking: 0.17995667457580566
+Sim iter,  2 SQP iter,  1 Alpha,  0.10000000000000014 Max step size,  0.006531839999997402
+Break at sqp iter 1, 
+
+
+Time before plotting sqp sol: 0.008681058883666992
+acados returned status 4 in closed loop solve
+loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
+Time plotting sqp sol & save fig: 0.08973836898803711
+Time taken 0.7284467220306396
+[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
+Time for one step planner: 1.0710201263427734
+Uncertainity at meas_loc [0.03002036]
+tensor(0.7200, dtype=torch.float64)
+Time for GP update: 0.004578351974487305
+Uncertainity at meas_loc [0.026811]
+tensor(0.6520)
+Nodes in optimistic graph: 30625
+init_node 16702 goal_node 25520
+There was an error running python
