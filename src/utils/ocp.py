@@ -14,6 +14,7 @@ from src.utils.model import (
     export_unicycle_model_with_discrete_rk4_LC,
     export_nova_carter_discrete,
     export_nova_carter_discrete_Lc,
+    export_nova_carter_discrete_Lc_rk4,
     export_bicycle_model_with_discrete_rk4_Lc,
 )
 
@@ -289,23 +290,23 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z):
         )
         Lc = params["common"]["Lc"]
         tol = params["common"]["Lc_lin_tol"]
-        model.con_h_expr = ca.vertcat(
-            lb_cz_lin
-            + lb_cz_grad.T @ (model_z - z_lin)
-            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-            * ((x_lin[:x_dim] - z_lin).T @ (model_x - x_lin)[:x_dim])
-            - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
-            * ((z_lin - x_lin[:x_dim]).T @ (model_z - z_lin))
-            - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
-            - q_th,
-            cw * var,
-            # cw_du * model.u[:2]
-            # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
-        )
+        # model.con_h_expr = ca.vertcat(
+        #     lb_cz_lin
+        #     + lb_cz_grad.T @ (model_z - z_lin)
+        #     - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
+        #     * ((x_lin[:x_dim] - z_lin).T @ (model_x - x_lin)[:x_dim])
+        #     - (Lc / (ca.norm_2(x_lin[:x_dim] - z_lin) + tol))
+        #     * ((z_lin - x_lin[:x_dim]).T @ (model_z - z_lin))
+        #     - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
+        #     - q_th,
+        #     cw * var,
+        #     # cw_du * model.u[:2]
+        #     # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
+        # )
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
-        model.con_h_expr_e = ca.vertcat(
-            lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
-        )
+        # model.con_h_expr_e = ca.vertcat(
+        #     lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim] - q_th
+        # )
     elif params["algo"]["type"] == "MPC_Xn":
         p_lin = ca.vertcat(
             lb_cx_lin,
@@ -367,7 +368,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
         + model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
-        + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
+        # + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
     )
     ocp.model.cost_expr_ext_cost_e = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
@@ -377,6 +378,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         or params["algo"]["type"] == "MPC_expander"
         or params["algo"]["type"] == "MPC_expander_V0"
     ):
+        pass
         # ocp.constraints.idxsh = np.array([1, 2])
         # ocp.cost.zl = 1e2 * np.array([1, 1])
         # ocp.cost.zu = 1e1 * np.array([1, 0.01])
@@ -387,11 +389,11 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         # ocp.cost.zu = 1e1 * np.array([1, 1e3])
         # ocp.cost.Zl = 1e1 * np.array([[1, 0], [0, 1e3]])
         # ocp.cost.Zu = 1e1 * np.array([[1, 0], [0, 1e3]])
-        ocp.constraints.idxsh = np.array([1])
-        ocp.cost.zl = 1e2 * np.array([1])
-        ocp.cost.zu = 1e1 * np.array([1])
-        ocp.cost.Zl = 1e1 * np.array([1])
-        ocp.cost.Zu = 1e1 * np.array([1])
+        # ocp.constraints.idxsh = np.array([1])
+        # ocp.cost.zl = 1e2 * np.array([1])
+        # ocp.cost.zu = 1e1 * np.array([1])
+        # ocp.cost.Zl = 1e1 * np.array([1])
+        # ocp.cost.Zu = 1e1 * np.array([1])
     else:
         ocp.constraints.idxsh = np.array([1])
         ocp.cost.zl = 1e2 * np.array([1])
@@ -437,9 +439,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         # lbx = np.concatenate([lbx, np.array([-1.0e2, -1.0e2])])
         # ubx = np.concatenate([ubx, np.array([1.0e2, 1.0e2])])
     else:
-        ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
-        ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
-        ocp.constraints.idxbu = np.arange(x_dim)
+        # ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
+        # ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
+        # ocp.constraints.idxbu = np.arange(x_dim)
 
         lbx = np.array(params["optimizer"]["x_min"])
         ubx = np.array(params["optimizer"]["x_max"])
@@ -456,15 +458,15 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         x0[x_dim] = params["env"]["start_angle"]
     ocp.constraints.x0 = x0.copy()
 
-    ocp.constraints.lbx_e = lbx.copy()
-    # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
-    ocp.constraints.ubx_e = ubx.copy()
-    # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
-    ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
+    # ocp.constraints.lbx_e = lbx.copy()
+    # # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
+    # ocp.constraints.ubx_e = ubx.copy()
+    # # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
+    # ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
 
-    ocp.constraints.lbx = lbx.copy()
-    ocp.constraints.ubx = ubx.copy()
-    ocp.constraints.idxbx = np.arange(lbx.shape[0])
+    # ocp.constraints.lbx = lbx.copy()
+    # ocp.constraints.ubx = ubx.copy()
+    # ocp.constraints.idxbx = np.arange(lbx.shape[0])
     if params["algo"]["type"] == "MPC_Xn":
         wee = 1.0e-5
         ocp.constraints.lh = np.array([0, eps, -1 * wee, -1 * wee, -1 * wee, -1 * wee])
@@ -479,8 +481,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
             if params["agent"]["dynamics"] == "nova_carter"
             else params["common"]["expander_offset"]
         )
-        ocp.constraints.lh = np.array([0, eps])
-        ocp.constraints.uh = np.array([10.0, 1e8])
+        # ocp.constraints.lh = np.array([0, eps])
+        # ocp.constraints.uh = np.array([10.0, 1e8])
         # ocp.constraints.lh = np.array([0, eps, 0.0, 0.0])
         # ocp.constraints.uh = np.array([10.0, 1e8, 0.0, 0.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
@@ -490,8 +492,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
     else:
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
-    ocp.constraints.lh_e = np.array([0.0])
-    ocp.constraints.uh_e = np.array([10.0])
+    # ocp.constraints.lh_e = np.array([0.0])
+    # ocp.constraints.uh_e = np.array([10.0])
 
     # ocp.constraints.lh = np.array([0, eps])
     # ocp.constraints.uh = np.array([10.0, 1.0e9])
@@ -567,6 +569,7 @@ def export_sempc_ocp(params):
             model = export_bicycle_model_with_discrete_rk4_Lc(name_prefix + "sempc")
         elif params["agent"]["dynamics"] == "nova_carter":
             model = export_nova_carter_discrete_Lc()
+            # model = export_nova_carter_discrete_Lc_rk4()
         else:
             model = export_pendulum_ode_model_with_discrete_rk4_Lc(
                 name_prefix + "sempc", n_order, x_dim

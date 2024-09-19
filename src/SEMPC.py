@@ -732,8 +732,8 @@ class SEMPC(Node):
             # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", st_ub)
             st_lb[-1] = self.params["optimizer"]["Tf"]
-            self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
-            self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
+            # self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
+            # self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)

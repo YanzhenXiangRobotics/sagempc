@@ -2,7 +2,7 @@ Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
 Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
-{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-0.1, -0.2], 'u_max': [0.1, 0.2], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': False, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': True}}
+{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-10000.0, -10000.0], 'u_max': [10000.0, 10000.0], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': False, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': True}}
 Namespace(param='params_nova_carter_isaac_sim', env=0, i=8)
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -29,11 +29,7 @@ Note: There is also the option to use the external cost module with a numerical 
 OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).
 
 rm -f libacados_ocp_solver_nova_carter_discrete_Lc.so
-rm -f nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.c
+rm -f nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
@@ -46,10 +42,10 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o acados_solver_nova_carter_discrete_Lc.o acados_solver_nova_carter_discrete_Lc.c
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.c
 cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
-cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
+cc -shared nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-09-19-21:20:33.230203.json
+stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization.json
 initialized location {'Cx_X': [tensor([-18.0000, -14.7000])], 'Fx_X': [tensor([-18.0000, -14.7000])], 'Cx_Y': tensor([[0.7200]], dtype=torch.float64)}
 tensor(0.6562)
 Nodes in optimistic graph: 30625
@@ -58,97 +54,95 @@ init_node 16702 goal_node 25520
 tensor(0.7200, dtype=torch.float64)
 -1 10
 [96mSolving Constrints[0m
-Time between two solving: 6.479064226150513
-
-SQP_RTI: QP solver returned error status 3 QP iteration 0.
-Time solving problem: 1.4216256141662598
-Time for backtracking: 0.01970505714416504
-Sim iter,  0 SQP iter,  0 Alpha,  1.0 Max step size,  0.07692307692307687
-Time before plotting sqp sol: 0.0074613094329833984
-acados returned status 4 in closed loop solve
-loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
-Time plotting sqp sol & save fig: 0.08429765701293945
-
-SQP_RTI: QP solver returned error status 3 QP iteration 0.
-Time solving problem: 0.022360801696777344
-Time for backtracking: 0.1394045352935791
-Sim iter,  0 SQP iter,  1 Alpha,  0.10000000000000014 Max step size,  0.006531839999997402
-Break at sqp iter 1, 
-
-
-Time before plotting sqp sol: 0.007622241973876953
-acados returned status 4 in closed loop solve
-loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
-Time plotting sqp sol & save fig: 0.0884695053100586
-Time taken 1.7913711071014404
-[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
-Time for one step planner: 2.1600534915924072
-Uncertainity at meas_loc [0.04242992]
-tensor(0.7200, dtype=torch.float64)
-Time for GP update: 0.003574371337890625
-Uncertainity at meas_loc [0.03463352]
-tensor(0.6525)
-Nodes in optimistic graph: 30625
-init_node 16702 goal_node 25520
-[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.160494565963745
-[96mSolving Constrints[0m
-Time between two solving: 4.566053628921509
-
-SQP_RTI: QP solver returned error status 3 QP iteration 1.
-Time solving problem: 0.2798953056335449
-Time for backtracking: 0.023066997528076172
-Sim iter,  1 SQP iter,  0 Alpha,  1.0 Max step size,  0.01185793893491116
+Time between two solving: 6.909423589706421
+Time solving problem: 1.4051408767700195
+Time for backtracking: 0.13031530380249023
+Sim iter,  0 SQP iter,  0 Alpha,  0.30000000000000016 Max step size,  0.015876000018165394
 Break at sqp iter 0, 
 
 
-Time before plotting sqp sol: 0.008341312408447266
-acados returned status 4 in closed loop solve
-loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
-Time plotting sqp sol & save fig: 0.0885775089263916
-Time taken 0.400097131729126
-[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
-Time for one step planner: 0.903038740158081
-Uncertainity at meas_loc [0.03463352]
+Time before plotting sqp sol: 0.008873939514160156
+Time plotting sqp sol & save fig: 0.07714223861694336
+Time taken 1.6217689514160156
+[32mReached: [-18.00058619 -14.69999981   3.14159   ] [-18.00058619 -14.69999981   3.14159   ] [0m
+Time for one step planner: 2.053736925125122
+Uncertainity at meas_loc [0.04273224]
 tensor(0.7200, dtype=torch.float64)
-Time for GP update: 0.0043866634368896484
-Uncertainity at meas_loc [0.03002036]
-tensor(0.6525)
+Time for GP update: 0.004534244537353516
+Uncertainity at meas_loc [0.03478813]
+tensor(0.6534)
 Nodes in optimistic graph: 30625
 init_node 16702 goal_node 25520
 [32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.093284368515015
+Time for finding next goal: 4.10007905960083
 [96mSolving Constrints[0m
-Time between two solving: 4.640089750289917
+Time between two solving: 4.577930212020874
+Time solving problem: 0.28221631050109863
+Time for backtracking: 0.12923598289489746
+Sim iter,  1 SQP iter,  0 Alpha,  0.30000000000000016 Max step size,  0.31186423971728083
+Time before plotting sqp sol: 0.010251998901367188
+Time plotting sqp sol & save fig: 0.08264541625976562
+Time solving problem: 0.0260622501373291
+Time for backtracking: 0.12964630126953125
+Sim iter,  1 SQP iter,  1 Alpha,  0.30000000000000016 Max step size,  0.5066287463941491
+Time before plotting sqp sol: 0.009342670440673828
+Time plotting sqp sol & save fig: 0.08258295059204102
+Time solving problem: 0.027224063873291016
+Time for backtracking: 0.1446211338043213
+Sim iter,  1 SQP iter,  2 Alpha,  0.20000000000000015 Max step size,  0.1435506643220008
+Time before plotting sqp sol: 0.008625984191894531
+Time plotting sqp sol & save fig: 0.08269119262695312
+Time solving problem: 0.026473283767700195
+Time for backtracking: 0.14361357688903809
+Sim iter,  1 SQP iter,  3 Alpha,  0.20000000000000015 Max step size,  0.14807327989257368
+Time before plotting sqp sol: 0.008536815643310547
+Time plotting sqp sol & save fig: 0.08514881134033203
+Time solving problem: 0.026434898376464844
+Time for backtracking: 0.15958118438720703
+Sim iter,  1 SQP iter,  4 Alpha,  0.10000000000000014 Max step size,  0.014711811922672013
+Break at sqp iter 4, 
 
-SQP_RTI: QP solver returned error status 3 QP iteration 1.
-Time solving problem: 0.296144962310791
-Time for backtracking: 0.025092601776123047
-Sim iter,  2 SQP iter,  0 Alpha,  1.0 Max step size,  0.06688943628584432
-Time before plotting sqp sol: 0.008984565734863281
-acados returned status 4 in closed loop solve
-loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
-Time plotting sqp sol & save fig: 0.09267616271972656
 
-SQP_RTI: QP solver returned error status 3 QP iteration 0.
-Time solving problem: 0.026736021041870117
-Time for backtracking: 0.17995667457580566
-Sim iter,  2 SQP iter,  1 Alpha,  0.10000000000000014 Max step size,  0.006531839999997402
-Break at sqp iter 1, 
-
-
-Time before plotting sqp sol: 0.008681058883666992
-acados returned status 4 in closed loop solve
-loading iterate MPC_expander_V0_env_0_i_8_ocp_initialization.json
-Time plotting sqp sol & save fig: 0.08973836898803711
-Time taken 0.7284467220306396
-[32mReached: [-18.         -14.69999981   3.14159   ] [-18.         -14.69999981   3.14159   ] [0m
-Time for one step planner: 1.0710201263427734
-Uncertainity at meas_loc [0.03002036]
-tensor(0.7200, dtype=torch.float64)
-Time for GP update: 0.004578351974487305
-Uncertainity at meas_loc [0.026811]
-tensor(0.6520)
-Nodes in optimistic graph: 30625
+Time before plotting sqp sol: 0.008708000183105469
+Time plotting sqp sol & save fig: 0.08543992042541504
+Time taken 1.5600404739379883
+[32mReached: [-18.01658858 -14.69703173   2.67693403] [-18.01658858 -14.69703173   2.67693403] [0m
+Time for one step planner: 2.0274581909179688
+Uncertainity at meas_loc [0.15688193]
+tensor(0.6800, dtype=torch.float64)
+Time for GP update: 0.004380464553833008
+Uncertainity at meas_loc [0.05604827]
+tensor(0.6585)
+Nodes in optimistic graph: 30621
 init_node 16702 goal_node 25520
+[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
+Time for finding next goal: 4.0769641399383545
+[96mSolving Constrints[0m
+Time between two solving: 4.587849140167236
+Time solving problem: 0.31352925300598145
+Time for backtracking: 0.15041637420654297
+Sim iter,  2 SQP iter,  0 Alpha,  0.20000000000000015 Max step size,  0.14271902231748207
+Time before plotting sqp sol: 0.009565114974975586
+Time plotting sqp sol & save fig: 0.08895277976989746
+Time solving problem: 0.027538776397705078
+Time for backtracking: 0.1561753749847412
+Sim iter,  2 SQP iter,  1 Alpha,  0.20000000000000015 Max step size,  0.15208143302343402
+Time before plotting sqp sol: 0.009217023849487305
+Time plotting sqp sol & save fig: 0.09020733833312988
+Time solving problem: 0.026898622512817383
+Time for backtracking: 0.1753838062286377
+Sim iter,  2 SQP iter,  2 Alpha,  1.3877787807814457e-16 Max step size,  0.0
+Break at sqp iter 2, 
+
+
+Time before plotting sqp sol: 0.009943485260009766
+Time plotting sqp sol & save fig: 0.08799362182617188
+Time taken 1.1464674472808838
+[32mReached: [-18.02484863 -14.6926146    2.60304862] [-18.02484863 -14.6926146    2.60304862] [0m
+Time for one step planner: 1.455519437789917
+Uncertainity at meas_loc [0.09054816]
+tensor(0.6800, dtype=torch.float64)
+Time for GP update: 0.004583597183227539
+Uncertainity at meas_loc [0.05001962]
+tensor(0.6468)
 There was an error running python
