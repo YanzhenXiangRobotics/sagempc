@@ -74,7 +74,7 @@ class SEMPC_solver(object):
             self.last_X[stage, :] = self.ocp_solver.get(stage, "x")
             self.last_U[stage, :] = self.ocp_solver.get(stage, "u")
         self.last_X[self.H, :] = self.ocp_solver.get(self.H, "x")
-        
+
         self.debug = self.params["experiment"]["debug"]
         self.time_ckp = time.time()
 
@@ -291,9 +291,9 @@ class SEMPC_solver(object):
         for sqp_iter in range(self.max_sqp_iter):
             if self.debug:
                 if self.params["experiment"]["plot_contour"]:
-                    if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-                        sqp_iter == 0
-                    ):
+                    if (
+                        sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter
+                    ) or (sqp_iter == 0):
                         self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
                         self.plot_3D(player)
             self.ocp_solver.options_set("rti_phase", 1)
@@ -323,9 +323,6 @@ class SEMPC_solver(object):
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
-            f, df_dx, df_du = player.get_dyn_sensitivities(
-                x_h[:-1, :], u_h[:, : -self.x_dim]
-            )
             UB_cx_val, UB_cx_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "UB", "Cx"
             )  # optimistic safe location
@@ -343,13 +340,9 @@ class SEMPC_solver(object):
                         "p",
                         np.hstack(
                             (
-                                f[stage, :],
-                                df_dx[stage, ::].flatten(),
-                                x_h[stage, :],
-                                df_du[stage, ::].flatten(),
-                                u_h[stage, : -self.x_dim],
                                 gp_val[stage],
                                 gp_grad[stage],
+                                x_h[stage, : self.state_dim],
                                 xg[stage],
                                 w[stage],
                                 x_terminal,
@@ -359,7 +352,7 @@ class SEMPC_solver(object):
                                 u_h[stage, -self.x_dim :],
                                 LB_cz_val[stage],
                                 LB_cz_grad[stage],
-                                w_du[stage]
+                                w_v_omega[stage],
                             )
                         ),
                     )
@@ -369,13 +362,9 @@ class SEMPC_solver(object):
                     "p",
                     np.hstack(
                         (
-                            f[stage - 1, :],  # unused
-                            df_dx[stage - 1, ::].flatten(),  # unused
-                            x_h[stage, :],
-                            df_du[stage - 1, ::].flatten(),  # unused
-                            u_h[stage - 1, : -self.x_dim],  # unused
                             gp_val[stage],
                             gp_grad[stage],
+                            x_h[stage, : self.state_dim],
                             xg[stage],
                             w[stage],
                             x_terminal,
@@ -385,7 +374,7 @@ class SEMPC_solver(object):
                             u_h[stage - 1, -self.x_dim :],
                             LB_cz_val[stage - 1],
                             LB_cz_grad[stage - 1],
-                            w_du[stage - 1],
+                            w_v_omega[stage - 1],
                         )
                     ),
                 )  # last 3 "stage-1" are dummy values
@@ -539,7 +528,9 @@ class SEMPC_solver(object):
                 self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
                 if not os.path.exists("sqp_sols"):
                     os.makedirs("sqp_sols")
-                self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png"))
+                self.fig.savefig(
+                    os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png")
+                )
                 if (sqp_iter == self.max_sqp_iter) or self.early_term:
                     len_plot_tmps = len(self.plot_tmps)
                     len_scatter_tmps = len(self.scatter_tmps)
@@ -608,7 +599,9 @@ class SEMPC_solver(object):
             #         self.threeD_tmps.pop(0).remove()
             if self.debug:
                 if sqp_iter == (self.max_sqp_iter - 1):
-                    tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+                    tmp_1, _ = player.get_gp_sensitivities(
+                        X[:, : self.x_dim], "LB", "Cx"
+                    )
                     tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(
                         self.last_X[:, : self.x_dim], "LB", "Cx"
                     )

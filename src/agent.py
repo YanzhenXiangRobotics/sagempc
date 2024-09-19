@@ -30,14 +30,12 @@ def get_idx_from_grid(position, grid_V):
 
 
 def dynamics(x, u):
-    v, omega, dv, domega, theta, dT = u[0], u[1], u[2], u[3], x[2], u[-1]
+    v, omega, theta, dT = u[0], u[1], x[2], u[-1]
     K0 = torch.stack(
         (
             v * torch.cos(theta),
             v * torch.sin(theta),
             omega,
-            dv / dT,
-            domega / dT,
             torch.tensor(1.0),
         )
     )
@@ -46,8 +44,6 @@ def dynamics(x, u):
             v * torch.cos(theta + 0.5 * dT * omega),
             v * torch.sin(theta + 0.5 * dT * omega),
             omega,
-            dv / dT,
-            domega / dT,
             torch.tensor(1.0),
         )
     )
@@ -57,8 +53,6 @@ def dynamics(x, u):
             v * torch.cos(theta + dT * omega),
             v * torch.sin(theta + dT * omega),
             omega,
-            dv / dT,
-            domega / dT,
             torch.tensor(1.0),
         )
     )
