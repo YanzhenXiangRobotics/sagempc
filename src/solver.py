@@ -13,6 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from src.utils.ocp import export_oracle_ocp, export_sempc_ocp, export_sim
 
 from geometry_msgs.msg import Twist
+import time
 
 
 # The class below is an optimizer class,
@@ -258,7 +259,18 @@ class SEMPC_solver(object):
         #     )
         # )
 
+    def log_duration(self, prefix="Time", last_time=None):
+        duration = (
+            time.time() - self.time_ckp
+            if last_time is None
+            else time.time() - last_time
+        )
+        print(f"{prefix}: {duration}")
+        self.time_ckp = time.time()
+        return self.time_ckp
+
     def solve(self, player, sim_iter):
+        self.time_ckp = time.time()
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
         we[int(self.H - 1)] = 10000
@@ -278,6 +290,7 @@ class SEMPC_solver(object):
                 ):
                     self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
                     self.plot_3D(player)
+            self.log_duration()
             self.ocp_solver.options_set("rti_phase", 1)
             x_h, u_h = self.initilization(sqp_iter)
             if sqp_iter == 0:
@@ -286,10 +299,14 @@ class SEMPC_solver(object):
                 self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
                 if not os.path.exists("sqp_sols"):
                     os.makedirs("sqp_sols")
-                self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png"))
+                self.fig.savefig(
+                    os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png")
+                )
                 self.ax.set_xlim([self.x_curr[0] - 3.0, self.x_curr[0] + 3.0])
                 self.ax.set_ylim([self.x_curr[1] - 3.0, self.x_curr[1] + 3.0])
-                self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter-1}_final.png"))
+                self.fig.savefig(
+                    os.path.join("sqp_sols", f"sol_{sim_iter-1}_final.png")
+                )
             if sqp_iter == 0:
                 tmp, _ = player.get_gp_sensitivities(
                     self.last_X[:, : self.x_dim], "LB", "Cx"
@@ -413,7 +430,7 @@ class SEMPC_solver(object):
             # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
 
             X_raw, U_raw, Sl = self.get_solution()
-
+            ckp = self.log_duration("Time solving problem")
             # print(
             #     "cost ",
             #     self.ocp_solver.get_cost(),
@@ -443,6 +460,7 @@ class SEMPC_solver(object):
                 X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
+                self.log_duration("Time for backtracking", ckp)
             else:
                 alpha = 1.0
                 X, U = X_raw.copy(), U_raw.copy()
@@ -456,8 +474,8 @@ class SEMPC_solver(object):
                 alpha,
                 "Max step size, ",
                 max_step_size,
-            )    
-                
+            )
+
             self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
@@ -479,8 +497,6 @@ class SEMPC_solver(object):
                 # print(
                 #     f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
                 # )
-            if sqp_iter == (self.max_sqp_iter - 1):
-                pass
                 # print(f"GP_VALS: {GP_vals_next}")
                 # print(f"GP_VALS: {GP_vals_next}, final_X: {X}, final_U: {U}")
             # print(
@@ -500,7 +516,7 @@ class SEMPC_solver(object):
                 self.early_term = True
             else:
                 self.early_term = False
-
+            self.log_duration("Time before plotting sqp sol")
             if (
                 self.params["algo"]["type"] == "ret_expander"
                 or self.params["algo"]["type"] == "MPC_expander"
@@ -564,7 +580,7 @@ class SEMPC_solver(object):
                 self.ocp_solver.load_iterate(
                     self.name_prefix + "ocp_initialization.json"
                 )
-
+            self.log_duration("Time plotting sqp sol & save fig")
             sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
             if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
                 os.makedirs(sqp_plot_dir)
@@ -622,6 +638,7 @@ class SEMPC_solver(object):
         #         < self.params["common"]["constraint"]
         #     )
         # ) and (alpha > 0.02):
+        # self.log_duration()
         while (
             any(
                 LB_cz_val_next[self.Hm]
@@ -643,10 +660,13 @@ class SEMPC_solver(object):
             alpha -= 0.1
             X = alpha * X + (1 - alpha) * x_h
             U = alpha * U + (1 - alpha) * u_h
+            # self.log_duration()
             gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+            # self.log_duration()
             LB_cz_val_next, _ = player.get_gp_sensitivities(
                 U[:, -self.x_dim :], "LB", "Cx"
             )
+            # self.log_duration()
         return X, U, alpha
 
     def compute_Lc_constr_next_lin(self, X, U, x_h, z_h, player):
