@@ -301,7 +301,9 @@ class SEMPC(Node):
             if w < self.params["common"]["epsilon"]:
                 self.players[self.pl_idx].feasible = False
             else:
+                ckp = time.time()
                 w = self.set_next_goal()
+                print(f"Time for finding next goal: {time.time() - ckp}")
 
             if self.params["algo"]["objective"] == "GO":
                 running_condition_true = (
@@ -903,7 +905,9 @@ class SEMPC(Node):
         # this while loops ensures we collect measurement only at constraint and not all along
         # the path
         # self.receding_horizon(self.players[self.pl_idx])
+        ckp = time.time()
         self.one_step_planner()
+        print(f"Time for one step planner: {time.time() - ckp}")
         # if self.flag_reached_xt_goal:
         #     self.visu.UpdateIter(self.iter, -1)
         #     self.visu.UpdateSafeVisu(0, self.players, self.env)
@@ -935,6 +939,7 @@ class SEMPC(Node):
                     self.params,
                 )
             else:
+                ckp = time.time()
                 TrainAndUpdateConstraint(
                     self.players[self.pl_idx].safe_meas_loc,
                     self.pl_idx,
@@ -942,6 +947,7 @@ class SEMPC(Node):
                     self.params,
                     self.env,
                 )
+                print(f"Time for GP update: {time.time() - ckp}")
             print(
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
