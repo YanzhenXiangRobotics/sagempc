@@ -317,7 +317,7 @@ class Agent(object):
         self.update_current_location(state[: self.x_dim])
 
     def rollout(self, U):
-        print(f"Apply: {U}")
+        print(f"Apply: {U}, \n Acceleration: {np.diff(U, axis=0)}")
         for i in range(U.shape[0]):
             self.state_sim = (
                 dynamics(torch.from_numpy(self.state_sim), torch.from_numpy(U[i, :]))

@@ -249,6 +249,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
     w = ca.SX.sym("w", 1, 1)
     we = ca.SX.sym("we", 1, 1)
     cw = ca.SX.sym("cw", 1, 1)
+    # cw_du = ca.SX.sym("cw_du", 1, 1)
 
     q_th = params["common"]["constraint"]
     var = (
@@ -273,6 +274,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             ub_cx_lin,
             ub_cx_grad,
             cw,
+            # cw_du,
             z_lin,
             lb_cz_lin,
             lb_cz_grad,
@@ -289,6 +291,7 @@ def sempc_const_expr(model, x_dim, n_order, params, model_x, model_z, x_lin):
             - Lc * ca.norm_2(x_lin[:x_dim] - z_lin)
             - q_th,
             cw * var,
+            # cw_du * model.u[:2]
             # w * (lb_cx_lin + lb_cx_grad.T @ (model_x - x_lin)[:x_dim]),
         )
         # Since the variable z is actually a u, we cannot have a terminal constraint on u for H+1
@@ -350,9 +353,11 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
     # cost
     ocp.cost.cost_type = "EXTERNAL"
     ocp.cost.cost_type_e = "EXTERNAL"
+    w_du = ca.SX.sym("cw_du", 1, 1)
+    ocp.model.p = ca.vertcat(ocp.model.p, w_du)
     ocp.model.cost_expr_ext_cost = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
-        + model_u.T @ (q) @ model_u
+        + w_du * model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
     )
     ocp.model.cost_expr_ext_cost_e = (
@@ -465,6 +470,8 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         )
         ocp.constraints.lh = np.array([0, eps])
         ocp.constraints.uh = np.array([10.0, 1e8])
+        # ocp.constraints.lh = np.array([0, eps, 0.0, 0.0])
+        # ocp.constraints.uh = np.array([10.0, 1e8, 0.0, 0.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8, 0])
         # ocp.constraints.uh = np.array([10.0, 1e8, l_max, 10.0])
         # ocp.constraints.lh = np.array([0, eps, -1e8])
