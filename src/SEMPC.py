@@ -806,6 +806,9 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
+                print(
+                    f"X_first_half: {X[:self.Hm, :]}, \n U_first_half: {U[:self.Hm, :]}"
+                )
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
                 # self.players[self.pl_idx].rollout(U[: self.Hm, :])
                 x_curr = (
@@ -813,7 +816,7 @@ class SEMPC(Node):
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
-                
+
         # assert np.isclose(x_curr,X[self.Hm]).all()
         # self.visu.UpdateIter(self.iter+i, -1)
         # self.visu.UpdateSafeVisu(0, self.players, self.env)
