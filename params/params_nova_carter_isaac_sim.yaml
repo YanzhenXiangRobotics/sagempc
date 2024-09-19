@@ -41,10 +41,10 @@ agent:
 optimizer:
   H: 25 # Horizon
   Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
-  # u_min: [-0.1, -0.2] # Constraints on action space, Minimum control input
-  # u_max: [0.1, 0.2] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
-  u_min: [-10000.0, -10000.0] # Constraints on action space, Minimum control input
-  u_max: [10000.0, 10000.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  u_min: [-0.1, -0.2] # Constraints on action space, Minimum control input
+  u_max: [0.1, 0.2] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
+  # u_min: [-10.0, -10.0] # Constraints on action space, Minimum control input
+  # u_max: [10.0, 10.0] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   x_min: [-21.8, -21.8, -0.5, -1.0] # Constraints on state space, Minimum state value
   x_max: [2.0, 2.0, 0.5, 1.0] # Constraints on state space, Maximum state value
   linear_solver: "ma57" # linear solver used by the optimizer, see https://coin-or.github.io/Ipopt/OPTIONS.html#OPT_linear_solver

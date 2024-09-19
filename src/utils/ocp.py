@@ -368,7 +368,7 @@ def sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params):
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
         + model_u.T @ (q) @ model_u
         + ocp.model.x[-1] * w / 1000
-        # + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
+        + w_v_omega * (ocp.model.x[x_dim + 1 : -1]).T @ (ocp.model.x[x_dim + 1 : -1])
     )
     ocp.model.cost_expr_ext_cost_e = (
         w * (model_x[:x_dim] - xg).T @ qx @ (model_x[:x_dim] - xg)
@@ -439,9 +439,9 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         # lbx = np.concatenate([lbx, np.array([-1.0e2, -1.0e2])])
         # ubx = np.concatenate([ubx, np.array([1.0e2, 1.0e2])])
     else:
-        # ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
-        # ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
-        # ocp.constraints.idxbu = np.arange(x_dim)
+        ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
+        ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
+        ocp.constraints.idxbu = np.arange(x_dim)
 
         lbx = np.array(params["optimizer"]["x_min"])
         ubx = np.array(params["optimizer"]["x_max"])
@@ -458,15 +458,15 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         x0[x_dim] = params["env"]["start_angle"]
     ocp.constraints.x0 = x0.copy()
 
-    # ocp.constraints.lbx_e = lbx.copy()
-    # # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
-    # ocp.constraints.ubx_e = ubx.copy()
-    # # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
-    # ocp.constraints.idxbx_e = np.arange(lbx.shape[0])
+    ocp.constraints.lbx_e = lbx.copy()
+    # ocp.constraints.lbx_e[-x_dim:] = np.zeros(x_dim)
+    ocp.constraints.ubx_e = ubx.copy()
+    # ocp.constraints.ubx_e[-x_dim:] = np.zeros(x_dim)
+    ocp.constraints.idxbx_e = np.array([0, 1, 3, 4])
 
-    # ocp.constraints.lbx = lbx.copy()
-    # ocp.constraints.ubx = ubx.copy()
-    # ocp.constraints.idxbx = np.arange(lbx.shape[0])
+    ocp.constraints.lbx = lbx.copy()
+    ocp.constraints.ubx = ubx.copy()
+    ocp.constraints.idxbx = np.array([0, 1, 3, 4])
     if params["algo"]["type"] == "MPC_Xn":
         wee = 1.0e-5
         ocp.constraints.lh = np.array([0, eps, -1 * wee, -1 * wee, -1 * wee, -1 * wee])
