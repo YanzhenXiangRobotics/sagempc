@@ -282,6 +282,9 @@ class SEMPC_solver(object):
         cw = 1e3 * np.ones(self.H + 1)
         if not player.goal_in_pessi:
             cw[int(self.Hm)] = 1
+        w_du = 1 * np.ones(self.H)
+        w_du[0] = 1e8
+        w_du[int(self.Hm) - 1] = 1e8
         xg = np.ones((self.H + 1, self.x_dim)) * player.get_next_to_go_loc()
         x_origin = player.origin[: self.x_dim].numpy()
         x_terminal = np.zeros(self.state_dim)
@@ -357,6 +360,7 @@ class SEMPC_solver(object):
                                 u_h[stage, -self.x_dim :],
                                 LB_cz_val[stage],
                                 LB_cz_grad[stage],
+                                w_du[stage]
                             )
                         ),
                     )
@@ -382,6 +386,7 @@ class SEMPC_solver(object):
                             u_h[stage - 1, -self.x_dim :],
                             LB_cz_val[stage - 1],
                             LB_cz_grad[stage - 1],
+                            w_du[stage - 1],
                         )
                     ),
                 )  # last 3 "stage-1" are dummy values
