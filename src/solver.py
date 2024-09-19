@@ -284,36 +284,36 @@ class SEMPC_solver(object):
         x_terminal = np.zeros(self.state_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
         for sqp_iter in range(self.max_sqp_iter):
-            if self.params["experiment"]["plot_contour"]:
-                if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
-                    sqp_iter == 0
-                ):
-                    self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
-                    self.plot_3D(player)
+            # if self.params["experiment"]["plot_contour"]:
+            #     if (sqp_iter != (self.max_sqp_iter - 1) and self.plot_per_sqp_iter) or (
+            #         sqp_iter == 0
+            #     ):
+            #         self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
+            #         self.plot_3D(player)
             self.log_duration()
             self.ocp_solver.options_set("rti_phase", 1)
             x_h, u_h = self.initilization(sqp_iter)
-            if sqp_iter == 0:
-                self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
-                self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
-                self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
-                if not os.path.exists("sqp_sols"):
-                    os.makedirs("sqp_sols")
-                self.fig.savefig(
-                    os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png")
-                )
-                self.ax.set_xlim([self.x_curr[0] - 3.0, self.x_curr[0] + 3.0])
-                self.ax.set_ylim([self.x_curr[1] - 3.0, self.x_curr[1] + 3.0])
-                self.fig.savefig(
-                    os.path.join("sqp_sols", f"sol_{sim_iter-1}_final.png")
-                )
-            if sqp_iter == 0:
-                tmp, _ = player.get_gp_sensitivities(
-                    self.last_X[:, : self.x_dim], "LB", "Cx"
-                )
+            # if sqp_iter == 0:
+            #     self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
+            #     self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
+            #     self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+            #     if not os.path.exists("sqp_sols"):
+            #         os.makedirs("sqp_sols")
+            #     self.fig.savefig(
+            #         os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png")
+            #     )
+            #     self.ax.set_xlim([self.x_curr[0] - 3.0, self.x_curr[0] + 3.0])
+            #     self.ax.set_ylim([self.x_curr[1] - 3.0, self.x_curr[1] + 3.0])
+            #     self.fig.savefig(
+            #         os.path.join("sqp_sols", f"sol_{sim_iter-1}_final.png")
+            #     )
+            # if sqp_iter == 0:
+            #     tmp, _ = player.get_gp_sensitivities(
+            #         self.last_X[:, : self.x_dim], "LB", "Cx"
+            #     )
                 # print(f"After updating GP, gp val: {tmp}")
-            if sqp_iter == 0:
-                x_h_0, u_h_0 = x_h.copy(), u_h.copy()
+            # if sqp_iter == 0:
+            #     x_h_0, u_h_0 = x_h.copy(), u_h.copy()
             gp_val, gp_grad = player.get_gp_sensitivities(
                 x_h[:, : self.x_dim], "LB", "Cx"
             )  # pessimitic safe location
@@ -479,21 +479,21 @@ class SEMPC_solver(object):
             self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
-            LB_cz_val_next, _ = player.get_gp_sensitivities(
-                U[:, -self.x_dim :], "LB", "Cx"
-            )
-            GP_vals_next = LB_cz_val_next - np.linalg.norm(
-                X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
-            )
-            GP_val_next = GP_vals_next[self.Hm]
-            if GP_val_next < self.params["common"]["constraint"]:
-                print("Unsafe !!!")
-                print(f"GP_val_next: {GP_val_next}")
-                diff_init = np.linalg.norm(
-                    X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
-                )
-                GP_vals_init = LB_cz_val_next - diff_init
-                print(f"GP_vals_init: {GP_vals_init}, diff_init: {diff_init}")
+            # LB_cz_val_next, _ = player.get_gp_sensitivities(
+            #     U[:, -self.x_dim :], "LB", "Cx"
+            # )
+            # GP_vals_next = LB_cz_val_next - np.linalg.norm(
+            #     X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
+            # )
+            # GP_val_next = GP_vals_next[self.Hm]
+            # if GP_val_next < self.params["common"]["constraint"]:
+            #     print("Unsafe !!!")
+            #     print(f"GP_val_next: {GP_val_next}")
+            #     diff_init = np.linalg.norm(
+            #         X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
+            #     )
+            #     GP_vals_init = LB_cz_val_next - diff_init
+            #     print(f"GP_vals_init: {GP_vals_init}, diff_init: {diff_init}")
                 # print(
                 #     f"alpha: {alpha}, \nGP_vals_next: {GP_vals_next},\n X_raw: {X_raw}, X: {X},\n, last_X: {self.last_X},\n, U_raw: {U_raw}, \n, U: {U},\n last_U: {self.last_U}\n\n\n\n"
                 # )
@@ -516,27 +516,27 @@ class SEMPC_solver(object):
                 self.early_term = True
             else:
                 self.early_term = False
-            self.log_duration("Time before plotting sqp sol")
-            if (
-                self.params["algo"]["type"] == "ret_expander"
-                or self.params["algo"]["type"] == "MPC_expander"
-                or self.params["algo"]["type"] == "MPC_expander_V0"
-            ):
-                self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
-            else:
-                self.plot_sqp_sol(sqp_iter, X)
-            self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
-            self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
-            if not os.path.exists("sqp_sols"):
-                os.makedirs("sqp_sols")
-            self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png"))
-            if (sqp_iter == self.max_sqp_iter) or self.early_term:
-                len_plot_tmps = len(self.plot_tmps)
-                len_scatter_tmps = len(self.scatter_tmps)
-                for _ in range(len_plot_tmps):
-                    self.plot_tmps.pop(0).remove()
-                for _ in range(len_scatter_tmps):
-                    self.scatter_tmps.pop(0).set_visible(False)
+            # self.log_duration("Time before plotting sqp sol")
+            # if (
+            #     self.params["algo"]["type"] == "ret_expander"
+            #     or self.params["algo"]["type"] == "MPC_expander"
+            #     or self.params["algo"]["type"] == "MPC_expander_V0"
+            # ):
+            #     self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
+            # else:
+            #     self.plot_sqp_sol(sqp_iter, X)
+            # self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
+            # self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+            # if not os.path.exists("sqp_sols"):
+            #     os.makedirs("sqp_sols")
+            # self.fig.savefig(os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png"))
+            # if (sqp_iter == self.max_sqp_iter) or self.early_term:
+            #     len_plot_tmps = len(self.plot_tmps)
+            #     len_scatter_tmps = len(self.scatter_tmps)
+            #     for _ in range(len_plot_tmps):
+            #         self.plot_tmps.pop(0).remove()
+            #     for _ in range(len_scatter_tmps):
+            #         self.scatter_tmps.pop(0).set_visible(False)
             # print(X)
             # for stage in range(self.H):
             #     print(stage, " constraint ", self.constraint(LB_cz_val[stage], LB_cz_grad[stage], U[stage,3:5], X[stage,0:4], u_h[stage,-self.x_dim:], x_h[stage, :self.state_dim], self.params["common"]["Lc"]))
@@ -580,11 +580,11 @@ class SEMPC_solver(object):
                 self.ocp_solver.load_iterate(
                     self.name_prefix + "ocp_initialization.json"
                 )
-            self.log_duration("Time plotting sqp sol & save fig")
-            sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
-            if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
-                os.makedirs(sqp_plot_dir)
-                self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
+            # self.log_duration("Time plotting sqp sol & save fig")
+            # sqp_plot_dir = os.path.join(self.fig_dir, f"sol_{sim_iter}")
+            # if not os.path.exists(sqp_plot_dir) and self.plot_per_sqp_iter:
+            #     os.makedirs(sqp_plot_dir)
+            #     self.fig.savefig(os.path.join(sqp_plot_dir, f"{sqp_iter}"))
             # if sqp_iter != self.max_sqp_iter - 1:
             #     len_plot_tmps = len(self.plot_tmps)
             #     len_scatter_tmps = len(self.scatter_tmps)
@@ -595,24 +595,24 @@ class SEMPC_solver(object):
             #         self.scatter_tmps.pop(0).set_visible(False)
             #     for _ in range(len_threeD_tmps):
             #         self.threeD_tmps.pop(0).remove()
-            if sqp_iter == (self.max_sqp_iter - 1):
-                tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
-                tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(
-                    self.last_X[:, : self.x_dim], "LB", "Cx"
-                )
-                step_size = (X - self.last_X)[:, : self.x_dim]
-                lin_gp_vals = []
-                for val, grad, x, x_lin in zip(
-                    tmp_2_vals,
-                    tmp_2_grads,
-                    X[:, : self.x_dim],
-                    self.last_X[:, : self.x_dim],
-                ):
-                    lin_gp_val = val + grad @ (x - x_lin).T
-                    lin_gp_vals.append(lin_gp_val)
-                tmp_2_vals = np.array(lin_gp_vals)
-                # print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
-            self.last_X, self.last_U = X.copy(), U.copy()
+            # if sqp_iter == (self.max_sqp_iter - 1):
+            #     tmp_1, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+            #     tmp_2_vals, tmp_2_grads = player.get_gp_sensitivities(
+            #         self.last_X[:, : self.x_dim], "LB", "Cx"
+            #     )
+            #     step_size = (X - self.last_X)[:, : self.x_dim]
+            #     lin_gp_vals = []
+            #     for val, grad, x, x_lin in zip(
+            #         tmp_2_vals,
+            #         tmp_2_grads,
+            #         X[:, : self.x_dim],
+            #         self.last_X[:, : self.x_dim],
+            #     ):
+            #         lin_gp_val = val + grad @ (x - x_lin).T
+            #         lin_gp_vals.append(lin_gp_val)
+            #     tmp_2_vals = np.array(lin_gp_vals)
+            #     # print(f"Before updating GP, gp val: {tmp_1}, lin gp val: {lin_gp_vals}")
+            # self.last_X, self.last_U = X.copy(), U.copy()
             if self.early_term:
                 break
         return X, U
