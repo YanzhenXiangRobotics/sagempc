@@ -282,7 +282,7 @@ class SEMPC_solver(object):
         cw = 1e3 * np.ones(self.H + 1)
         if not player.goal_in_pessi:
             cw[int(self.Hm)] = 1
-        w_v_omega = 1 * np.ones(self.H)
+        w_v_omega = 1e-3 * np.ones(self.H)
         w_v_omega[int(self.Hm) - 1] = 1e5
         xg = np.ones((self.H + 1, self.x_dim)) * player.get_next_to_go_loc()
         x_origin = player.origin[: self.x_dim].numpy()

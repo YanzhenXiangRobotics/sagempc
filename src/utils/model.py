@@ -451,6 +451,28 @@ def export_nova_carter_discrete_Lc():
     z = ca.SX.sym("z", 2)
     model.x, model.u = x, ca.vertcat(u, z)
 
+    theta, v, omega, dv, domega, dT = x[2], x[3], x[4], u[0], u[1], u[-1]
+    model.disc_dyn_expr = x + ca.vertcat(
+        v * ca.cos(theta + 0.5 * omega * dT) * dT,
+        v * ca.sin(theta + 0.5 * omega * dT) * dT,
+        omega * dT,
+        dv,
+        domega,
+        dT,
+    )
+
+    return model
+
+
+def export_nova_carter_discrete_Lc_rk4():
+    model = AcadosModel()
+    model.name = "nova_carter_discrete_Lc"
+
+    x = ca.SX.sym("x", 6)
+    u = ca.SX.sym("u", 3)
+    z = ca.SX.sym("z", 2)
+    model.x, model.u = x, ca.vertcat(u, z)
+
     v, omega, dv, domega, theta, dT = x[3], x[4], u[0], u[1], x[2], u[-1]
     K0 = ca.vertcat(
         v * ca.cos(theta),
