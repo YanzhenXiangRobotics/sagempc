@@ -732,8 +732,8 @@ class SEMPC(Node):
             # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", st_lb)
             # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", st_ub)
             st_lb[-1] = self.params["optimizer"]["Tf"]
-            # self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
-            # self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
+            self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
+            self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
@@ -807,7 +807,7 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 print(
-                    f"X_first_half: {X[:self.Hm, :]}, \n U_first_half: {U[:self.Hm, :]}"
+                    f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
                 # self.players[self.pl_idx].rollout(U[: self.Hm, :])
