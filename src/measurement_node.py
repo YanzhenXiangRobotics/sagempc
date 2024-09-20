@@ -80,23 +80,40 @@ class MeasurementNode(Node):
         else:
             return angle
 
+    # def get_pose_3D(self):
+    #     # map_2_chassis_imu = self.tf_buffer.lookup_transform(
+    #     #     "map", "chassis_imu", time=rclpy.time.Time()
+    #     # )
+    #     odom_2_chassis_imu = self.tf_buffer.lookup_transform(
+    #         "odom", "chassis_imu", time=rclpy.time.Time()
+    #     )
+    #     trans = odom_2_chassis_imu.transform.translation
+    #     trans = map_2_chassis_imu.transform.translation
+    #     orient = map_2_chassis_imu.transform.rotation
+    #     orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
+    #     orient_euler = np.array(euler_from_quaternion(orient_quat))
+    #     pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
+    #     # start_pose = np.append(
+    #     #     np.array(params["start_loc"]), params_0["env"]["start_angle"]
+    #     # )
+    #     # self.pose_3D += np.array(start_pose)
+    #     pose_3D[-1] = self._angle_helper(pose_3D[-1])
+
+    #     return pose_3D
+    
     def get_pose_3D(self):
-        map_2_chassis_imu = self.tf_buffer.lookup_transform(
-            "map", "chassis_imu", time=rclpy.time.Time()
+        od_2_cl = self.tf_buffer.lookup_transform(
+            "odom", "chassis_imu", time=rclpy.time.Time()
         )
-        # odom_2_chassis_imu = self.tf_buffer.lookup_transform(
-        #     "odom", "chassis_imu", time=rclpy.time.Time()
-        # )
-        # trans = odom_2_chassis_imu.transform.translation
-        trans = map_2_chassis_imu.transform.translation
-        orient = map_2_chassis_imu.transform.rotation
+        trans = od_2_cl.transform.translation
+        orient = od_2_cl.transform.rotation
         orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
         orient_euler = np.array(euler_from_quaternion(orient_quat))
-        pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
-        # start_pose = np.append(
-        #     np.array(params["start_loc"]), params_0["env"]["start_angle"]
-        # )
-        # self.pose_3D += np.array(start_pose)
+        pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
+        start_pose = np.append(
+            np.array(params["start_loc"]), params_0["env"]["start_angle"]
+        )
+        pose_3D += np.array(start_pose)
         pose_3D[-1] = self._angle_helper(pose_3D[-1])
 
         return pose_3D

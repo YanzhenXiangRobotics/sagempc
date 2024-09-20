@@ -23,11 +23,14 @@ from src.agent import get_idx_from_grid
 
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float64MultiArray, Int32
 
 from mlsocket import MLSocket
 
 HOST = "127.0.0.1"
 PORT = 65432
+
+from src.utils.mpc_ref_tracker_node import MPCRefTracker
 
 
 class SEMPC(Node):
@@ -38,6 +41,12 @@ class SEMPC(Node):
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.ref_path_publisher = self.create_publisher(
+            Float64MultiArray, "/ref_path", 10
+        )
+        # self.complete_subscriber = self.create_subscription(
+        #     Int32, "/complete", self.clock_listener_callback, 10
+        # )
         self.sempc_solver = SEMPC_solver(
             params,
             env.VisuGrid,
@@ -76,6 +85,7 @@ class SEMPC(Node):
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
         self.has_legend = False
+        self.ref_tracker = MPCRefTracker()
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -636,7 +646,6 @@ class SEMPC(Node):
     def LoS_control(self, path):
         self.get_current_state_measurement()
         dist_to_ref = np.linalg.norm(self.x_curr[: self.x_dim] - path, axis=-1)
-        
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
@@ -646,7 +655,7 @@ class SEMPC(Node):
             start = self.t_curr
             while self.t_curr - start < duration[i]:
                 msg.linear.x = ctrl[i, 0]
-                msg.angular.z = ctrl[i, 1] + LoS_control(path)
+                msg.angular.z = ctrl[i, 1]
                 self.publisher.publish(msg)
                 self.get_current_state_measurement()
                 # print(
@@ -823,6 +832,30 @@ class SEMPC(Node):
                     f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
+                self.ref_tracker.set_ref_path(X[: self.Hm, : self.x_dim].tolist())
+                # U_cl = np.zeros((self.Hm, self.x_dim))
+                last_v_omega = np.zeros(self.x_dim)
+                for k in range(self.Hm):
+                    x0 = self.players[self.pl_idx].state_sim[:self.state_dim]
+                    x0 = np.concatenate((x0, last_v_omega))
+                    u = self.ref_tracker.solve_for_x0(x0)
+                    u = np.append(u, self.ref_tracker.dt)
+                    self.players[self.pl_idx].rollout(u.reshape(1, -1))
+                    last_v_omega = u[:self.x_dim]
+                    self.ref_tracker.ref_path.pop(0)
+                # ref_path_msg = Float64MultiArray()
+                # ref_path_msg.data = (
+                #     np.concatenate(
+                #         (
+                #             X[: self.Hm + 1, : self.x_dim],
+                #             X[: self.Hm + 1, self.state_dim].reshape(-1, 1),
+                #         ),
+                #         axis=-1,
+                #     )
+                #     .flatten()
+                #     .tolist()
+                # )
+                # self.ref_path_publisher.publish(ref_path_msg)
                 # self.players[self.pl_idx].rollout(U[: self.Hm, :])
                 x_curr = (
                     self.players[self.pl_idx]
