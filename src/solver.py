@@ -77,6 +77,7 @@ class SEMPC_solver(object):
 
         self.debug = self.params["experiment"]["debug"]
         self.time_ckp = time.time()
+        self.local_plot_radius = 0.3
 
     def update_x_curr(self, x_curr):
         self.x_curr = x_curr
@@ -301,8 +302,18 @@ class SEMPC_solver(object):
             if self.debug:
                 if sqp_iter == 0:
                     self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
-                    self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
-                    self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+                    self.ax.set_xlim(
+                        [
+                            self.x_curr[0] - self.local_plot_radius,
+                            self.x_curr[0] + self.local_plot_radius,
+                        ]
+                    )
+                    self.ax.set_ylim(
+                        [
+                            self.x_curr[1] - self.local_plot_radius,
+                            self.x_curr[1] + self.local_plot_radius,
+                        ]
+                    )
                     if not os.path.exists("sqp_sols"):
                         os.makedirs("sqp_sols")
                     self.fig.savefig(
@@ -524,8 +535,18 @@ class SEMPC_solver(object):
                     self.plot_sqp_sol(sqp_iter, X, U[self.Hm, -self.x_dim :])
                 else:
                     self.plot_sqp_sol(sqp_iter, X)
-                self.ax.set_xlim([self.x_curr[0] - 0.1, self.x_curr[0] + 0.1])
-                self.ax.set_ylim([self.x_curr[1] - 0.1, self.x_curr[1] + 0.1])
+                self.ax.set_xlim(
+                    [
+                        self.x_curr[0] - self.local_plot_radius,
+                        self.x_curr[0] + self.local_plot_radius,
+                    ]
+                )
+                self.ax.set_ylim(
+                    [
+                        self.x_curr[1] - self.local_plot_radius,
+                        self.x_curr[1] + self.local_plot_radius,
+                    ]
+                )
                 if not os.path.exists("sqp_sols"):
                     os.makedirs("sqp_sols")
                 self.fig.savefig(

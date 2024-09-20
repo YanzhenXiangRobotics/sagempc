@@ -633,15 +633,15 @@ class SEMPC(Node):
     def _angle_pid_ctrl(self, error_angle, last_error_angle):
         return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
 
-    def apply_control(self, U):
+    def apply_control(self, ctrl, duration):
         msg = Twist()
         # for i in range(U.shape[0] - 1):
-        for i in range(U.shape[0]):
+        for i in range(self.Hm):
             self.get_current_state_measurement()
             start = self.t_curr
-            while self.t_curr - start < U[i, 2]:
-                msg.linear.x = U[i, 0]
-                msg.angular.z = U[i, 1]
+            while self.t_curr - start < duration[i]:
+                msg.linear.x = ctrl[i, 0]
+                msg.angular.z = ctrl[i, 1]
                 self.publisher.publish(msg)
                 self.get_current_state_measurement()
                 # print(
@@ -764,7 +764,7 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(U[: self.Hm, :])
+            self.apply_control(X[: self.Hm, 3:5], U[: self.Hm, 2])
         val = (
             2
             * self.players[self.pl_idx].Cx_beta

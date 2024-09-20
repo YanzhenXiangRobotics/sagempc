@@ -474,40 +474,26 @@ def export_nova_carter_discrete_Lc_rk4():
     model.x, model.u = x, ca.vertcat(u, z)
 
     v, omega, dv, domega, theta, dT = x[3], x[4], u[0], u[1], x[2], u[-1]
-    K0 = ca.vertcat(
-        v * ca.cos(theta),
-        v * ca.sin(theta),
-        omega,
-        dv / dT,
-        domega / dT,
-        1.0,
+    model.disc_dyn_expr = x + ca.vertcat(
+        v
+        * (
+            ca.cos(theta) / 6
+            + ca.cos(theta + 0.5 * omega * dT) * 2 / 3
+            + ca.cos(theta + omega * dT) / 6
+        )
+        * dT,
+        v
+        * (
+            ca.sin(theta) / 6
+            + ca.sin(theta + 0.5 * omega * dT) * 2 / 3
+            + ca.sin(theta + omega * dT) / 6
+        )
+        * dT,
+        omega * dT,
+        dv,
+        domega,
+        dT,
     )
-    K1 = ca.vertcat(
-        v * ca.cos(theta + 0.5 * dT * omega),
-        v * ca.sin(theta + 0.5 * dT * omega),
-        omega,
-        dv / dT,
-        domega / dT,
-        1.0,
-    )
-    K2 = ca.vertcat(
-        v * ca.cos(theta + 0.5 * dT * omega),
-        v * ca.sin(theta + 0.5 * dT * omega),
-        omega,
-        dv / dT,
-        domega / dT,
-        1.0,
-    )
-    K3 = ca.vertcat(
-        v * ca.cos(theta + dT * omega),
-        v * ca.sin(theta + dT * omega),
-        omega,
-        dv / dT,
-        domega / dT,
-        1.0,
-    )
-
-    model.disc_dyn_expr = x + (dT / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
 
     return model
 

@@ -568,8 +568,8 @@ def export_sempc_ocp(params):
         elif params["agent"]["dynamics"] == "bicycle":
             model = export_bicycle_model_with_discrete_rk4_Lc(name_prefix + "sempc")
         elif params["agent"]["dynamics"] == "nova_carter":
-            model = export_nova_carter_discrete_Lc()
-            # model = export_nova_carter_discrete_Lc_rk4()
+            # model = export_nova_carter_discrete_Lc()
+            model = export_nova_carter_discrete_Lc_rk4()
         else:
             model = export_pendulum_ode_model_with_discrete_rk4_Lc(
                 name_prefix + "sempc", n_order, x_dim

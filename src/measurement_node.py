@@ -14,6 +14,8 @@ from tf_transformations import (
     quaternion_multiply,
 )
 
+from rosgraph_msgs.msg import Clock
+
 import numpy as np
 
 HOST = "127.0.0.1"
@@ -55,8 +57,8 @@ class MeasurementNode(Node):
         self.min_dist_subscriber = self.create_subscription(
             LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         )
-        self.sim_time_subscriber = self.create_subscription(
-            Float64, "/sim_time", self.sim_time_listener_callback, 10
+        self.clock_subscriber = self.create_subscription(
+            Clock, "/clock", self.clock_listener_callback, 10
         )
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -94,12 +96,15 @@ class MeasurementNode(Node):
         pose_3D[-1] = self._angle_helper(pose_3D[-1])
 
         return pose_3D
+    
+    def convert_to_sim_time(self, clock):
+        return clock.sec + 1e-9 * clock.nanosec
 
-    def sim_time_listener_callback(self, msg):
-        sim_time = msg.data
-        if self.min_dist != -1.0:
-            try:
-                self.pose_3D = self.get_pose_3D()
+    def clock_listener_callback(self, msg):
+        sim_time = self.convert_to_sim_time(msg.clock)
+        try:
+            self.pose_3D = self.get_pose_3D()
+            if self.min_dist != -1.0:
                 data_to_send = np.concatenate(
                     (
                         self.pose_3D,
@@ -116,15 +121,15 @@ class MeasurementNode(Node):
                 print(f"Sent {data_to_send}")
                 # print(data_to_send)
                 conn.close()
-            except Exception as e:
-                print(e)
+        except Exception as e:
+            print(e)
 
     def min_dist_listener_callback(self, msg):
         try:
             ranges = np.array(msg.ranges)
             # choice = np.round(np.linspace(1, len(ranges)-1, num=36)).astype(int)
             # print(ranges[choice], "\n\n")
-            ranges[ranges==0.0] += 1e3
+            ranges[ranges<=0.0] += 1e3
             min_dist_idx = np.argmin(ranges)
             self.min_dist = ranges[min_dist_idx]
             self.min_dist_angle = (
