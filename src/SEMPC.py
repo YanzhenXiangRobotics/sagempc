@@ -627,13 +627,18 @@ class SEMPC(Node):
             error_angle -= math.pi
         return error_pos_robot, error_angle
 
-    def _pos_pid_ctrl(self, error_pos_x, last_error_pos_x):
-        return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
+    # def _pos_pid_ctrl(self, error_pos_x, last_error_pos_x):
+    #     return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
 
-    def _angle_pid_ctrl(self, error_angle, last_error_angle):
-        return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
+    # def _angle_pid_ctrl(self, error_angle, last_error_angle):
+    #     return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
 
-    def apply_control(self, ctrl, duration):
+    def LoS_control(self, path):
+        self.get_current_state_measurement()
+        dist_to_ref = np.linalg.norm(self.x_curr[: self.x_dim] - path, axis=-1)
+        
+
+    def apply_control(self, path, ctrl, duration):
         msg = Twist()
         # for i in range(U.shape[0] - 1):
         for i in range(self.Hm):
@@ -641,7 +646,7 @@ class SEMPC(Node):
             start = self.t_curr
             while self.t_curr - start < duration[i]:
                 msg.linear.x = ctrl[i, 0]
-                msg.angular.z = ctrl[i, 1]
+                msg.angular.z = ctrl[i, 1] + LoS_control(path)
                 self.publisher.publish(msg)
                 self.get_current_state_measurement()
                 # print(
@@ -764,7 +769,9 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(X[: self.Hm, 3:5], U[: self.Hm, 2])
+            self.apply_control(
+                X[: self.Hm, : self.x_dim], X[: self.Hm, 3:5], U[: self.Hm, 2]
+            )
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
