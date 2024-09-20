@@ -6,7 +6,7 @@ from rclpy.node import Node
 from tf_transformations import (
     euler_from_quaternion,
 )
-from std_msgs.msg import Float64, Float64MultiArray
+from std_msgs.msg import Float64, Float64MultiArray, Int32
 from geometry_msgs.msg import Twist
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -17,6 +17,11 @@ import os
 import yaml
 import math
 import time
+
+from mlsocket import MLSocket
+
+HOST = "127.0.0.1"
+PORT = 65432
 
 dir_here = os.path.abspath(os.path.dirname(__file__))
 with open(
@@ -47,43 +52,66 @@ class MPCRefTracker:
     def __init__(self) -> None:
         self.ocp = AcadosOcp()
         self.ocp.model = AcadosModel()
-        self.ocp.model.name = "nova_carter_discrete_Lc"
+        self.ocp.model.name = "nova_carter_discrete_Lc_inner_loop"
         self.H = params["optimizer"]["Hm"]
-        self.ref_path = [params_additional["start_loc"] + [params["env"]["start_angle"]]]
+        self.ref_path = [
+            params_additional["start_loc"] + [params["env"]["start_angle"]]
+        ]
         self.setup_dynamics()
-        self.setup_constraints()
         self.setup_cost()
+        self.setup_constraints()
         self.setup_solver_options()
+        self.lbx_end = np.append(
+            params["optimizer"]["x_min"][: self.x_dim], np.zeros(self.x_dim)
+        )
+        self.ubx_end = np.append(
+            params["optimizer"]["x_max"][: self.x_dim], np.zeros(self.x_dim)
+        )
 
     def setup_dynamics(self):
         self.x_dim, self.u_dim = 2, 2
-        x = ca.SX.sym("x", self.x_dim + 1)
-        u = ca.SX.sym("u", self.u_dim)
+        self.state_dim = self.x_dim + 1
+
+        x = ca.SX.sym("x", 5)
+        u = ca.SX.sym("u", 2)
         self.ocp.model.x, self.ocp.model.u = x, u
 
-        v, omega, theta = u[0], u[1], x[2]
         self.dt = params["optimizer"]["dt"]
-        K0 = ca.vertcat(v * ca.cos(theta), v * ca.sin(theta), omega)
-        K1 = ca.vertcat(
-            v * ca.cos(theta + 0.5 * omega * self.dt),
-            v * ca.sin(theta + 0.5 * omega * self.dt),
-            omega,
+        v, omega, dv, domega, theta = (
+            x[3],
+            x[4],
+            u[0],
+            u[1],
+            x[2],
         )
-        K2 = ca.SX(K1)
-        K3 = ca.vertcat(
-            v * ca.cos(theta + omega * self.dt),
-            v * ca.sin(theta + omega * self.dt),
-            omega,
+        self.ocp.model.disc_dyn_expr = x + ca.vertcat(
+            v
+            * (
+                ca.cos(theta) / 6
+                + ca.cos(theta + 0.5 * omega * self.dt) * 2 / 3
+                + ca.cos(theta + omega * self.dt) / 6
+            )
+            * self.dt,
+            v
+            * (
+                ca.sin(theta) / 6
+                + ca.sin(theta + 0.5 * omega * self.dt) * 2 / 3
+                + ca.sin(theta + omega * self.dt) / 6
+            )
+            * self.dt,
+            omega * self.dt,
+            dv,
+            domega,
         )
-
-        self.ocp.model.disc_dyn_expr = x + (self.dt / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
 
     def setup_constraints(self):
         self.ocp.constraints.lbx = np.array(params["optimizer"]["x_min"])
         self.ocp.constraints.ubx = np.array(params["optimizer"]["x_max"])
-        self.ocp.constraints.idxbx = np.arange(self.x_dim)
-        
-        self.ocp.constraints.x0 = np.array(self.ref_path[0])
+        self.ocp.constraints.idxbx = np.array([0, 1, 3, 4])
+
+        self.ocp.constraints.x0 = np.append(
+            np.array(self.ref_path[0]), np.array([0.0, 0.0])
+        )
 
         self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
         self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
@@ -94,22 +122,22 @@ class MPCRefTracker:
         self.ocp.constraints.idxbu = np.arange(self.u_dim)
 
     def setup_cost(self):
-        x_ref = ca.SX.sym("x_ref", self.x_dim + 1)
+        x_ref = ca.SX.sym("x_ref", self.x_dim)
         self.ocp.model.p = x_ref
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.eye(self.x_dim + 1)
+        Q = np.eye(self.x_dim)
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = (
-            (self.ocp.model.x - x_ref).T
+            (self.ocp.model.x[: self.x_dim] - x_ref).T
             @ Q
-            @ (self.ocp.model.x - x_ref)
+            @ (self.ocp.model.x[: self.x_dim] - x_ref)
         )
         self.ocp.model.cost_expr_ext_cost_e = (
-            (self.ocp.model.x - x_ref).T
+            (self.ocp.model.x[: self.x_dim] - x_ref).T
             @ Q
-            @ (self.ocp.model.x - x_ref)
+            @ (self.ocp.model.x[: self.x_dim] - x_ref)
         )
 
     def setup_solver_options(self):
@@ -123,7 +151,7 @@ class MPCRefTracker:
         self.ocp.solver_options.nlp_solver_ext_qp_res = 1
         self.ocp.solver_options.nlp_solver_type = "SQP_RTI"
 
-        self.ocp_solver = AcadosOcpSolver(self.ocp, json_file="acados_ocp_sempc.json")
+        self.ocp_solver = AcadosOcpSolver(self.ocp, json_file="inner_loop_acados_ocp_sempc.json")
 
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
@@ -131,10 +159,9 @@ class MPCRefTracker:
                 self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
             else:
                 self.ocp_solver.set(k, "p", np.array(self.ref_path[-1]))
-        
-        
+
     def get_solution(self):
-        X = np.zeros((self.H + 1, self.x_dim + 1))
+        X = np.zeros((self.H + 1, self.state_dim + self.x_dim))
         U = np.zeros((self.H, self.u_dim))
         for k in range(self.H):
             X[k, :] = self.ocp_solver.get(k, "x")
@@ -142,24 +169,30 @@ class MPCRefTracker:
         X[-1, :] = self.ocp_solver.get(self.H, "x")
         print(f"X: {X}, U: {U}")
         return X, U
-    
+
     def solve_for_x0(self, x0):
         self.ocp_solver.options_set("rti_phase", 1)
         self.solver_set_ref_path()
         status = self.ocp_solver.solve()
-        
+
         self.ocp_solver.set(0, "lbx", x0)
         self.ocp_solver.set(0, "ubx", x0)
-        
+        self.ocp_solver.set(self.H - 1, "lbx", self.lbx_end)
+        self.ocp_solver.set(self.H - 1, "ubx", self.ubx_end)
+
         self.ocp_solver.options_set("rti_phase", 2)
         status = self.ocp_solver.solve()
-        
+
         X, U = self.get_solution()
-        
-        return U[0, :]
+
+        return X[1, 3:]
 
     def update_ref_path(self, new_ref_path):
         self.ref_path += new_ref_path
+        print(f"Ref path: {self.ref_path}")
+
+    def set_ref_path(self, ref_path):
+        self.ref_path = ref_path
         print(f"Ref path: {self.ref_path}")
 
 
@@ -177,6 +210,7 @@ class MPCRefTrackerNode(Node):
         #     LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         # )
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.complete_publisher = self.create_publisher(Int32, "/complete", 10)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.timer = self.create_timer(1 / 100, self.check_event)
@@ -192,7 +226,7 @@ class MPCRefTrackerNode(Node):
             return self._angle_helper(angle + 2 * math.pi)
         else:
             return angle
-        
+
     # def min_dist_listener_callback(self, msg):
     #     try:
     #         ranges = np.array(msg.ranges)
@@ -209,52 +243,17 @@ class MPCRefTrackerNode(Node):
 
     #     except Exception as e:
     #         print(e)
-    
-    def get_pose_3D(self):
-        map_2_chassis_imu = self.tf_buffer.lookup_transform(
-            "map", "chassis_imu", time=rclpy.time.Time()
-        )
-        odom_2_chassis_imu = self.tf_buffer.lookup_transform(
-            "odom", "chassis_imu", time=rclpy.time.Time()
-        )
-        trans = odom_2_chassis_imu.transform.translation
-        orient = map_2_chassis_imu.transform.rotation
-        orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
-        orient_euler = np.array(euler_from_quaternion(orient_quat))
-        self.pose_3D = np.array([-trans.x, -trans.y, orient_euler[-1]])
-        start_pose = np.append(
-            np.array(params_additional["start_loc"]), params["env"]["start_angle"]
-        )
-        self.pose_3D += np.array(start_pose)
-        self.pose_3D[-1] = self._angle_helper(self.pose_3D[-1] - math.pi)
-        self.init_pose_obtained = True
-        
-    def compute_sim_time(self, clock):
-        return clock.sec + 1e-9 * clock.nanosec
 
-    def clock_listener_callback(self, msg):
-        if self.sim_time == -1.0:
-            self.last_sim_time = self.compute_sim_time(msg.clock)
-        self.sim_time = self.compute_sim_time(msg.clock)
+    def get_curr_pose_clock(self):
         try:
-            self.get_pose_3D()
-            # if self.min_dist != -1.0:
-            #     data_to_send = np.concatenate(
-            #         (
-            #             self.pose_3D,
-            #             np.array([self.min_dist_angle]),
-            #             np.array([self.min_dist]),
-            #             np.array([self.sim_time]),
-            #         )
-            #     )
+            s = MLSocket()
+            s.connect((HOST, PORT))
+            data = s.recv(1024)
+            s.close()
 
-            #     print(f"To send {data_to_send}")
+            self.pose_3D = data[: self.ctrl.state_dim]
+            self.sim_time = data[-1]
 
-            #     conn, _ = self.s.accept()
-            #     conn.sendall(data_to_send)
-            #     print(f"Sent {data_to_send}")
-            #     # print(data_to_send)
-            #     conn.close()
         except Exception as e:
             print(e)
 
@@ -274,9 +273,10 @@ class MPCRefTrackerNode(Node):
                 print("Waiting...")
                 zero_vel_cmd = Twist()
                 # self.publisher.publish(zero_vel_cmd)
-                
+
     def control_callback(self):
         time_before = time.time()
+        self.get_curr_pose_clock()
         u = self.ctrl.solve_for_x0(self.pose_3D)
         time_after = time.time()
         cmd_vel = Twist()
@@ -287,6 +287,12 @@ class MPCRefTrackerNode(Node):
     def ref_path_listener_callback(self, msg):
         new_ref_path = np.array(msg.data).reshape(self.ctrl.H + 1, -1).tolist()
         self.ctrl.update_ref_path(new_ref_path)
+        complete_msg = Int32()
+        if np.array(self.ctrl.ref_path).shape[0] == 1:
+            complete_msg.data = 1
+        else:
+            complete_msg.data = 0
+        self.complete_publisher.publish(complete_msg)
 
 
 if __name__ == "__main__":
