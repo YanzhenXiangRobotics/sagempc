@@ -2,7 +2,7 @@ Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
 Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
-{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-0.1, -0.2], 'u_max': [0.1, 0.2], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': False, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': False}}
+{'env': {'start': [-21.8, -17.8], 'shape': {'x': 175, 'y': 175}, 'start_loc': [-20.0, -20.0], 'start_angle': 3.14159, 'goal_loc': [-10.0, -5.0], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 25, 'Hm': 13, 'u_min': [-0.1, -0.2], 'u_max': [0.1, 0.2], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 20, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'w': 5000, 'dt': 0.035}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': True, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': True}}
 Namespace(param='params_nova_carter_isaac_sim', env=0, i=8)
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -49,732 +49,1051 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-09-20-00:23:17.436974.json
-initialized location {'Cx_X': [tensor([-18.0000, -14.7000])], 'Fx_X': [tensor([-18.0000, -14.7000])], 'Cx_Y': tensor([[0.7200]], dtype=torch.float64)}
-tensor(0.6562)
+stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-09-20-10:23:08.743084.json
+'SEMPC' object has no attribute 'players'
+waiting...
+initialized location {'Cx_X': [tensor([-19.8929, -16.0244], dtype=torch.float64)], 'Fx_X': [tensor([-19.8929, -16.0244], dtype=torch.float64)], 'Cx_Y': tensor([[1.3774]], dtype=torch.float64), 'Fx_Y': tensor([[5.5991]], dtype=torch.float64)}
+tensor(1.3142, dtype=torch.float64)
 Nodes in optimistic graph: 30625
-init_node 16702 goal_node 25520
-[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
-tensor(0.7200, dtype=torch.float64)
+init_node 8444 goal_node 25520
+[32mGoal: [-19.32 -15.32]  uncertainity: 100 [0m
+query_pts:  [[-19.89290656 -16.02439448]
+ [-19.54880848 -16.02296669]
+ [-19.2047104  -16.0215389 ]
+ [-18.86061232 -16.02011111]
+ [-18.51651424 -16.01868332]]
+query_meas:  [1.37640417e+00 1.03230312e+00 6.88202083e-01 3.44101042e-01
+ 1.55431223e-15]
 -1 10
 [96mSolving Constrints[0m
-Time between two solving: 6.24656343460083
-Time solving problem: 1.1235737800598145
-Time for backtracking: 0.022742509841918945
-Sim iter,  0 SQP iter,  0 Alpha,  1.0 Max step size,  0.49692307947003683
-Time solving problem: 0.026215076446533203
-Time for backtracking: 0.022804737091064453
-Sim iter,  0 SQP iter,  1 Alpha,  1.0 Max step size,  0.044040857318967674
-Time solving problem: 0.027951478958129883
-Time for backtracking: 0.02286505699157715
-Sim iter,  0 SQP iter,  2 Alpha,  1.0 Max step size,  0.02718930772444439
+Time between two solving: 8.921912908554077
+Time solving problem: 1.380357265472412
+Time for backtracking: 0.03019547462463379
+Sim iter,  0 SQP iter,  0 Alpha,  1.0 Max step size,  0.4969230769439627
+Time before plotting sqp sol: 0.012417078018188477
+Time plotting sqp sol & save fig: 0.08631777763366699
+Time solving problem: 0.03873157501220703
+Time for backtracking: 0.02998971939086914
+Sim iter,  0 SQP iter,  1 Alpha,  1.0 Max step size,  1.0000000000400289
+Time before plotting sqp sol: 0.010605335235595703
+Time plotting sqp sol & save fig: 0.09368586540222168
+Time solving problem: 0.04282879829406738
+Time for backtracking: 0.07282495498657227
+Sim iter,  0 SQP iter,  2 Alpha,  0.8 Max step size,  0.594090624446705
+Time before plotting sqp sol: 0.010881185531616211
+Time plotting sqp sol & save fig: 0.0913393497467041
+Time solving problem: 0.036905765533447266
+Time for backtracking: 0.03370976448059082
+Sim iter,  0 SQP iter,  3 Alpha,  1.0 Max step size,  0.974722482952765
+Time before plotting sqp sol: 0.0099639892578125
+Time plotting sqp sol & save fig: 0.10086703300476074
+Time solving problem: 0.04328632354736328
+Time for backtracking: 0.030393362045288086
+Sim iter,  0 SQP iter,  4 Alpha,  1.0 Max step size,  1.199999999999985
+Time before plotting sqp sol: 0.010462045669555664
+Time plotting sqp sol & save fig: 0.08998727798461914
+Time solving problem: 0.03577089309692383
+Time for backtracking: 0.15845441818237305
+Sim iter,  0 SQP iter,  5 Alpha,  0.30000000000000016 Max step size,  0.17715307454062312
+Time before plotting sqp sol: 0.010781526565551758
+Time plotting sqp sol & save fig: 0.08862662315368652
+Time solving problem: 0.03464365005493164
+Time for backtracking: 0.17164945602416992
+Sim iter,  0 SQP iter,  6 Alpha,  0.20000000000000015 Max step size,  0.020290145890328404
+Break at sqp iter 6, 
+
+
+Time before plotting sqp sol: 0.00842428207397461
+Time plotting sqp sol & save fig: 0.092864990234375
+Time taken 2.858982801437378
+uncertainty:  [0.04241897]
+uncertainty:  [0.04325202]
+uncertainty:  [0.04398031]
+uncertainty:  [0.04410082]
+uncertainty:  [0.04466973]
+uncertainty:  [0.21588555]
+uncertainty:  [0.35780026]
+uncertainty:  [0.50412653]
+uncertainty:  [0.6600955]
+uncertainty:  [0.82539005]
+uncertainty:  [0.98541379]
+uncertainty:  [1.11658297]
+uncertainty:  [1.20833329]
+[32mReached: [-19.67546878 -15.89090509  -2.72405464] [-19.70767512 -15.99711956   3.46459569] [0m
+Time for one step planner: 7.391600847244263
+Uncertainity at meas_loc [1.22562414]
+query_pts:  [[-19.67476053 -15.8890643 ]
+ [-19.3804341  -15.87341691]
+ [-19.08610766 -15.85776952]
+ [-18.79178122 -15.84212212]
+ [-18.49745478 -15.82647473]]
+query_meas:  [1.17896831e+00 8.84226233e-01 5.89484155e-01 2.94742078e-01
+ 8.88178420e-16]
+Uncertainity at meas_loc [0.05985635]
+tensor(1.2687, dtype=torch.float64)
+Nodes in optimistic graph: 30308
+init_node 8444 goal_node 25520
+[32mGoal: [-19.32 -15.32]  uncertainity: 100 [0m
+Time for finding next goal: 5.94054102897644
+[96mSolving Constrints[0m
+Time between two solving: 10.519181489944458
+Time solving problem: 2.159393548965454
+Time for backtracking: 0.1514289379119873
+Sim iter,  1 SQP iter,  0 Alpha,  0.30000000000000016 Max step size,  0.16411533839129078
+Time before plotting sqp sol: 0.01026463508605957
+Time plotting sqp sol & save fig: 0.0974574089050293
+Time solving problem: 0.04142451286315918
+Time for backtracking: 0.18027544021606445
+Sim iter,  1 SQP iter,  1 Alpha,  0.30000000000000016 Max step size,  0.17478078330753277
+Time before plotting sqp sol: 0.009698152542114258
+Time plotting sqp sol & save fig: 0.09509038925170898
+Time solving problem: 0.03837180137634277
+Time for backtracking: 0.1701807975769043
+Sim iter,  1 SQP iter,  2 Alpha,  0.20000000000000015 Max step size,  0.03431417380362589
 Break at sqp iter 2, 
 
 
-Time taken 1.2476465702056885
-X_first_half: [[ 0.00000000e+00  0.00000000e+00]
- [-3.24108052e-04 -1.57262495e-02]
- [-5.38426909e-04 -1.99097813e-02]
- [-6.43435064e-04 -1.94997744e-02]
- [-6.03129295e-04 -1.73019792e-02]
- [-4.18491206e-04 -1.44523109e-02]
- [-1.43473909e-04 -1.14341863e-02]
- [ 1.52087341e-04 -8.43422567e-03]
- [ 4.22908992e-04 -5.56163535e-03]
- [ 6.45151152e-04 -2.91760554e-03]
- [ 7.75667328e-04 -6.85136132e-04]
- [ 6.79804871e-04  6.26919397e-04]
- [-9.59819256e-13 -1.67717959e-12]], 
- U_first_half: [[-3.24108052e-04 -1.57262495e-02  3.50000014e-02]
- [-2.14318857e-04 -4.18353184e-03  3.50000016e-02]
- [-1.05008155e-04  4.10006942e-04  3.50000017e-02]
- [ 4.03057690e-05  2.19779519e-03  3.50000017e-02]
- [ 1.84638089e-04  2.84966825e-03  3.50000017e-02]
- [ 2.75017297e-04  3.01812466e-03  3.50000017e-02]
- [ 2.95561250e-04  2.99996060e-03  3.50000017e-02]
- [ 2.70821651e-04  2.87259032e-03  3.50000017e-02]
- [ 2.22242160e-04  2.64402982e-03  3.50000017e-02]
- [ 1.30516176e-04  2.23246940e-03  3.50000017e-02]
- [-9.58624567e-05  1.31205553e-03  3.50000017e-02]
- [-6.79804872e-04 -6.26919399e-04  3.50000017e-02]
- [ 1.81193946e-07  2.03669201e-03  3.50000017e-02]]
-[32mReached: [-18.00000016 -14.69999981   3.13755464] [-18.00000016 -14.69999981   3.13755464] [0m
-Time for one step planner: 1.4492554664611816
-Uncertainity at meas_loc [0.04242992]
-tensor(0.7200, dtype=torch.float64)
-Time for GP update: 0.00425410270690918
-Uncertainity at meas_loc [0.03463352]
-tensor(0.6528)
-Nodes in optimistic graph: 30625
-init_node 16702 goal_node 25520
-[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.059232950210571
+Time before plotting sqp sol: 0.011435508728027344
+Time plotting sqp sol & save fig: 0.0888361930847168
+Time taken 3.0547029972076416
+uncertainty:  [0.0605017]
+uncertainty:  [0.06325326]
+uncertainty:  [0.06324077]
+uncertainty:  [0.06312274]
+uncertainty:  [0.06267398]
+uncertainty:  [0.06630939]
+uncertainty:  [0.07351667]
+uncertainty:  [0.07372961]
+uncertainty:  [0.0777291]
+uncertainty:  [0.10336159]
+uncertainty:  [0.15271127]
+uncertainty:  [0.20615519]
+uncertainty:  [0.24165683]
+[32mReached: [-19.75181916 -15.96476484  -2.98388854] [-19.74545345 -16.01000329   2.95292881] [0m
+Time for one step planner: 7.077895641326904
+Uncertainity at meas_loc [0.2453239]
+query_pts:  [[-19.75569448 -15.96638189]
+ [-19.45554664 -15.96840111]
+ [-19.15539881 -15.97042033]
+ [-18.85525098 -15.97243954]
+ [-18.55510314 -15.97445876]]
+query_meas:  [1.20061851e+00 9.00463879e-01 6.00309253e-01 3.00154626e-01
+ 1.33226763e-15]
+Uncertainity at meas_loc [0.05819347]
+tensor(1.2624, dtype=torch.float64)
+Nodes in optimistic graph: 30297
+init_node 8444 goal_node 25520
+[32mGoal: [-19.359999 -15.359999]  uncertainity: 100 [0m
+Time for finding next goal: 6.4489827156066895
 [96mSolving Constrints[0m
-Time between two solving: 4.304161787033081
-Time solving problem: 0.023557186126708984
-Time for backtracking: 0.0193326473236084
-Sim iter,  1 SQP iter,  0 Alpha,  1.0 Max step size,  0.30521729028973577
-Time solving problem: 0.027269840240478516
-Time for backtracking: 0.02400970458984375
-Sim iter,  1 SQP iter,  1 Alpha,  1.0 Max step size,  0.995133363699616
-Time solving problem: 0.02725529670715332
-Time for backtracking: 0.020415067672729492
-Sim iter,  1 SQP iter,  2 Alpha,  1.0 Max step size,  0.399999999999996
-Time solving problem: 0.027085542678833008
-Time for backtracking: 0.019298315048217773
-Sim iter,  1 SQP iter,  3 Alpha,  1.0 Max step size,  0.12499999999999259
-Time solving problem: 0.02341294288635254
-Time for backtracking: 0.01925349235534668
-Sim iter,  1 SQP iter,  4 Alpha,  1.0 Max step size,  0.10800934323289571
-Time solving problem: 0.023334503173828125
-Time for backtracking: 0.020221233367919922
-Sim iter,  1 SQP iter,  5 Alpha,  1.0 Max step size,  0.10800934323289565
-Time solving problem: 0.03558492660522461
-Time for backtracking: 0.02756190299987793
-Sim iter,  1 SQP iter,  6 Alpha,  1.0 Max step size,  0.10847050690298823
-Time solving problem: 0.028620243072509766
-Time for backtracking: 0.023049592971801758
-Sim iter,  1 SQP iter,  7 Alpha,  1.0 Max step size,  0.10847050690298828
-Time solving problem: 0.02750396728515625
-Time for backtracking: 0.023402929306030273
-Sim iter,  1 SQP iter,  8 Alpha,  1.0 Max step size,  0.10847126577380374
-Time solving problem: 0.027519702911376953
-Time for backtracking: 0.022877216339111328
-Sim iter,  1 SQP iter,  9 Alpha,  1.0 Max step size,  0.10847126577380375
-Time solving problem: 0.027332544326782227
-Time for backtracking: 0.02460956573486328
-Sim iter,  1 SQP iter,  10 Alpha,  1.0 Max step size,  0.10847126404244803
-Time solving problem: 0.030683040618896484
-Time for backtracking: 0.024251937866210938
-Sim iter,  1 SQP iter,  11 Alpha,  1.0 Max step size,  0.10847126404244803
-Time solving problem: 0.029613494873046875
-Time for backtracking: 0.023089885711669922
-Sim iter,  1 SQP iter,  12 Alpha,  1.0 Max step size,  0.10847126182786473
-Time solving problem: 0.027387142181396484
-Time for backtracking: 0.02325129508972168
-Sim iter,  1 SQP iter,  13 Alpha,  1.0 Max step size,  0.10847126182786473
-Time solving problem: 0.0275266170501709
-Time for backtracking: 0.02307438850402832
-Sim iter,  1 SQP iter,  14 Alpha,  1.0 Max step size,  0.10847126043176533
-Time solving problem: 0.02701091766357422
-Time for backtracking: 0.021259069442749023
-Sim iter,  1 SQP iter,  15 Alpha,  1.0 Max step size,  0.10847126043176517
-Time solving problem: 0.027460575103759766
-Time for backtracking: 0.02599167823791504
-Sim iter,  1 SQP iter,  16 Alpha,  1.0 Max step size,  0.10847126238860441
-Time solving problem: 0.025406360626220703
-Time for backtracking: 0.019482851028442383
-Sim iter,  1 SQP iter,  17 Alpha,  1.0 Max step size,  0.10847126238860409
-Time solving problem: 0.023884296417236328
-Time for backtracking: 0.019657135009765625
-Sim iter,  1 SQP iter,  18 Alpha,  1.0 Max step size,  0.10847126328540162
-Time solving problem: 0.02391529083251953
-Time for backtracking: 0.019415855407714844
-Sim iter,  1 SQP iter,  19 Alpha,  1.0 Max step size,  0.10847126328540198
-Time taken 0.9874732494354248
-X_first_half: [[ 0.00000000e+00  0.00000000e+00]
- [ 1.00000000e-01  2.00000000e-01]
- [ 2.00000000e-01  4.00000000e-01]
- [ 3.00000000e-01  6.00000000e-01]
- [ 2.00000000e-01  8.00000000e-01]
- [ 1.00000000e-01  1.00000000e+00]
- [-1.67628465e-15  1.00000000e+00]
- [-1.00000000e-01  1.00000000e+00]
- [-2.00000000e-01  8.00000000e-01]
- [-3.00000000e-01  6.00000000e-01]
- [-2.00000000e-01  4.00000000e-01]
- [-1.00000000e-01  2.00000000e-01]
- [-8.53520912e-17 -2.60370273e-16]], 
- U_first_half: [[ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01  2.00000000e-01  8.04035801e-02]
- [-1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01  2.13176583e-15  3.50000000e-02]
- [-1.00000000e-01  1.20455076e-17  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01 -2.00000000e-01  1.14596420e-01]
- [ 1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-9.99999988e-02 -1.12341238e-01  3.50000000e-02]]
-[32mReached: [-17.99188375 -14.68647748   3.45755464] [-17.99188375 -14.68647748   3.45755464] [0m
-Time for one step planner: 1.1304807662963867
-Uncertainity at meas_loc [0.14929914]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.003534078598022461
-Uncertainity at meas_loc [0.05568337]
-tensor(0.6578)
-Nodes in optimistic graph: 30621
-init_node 16702 goal_node 25520
-[32mGoal: [-18.       -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.006782293319702
+Time between two solving: 10.529085159301758
+Time solving problem: 3.343575954437256
+Time for backtracking: 0.15565776824951172
+Sim iter,  2 SQP iter,  0 Alpha,  0.30000000000000016 Max step size,  0.18461660247219314
+Time before plotting sqp sol: 0.011696338653564453
+Time plotting sqp sol & save fig: 0.09882807731628418
+Time solving problem: 0.034483909606933594
+Time for backtracking: 0.1816117763519287
+Sim iter,  2 SQP iter,  1 Alpha,  0.20000000000000015 Max step size,  0.034864813998819244
+Break at sqp iter 1, 
+
+
+Time before plotting sqp sol: 0.012981176376342773
+Time plotting sqp sol & save fig: 0.11604452133178711
+Time taken 3.955540418624878
+uncertainty:  [0.05819347]
+uncertainty:  [0.05819347]
+uncertainty:  [0.06451067]
+uncertainty:  [0.0645832]
+uncertainty:  [0.06504114]
+uncertainty:  [0.07164062]
+uncertainty:  [0.07981873]
+uncertainty:  [0.08851274]
+uncertainty:  [0.09732588]
+uncertainty:  [0.10579108]
+uncertainty:  [0.11363662]
+uncertainty:  [0.12400086]
+uncertainty:  [0.1302546]
+[32mReached: [-19.85576844 -15.98612471  -3.0163507 ] [-19.72685829 -15.9744578    2.82512213] [0m
+Time for one step planner: 7.940398931503296
+Uncertainity at meas_loc [0.13179943]
+query_pts:  [[-19.85818824 -15.98659855]
+ [-19.52572    -15.98961202]
+ [-19.19325177 -15.99262549]
+ [-18.86078353 -15.99563897]
+ [-18.5283153  -15.99865244]]
+query_meas:  [ 1.32992756e+00  9.97445673e-01  6.64963782e-01  3.32481891e-01
+ -6.66133815e-16]
+Uncertainity at meas_loc [0.05468967]
+tensor(1.2480, dtype=torch.float64)
+Nodes in optimistic graph: 30297
+init_node 8444 goal_node 25520
+[32mGoal: [-19.279999 -15.279999]  uncertainity: 100 [0m
+Time for finding next goal: 6.292687654495239
 [96mSolving Constrints[0m
-Time between two solving: 4.1875319480896
-Time solving problem: 0.025147676467895508
-Time for backtracking: 0.019073486328125
-Sim iter,  2 SQP iter,  0 Alpha,  1.0 Max step size,  0.6490532760462708
-Time solving problem: 0.023202896118164062
-Time for backtracking: 0.020482540130615234
-Sim iter,  2 SQP iter,  1 Alpha,  1.0 Max step size,  0.12499999999990956
-Time solving problem: 0.026198387145996094
-Time for backtracking: 0.04433155059814453
-Sim iter,  2 SQP iter,  2 Alpha,  0.8 Max step size,  0.0850896357934004
-Time solving problem: 0.025661706924438477
-Time for backtracking: 0.06937146186828613
-Sim iter,  2 SQP iter,  3 Alpha,  0.6000000000000001 Max step size,  0.010006541169302781
-Break at sqp iter 3, 
-
-
-Time taken 0.2547938823699951
-X_first_half: [[ 0.00000000e+00  0.00000000e+00]
- [-1.00000000e-01 -2.00000000e-01]
- [-2.00000000e-01 -4.00000000e-01]
- [-3.00000000e-01 -6.00000000e-01]
- [-2.00000000e-01 -8.00000000e-01]
- [-1.00000000e-01 -1.00000000e+00]
- [-6.23267902e-14 -1.00000000e+00]
- [ 1.00000000e-01 -1.00000000e+00]
- [ 2.00000000e-01 -8.00000000e-01]
- [ 3.00000000e-01 -6.00000000e-01]
- [ 2.00000000e-01 -4.00000000e-01]
- [ 1.00000000e-01 -2.00000000e-01]
- [-1.99237294e-15 -3.25134010e-15]], 
- U_first_half: [[-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01 -2.00000000e-01  8.29061974e-02]
- [ 1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01 -8.08920068e-14  5.80838728e-02]
- [ 1.00000000e-01  1.88072067e-13  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.63321272e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01  2.00000000e-01  8.76778026e-02]
- [-1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 4.16433610e-02  1.43662495e-01  3.50000000e-02]]
-[32mReached: [-17.99523109 -14.67519697   3.12778824] [-17.99523109 -14.67519697   3.12778824] [0m
-Time for one step planner: 0.41145825386047363
-Uncertainity at meas_loc [0.11594498]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.003932476043701172
-Uncertainity at meas_loc [0.05328083]
-tensor(0.6249)
-Nodes in optimistic graph: 30617
-init_node 16702 goal_node 25520
-[32mGoal: [-18.039999 -14.599999]  uncertainity: 100 [0m
-Time for finding next goal: 4.270934581756592
-[96mSolving Constrints[0m
-Time between two solving: 4.469659090042114
-Time solving problem: 0.03176569938659668
-Time for backtracking: 0.05787038803100586
-Sim iter,  3 SQP iter,  0 Alpha,  0.8 Max step size,  0.5871590281897484
-Time solving problem: 0.030692338943481445
-Time for backtracking: 0.059886932373046875
-Sim iter,  3 SQP iter,  1 Alpha,  0.7000000000000001 Max step size,  0.3764276931214098
-Time solving problem: 0.02607417106628418
-Time for backtracking: 0.10140037536621094
-Sim iter,  3 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.019042518250537155
-Break at sqp iter 2, 
-
-
-Time taken 0.30902695655822754
-X_first_half: [[ 5.43364813e-03  1.87451596e-02]
- [ 9.31316073e-02 -1.42522239e-02]
- [ 1.79117040e-01 -2.77603259e-02]
- [ 2.64616278e-01  1.46303712e-01]
- [ 2.47889976e-01  3.19651103e-01]
- [ 1.59616184e-01  4.92711275e-01]
- [ 7.15205755e-02  5.98524200e-01]
- [-1.64014475e-02  7.04186066e-01]
- [-1.04146404e-01  7.18228607e-01]
- [-1.91657166e-01  5.42037578e-01]
- [-1.76529670e-01  3.63701909e-01]
- [-8.87783818e-02  1.79825208e-01]
- [ 5.99934616e-05  2.42537848e-04]], 
- U_first_half: [[ 0.08769796 -0.03299738  0.035     ]
- [ 0.08598543 -0.0135081   0.07694017]
- [ 0.08549924  0.17406404  0.035     ]
- [-0.0167263   0.17334739  0.03660487]
- [-0.08827379  0.17306017  0.09418976]
- [-0.08809561  0.10581292  0.035     ]
- [-0.08792202  0.10566187  0.035     ]
- [-0.08774496  0.01404254  0.035     ]
- [-0.08751076 -0.17619103  0.035     ]
- [ 0.0151275  -0.17833567  0.04095513]
- [ 0.08775129 -0.1838767   0.035     ]
- [ 0.08883838 -0.17958267  0.035     ]
- [-0.02556119 -0.06425256  0.03660591]]
-[32mReached: [-18.02965319 -14.67242323   3.30119257] [-18.02965319 -14.67242323   3.30119257] [0m
-Time for one step planner: 0.47487330436706543
-Uncertainity at meas_loc [0.27622306]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.0036194324493408203
-Uncertainity at meas_loc [0.05863035]
-tensor(0.6254)
-Nodes in optimistic graph: 30604
-init_node 16702 goal_node 25520
-[32mGoal: [-18.119999 -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.1273109912872314
-[96mSolving Constrints[0m
-Time between two solving: 4.331092596054077
-Time solving problem: 0.03098440170288086
-Time for backtracking: 0.07443809509277344
-Sim iter,  4 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.5469051571743151
-Time solving problem: 0.033296823501586914
-Time for backtracking: 0.0766756534576416
-Sim iter,  4 SQP iter,  1 Alpha,  0.7000000000000001 Max step size,  0.7387670327488237
-Time solving problem: 0.03319430351257324
-Time for backtracking: 0.13507461547851562
-Sim iter,  4 SQP iter,  2 Alpha,  0.5000000000000001 Max step size,  0.10992853447251738
-Time solving problem: 0.03293967247009277
-Time for backtracking: 0.08511161804199219
-Sim iter,  4 SQP iter,  3 Alpha,  0.5000000000000001 Max step size,  0.09330734006062658
-Time solving problem: 0.025157928466796875
-Time for backtracking: 0.09386205673217773
-Sim iter,  4 SQP iter,  4 Alpha,  0.5000000000000001 Max step size,  0.07919927024351958
-Time solving problem: 0.02715897560119629
-Time for backtracking: 0.16069984436035156
-Sim iter,  4 SQP iter,  5 Alpha,  1.3877787807814457e-16 Max step size,  0.0
-Break at sqp iter 5, 
-
-
-Time taken 0.8103370666503906
-X_first_half: [[-3.83654204e-03 -9.63002606e-03]
- [-2.79563415e-02 -1.21710823e-01]
- [-3.31668696e-03 -2.31345609e-01]
- [ 8.22071256e-02 -3.40045585e-01]
- [ 1.67718527e-01 -4.48395166e-01]
- [ 2.48641084e-01 -5.56617467e-01]
- [ 2.72239429e-01 -5.56027837e-01]
- [ 2.95690317e-01 -5.55394573e-01]
- [ 2.71340653e-01 -4.45896828e-01]
- [ 1.86337570e-01 -3.36115981e-01]
- [ 1.01427824e-01 -2.25575145e-01]
- [ 2.14878830e-02 -1.13040470e-01]
- [-1.01364567e-05  3.59794412e-05]], 
- U_first_half: [[-0.0241198  -0.1120808   0.07376785]
- [ 0.02463965 -0.10963479  0.0352416 ]
- [ 0.08552381 -0.10869998  0.0352416 ]
- [ 0.0855114  -0.10834958  0.0352416 ]
- [ 0.08092256 -0.1082223   0.0352416 ]
- [ 0.02359834  0.00058963  0.08380064]
- [ 0.02345089  0.00063326  0.0352416 ]
- [-0.02434966  0.10949774  0.0352416 ]
- [-0.08500308  0.10978085  0.0352416 ]
- [-0.08490975  0.11054084  0.0352416 ]
- [-0.07993994  0.11253467  0.0352416 ]
- [-0.02149802  0.11307645  0.0352416 ]
- [-0.01622843  0.05620208  0.0366472 ]]
-[32mReached: [-18.09962392 -14.67608283   3.13710863] [-18.09962392 -14.67608283   3.13710863] [0m
-Time for one step planner: 1.0010533332824707
-Uncertainity at meas_loc [0.24947977]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.00393366813659668
-Uncertainity at meas_loc [0.05833685]
-tensor(0.6223)
-Nodes in optimistic graph: 30597
-init_node 16702 goal_node 25520
-[32mGoal: [-18.199999 -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.154585123062134
-[96mSolving Constrints[0m
-Time between two solving: 4.3829076290130615
-Time solving problem: 0.030555248260498047
-Time for backtracking: 0.08940720558166504
-Sim iter,  5 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.2750521966569267
-Time solving problem: 0.03137636184692383
-Time for backtracking: 0.09450006484985352
-Sim iter,  5 SQP iter,  1 Alpha,  0.6000000000000001 Max step size,  0.41314708576437
-Time solving problem: 0.031378984451293945
-Time for backtracking: 0.08060979843139648
-Sim iter,  5 SQP iter,  2 Alpha,  0.6000000000000001 Max step size,  0.28821140702923154
-Time solving problem: 0.025337934494018555
-Time for backtracking: 0.15488457679748535
-Sim iter,  5 SQP iter,  3 Alpha,  0.30000000000000016 Max step size,  0.013927001406054212
-Break at sqp iter 3, 
-
-
-Time taken 0.5394740104675293
-X_first_half: [[-0.00541271  0.01874552]
- [ 0.02551354 -0.05030818]
- [ 0.09017803 -0.1238443 ]
- [ 0.15657241 -0.19857177]
- [ 0.22267044 -0.27257102]
- [ 0.28840037 -0.34719473]
- [ 0.26107882 -0.24634535]
- [ 0.19622073 -0.1423031 ]
- [ 0.12885672 -0.06718693]
- [ 0.05977785  0.00806437]
- [-0.00838253  0.08280935]
- [-0.07203108  0.15346948]
- [-0.00099287  0.00118658]], 
- U_first_half: [[ 0.03092625 -0.0690537   0.03554906]
- [ 0.06466449 -0.07353612  0.03554908]
- [ 0.06639438 -0.07472748  0.03554924]
- [ 0.06609803 -0.07399925  0.03555882]
- [ 0.06572993 -0.07462371  0.05389368]
- [-0.02732155  0.10084938  0.08120415]
- [-0.06485809  0.10404225  0.03607851]
- [-0.06736401  0.07511617  0.0361225 ]
- [-0.06907887  0.0752513   0.03618191]
- [-0.06816038  0.07474498  0.03631615]
- [-0.06364855  0.07066013  0.03665948]
- [ 0.07103821 -0.1522829   0.05763001]
- [-0.03241525  0.05351883  0.03830223]]
-[32mReached: [-18.16042766 -14.67380822   3.08222161] [-18.16042766 -14.67380822   3.08222161] [0m
-Time for one step planner: 0.6990022659301758
-Uncertainity at meas_loc [0.20128155]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.006194114685058594
-Uncertainity at meas_loc [0.05750322]
-tensor(0.6223)
-Nodes in optimistic graph: 30594
-init_node 16702 goal_node 25520
-[32mGoal: [-18.24     -14.679999]  uncertainity: 100 [0m
-Time for finding next goal: 4.123362064361572
-[96mSolving Constrints[0m
-Time between two solving: 4.334198236465454
-Time solving problem: 0.024788618087768555
-Time for backtracking: 0.05742168426513672
-Sim iter,  6 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.5416731567225864
-Time solving problem: 0.029807090759277344
-Time for backtracking: 0.10749411582946777
-Sim iter,  6 SQP iter,  1 Alpha,  0.40000000000000013 Max step size,  0.0888740281375347
-Time solving problem: 0.02603435516357422
-Time for backtracking: 0.11639785766601562
-Sim iter,  6 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.08349892691582544
-Time solving problem: 0.03383469581604004
-Time for backtracking: 0.10656356811523438
-Sim iter,  6 SQP iter,  3 Alpha,  0.40000000000000013 Max step size,  0.07844891181594452
-Time solving problem: 0.026664018630981445
-Time for backtracking: 0.09828710556030273
-Sim iter,  6 SQP iter,  4 Alpha,  0.40000000000000013 Max step size,  0.07370432162939891
-Time solving problem: 0.024718761444091797
-Time for backtracking: 0.15619182586669922
-Sim iter,  6 SQP iter,  5 Alpha,  1.3877787807814457e-16 Max step size,  0.0
-Break at sqp iter 5, 
-
-
-Time taken 0.8099563121795654
-X_first_half: [[-0.01291094  0.02114151]
- [-0.03454559 -0.00604315]
- [-0.00147853 -0.03838667]
- [ 0.05850284 -0.07268277]
- [ 0.11811085 -0.10769855]
- [ 0.16964566 -0.14296249]
- [ 0.18351923 -0.14393424]
- [ 0.19659611 -0.14495179]
- [ 0.15718098 -0.11172553]
- [ 0.09222191 -0.07890122]
- [ 0.03178614 -0.04721954]
- [-0.0071522  -0.01859448]
- [-0.00405969  0.0020145 ]], 
- U_first_half: [[-0.02163465 -0.02718466  0.04383618]
- [ 0.03306707 -0.03234352  0.03627618]
- [ 0.05998136 -0.0342961   0.03627618]
- [ 0.05960802 -0.03501578  0.03627618]
- [ 0.0515348  -0.03526394  0.03627618]
- [ 0.01387358 -0.00097175  0.03627618]
- [ 0.01307688 -0.00101755  0.03627618]
- [-0.03941513  0.03322626  0.03627618]
- [-0.06495907  0.03282431  0.03627618]
- [-0.06043577  0.03168168  0.03627618]
- [-0.03893834  0.02862506  0.03627618]
- [ 0.00309251  0.02060898  0.03627618]
- [-0.01360981  0.06294797  0.05872216]]
-[32mReached: [-18.19659367 -14.6746379    3.04530116] [-18.19659367 -14.6746379    3.04530116] [0m
-Time for one step planner: 0.9984948635101318
-Uncertainity at meas_loc [0.12181127]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.004534006118774414
-Uncertainity at meas_loc [0.0538218]
-tensor(0.6223)
-Nodes in optimistic graph: 30591
-init_node 16702 goal_node 25520
-[32mGoal: [-18.24     -14.719999]  uncertainity: 100 [0m
-Time for finding next goal: 4.133479356765747
-[96mSolving Constrints[0m
-Time between two solving: 4.365740537643433
-Time solving problem: 0.026660919189453125
-Time for backtracking: 0.022501230239868164
-Sim iter,  7 SQP iter,  0 Alpha,  1.0 Max step size,  1.0882685863543884
-Time solving problem: 0.026988744735717773
-Time for backtracking: 0.02265191078186035
-Sim iter,  7 SQP iter,  1 Alpha,  1.0 Max step size,  1.9999999999999982
-Time solving problem: 0.02619647979736328
-Time for backtracking: 0.03385305404663086
-Sim iter,  7 SQP iter,  2 Alpha,  0.9 Max step size,  1.799999999995892
-Time solving problem: 0.02578282356262207
-Time for backtracking: 0.019602298736572266
-Sim iter,  7 SQP iter,  3 Alpha,  1.0 Max step size,  1.799999999995864
-Time solving problem: 0.027598857879638672
-Time for backtracking: 0.03218388557434082
-Sim iter,  7 SQP iter,  4 Alpha,  0.9 Max step size,  1.0799999999999867
-Time solving problem: 0.02643609046936035
-Time for backtracking: 0.019685983657836914
-Sim iter,  7 SQP iter,  5 Alpha,  1.0 Max step size,  1.0799999999999104
-Time solving problem: 0.026397705078125
-Time for backtracking: 0.060454368591308594
-Sim iter,  7 SQP iter,  6 Alpha,  0.7000000000000001 Max step size,  0.08156143449386577
-Time solving problem: 0.026915550231933594
-Time for backtracking: 0.10038995742797852
-Sim iter,  7 SQP iter,  7 Alpha,  0.40000000000000013 Max step size,  0.007559999999953479
-Break at sqp iter 7, 
-
-
-Time taken 0.5261156558990479
-X_first_half: [[ 0.00000000e+00  0.00000000e+00]
- [-1.00000000e-01  2.00000000e-01]
- [-1.81512761e-01  4.00000000e-01]
- [-1.45537297e-01  6.00000000e-01]
- [-4.55372969e-02  8.00000000e-01]
- [ 5.44627031e-02  1.00000000e+00]
- [ 1.54462703e-01  1.00000000e+00]
- [ 2.54462703e-01  1.00000000e+00]
- [ 3.35975464e-01  8.00000000e-01]
- [ 3.00000000e-01  6.00000000e-01]
- [ 2.00000000e-01  4.00000000e-01]
- [ 1.00000000e-01  2.00000000e-01]
- [-4.69808708e-16 -9.31888643e-16]], 
- U_first_half: [[-1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-8.15127609e-02  2.00000000e-01  3.50000000e-02]
- [ 3.59754640e-02  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  9.32502400e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  7.40844653e-14  3.50000000e-02]
- [ 1.00000000e-01 -2.16523237e-13  3.50000000e-02]
- [ 8.15127609e-02 -2.00000000e-01  4.25600000e-02]
- [-3.59754640e-02 -2.00000000e-01  9.41897600e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 2.26178703e-02 -1.99994298e-01  3.50000000e-02]]
-[32mReached: [-18.24056275 -14.68842702   3.393319  ] [-18.24056275 -14.68842702   3.393319  ] [0m
-Time for one step planner: 0.6944963932037354
-Uncertainity at meas_loc [0.16019797]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.003530263900756836
-Uncertainity at meas_loc [0.05618203]
-tensor(0.6216)
-Nodes in optimistic graph: 30590
-init_node 16702 goal_node 25520
-[32mGoal: [-18.32     -14.679999]  uncertainity: 100 [0m
-Time for finding next goal: 4.158875465393066
-[96mSolving Constrints[0m
-Time between two solving: 4.364667892456055
-Time solving problem: 0.025414705276489258
-Time for backtracking: 0.05754351615905762
-Sim iter,  8 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.6414488437559369
-Time solving problem: 0.02699732780456543
-Time for backtracking: 0.07982635498046875
-Sim iter,  8 SQP iter,  1 Alpha,  0.6000000000000001 Max step size,  0.4158847479701948
-Time solving problem: 0.03375124931335449
-Time for backtracking: 0.12208700180053711
-Sim iter,  8 SQP iter,  2 Alpha,  0.5000000000000001 Max step size,  0.14506060009200716
-Time solving problem: 0.03863024711608887
-Time for backtracking: 0.13192319869995117
-Sim iter,  8 SQP iter,  3 Alpha,  0.40000000000000013 Max step size,  0.04925097494323291
-Time solving problem: 0.03290081024169922
-Time for backtracking: 0.11514782905578613
-Sim iter,  8 SQP iter,  4 Alpha,  0.30000000000000016 Max step size,  0.013881682793601358
+Time between two solving: 10.330600500106812
+Time solving problem: 3.939784049987793
+Time for backtracking: 0.15343403816223145
+Sim iter,  3 SQP iter,  0 Alpha,  0.30000000000000016 Max step size,  0.18875706627548894
+Time before plotting sqp sol: 0.011175870895385742
+Time plotting sqp sol & save fig: 0.1099097728729248
+Time solving problem: 0.0383760929107666
+Time for backtracking: 0.0835106372833252
+Sim iter,  3 SQP iter,  1 Alpha,  0.7000000000000001 Max step size,  3.0218254498559918
+Time before plotting sqp sol: 0.010201454162597656
+Time plotting sqp sol & save fig: 0.10117912292480469
+Time solving problem: 0.03591418266296387
+Time for backtracking: 0.029441118240356445
+Sim iter,  3 SQP iter,  2 Alpha,  1.0 Max step size,  3.277559857216273
+Time before plotting sqp sol: 0.010191917419433594
+Time plotting sqp sol & save fig: 0.10107135772705078
+Time solving problem: 0.03620004653930664
+Time for backtracking: 0.03151655197143555
+Sim iter,  3 SQP iter,  3 Alpha,  1.0 Max step size,  1.6000000000069403
+Time before plotting sqp sol: 0.009769916534423828
+Time plotting sqp sol & save fig: 0.10245823860168457
+Time solving problem: 0.03395724296569824
+Time for backtracking: 0.16474008560180664
+Sim iter,  3 SQP iter,  4 Alpha,  0.20000000000000015 Max step size,  0.03206290842934578
 Break at sqp iter 4, 
 
 
-Time taken 0.6657311916351318
-X_first_half: [[ 0.00612772 -0.05418324]
- [-0.01841599 -0.11041045]
- [ 0.02226444 -0.15050781]
- [ 0.09370376 -0.18548853]
- [ 0.16512129 -0.21903067]
- [ 0.22318283 -0.25237404]
- [ 0.24759249 -0.2503028 ]
- [ 0.27216885 -0.24879775]
- [ 0.22967361 -0.21231987]
- [ 0.15575567 -0.17609788]
- [ 0.08120669 -0.1369147 ]
- [ 0.01795376 -0.08162185]
- [-0.00339261 -0.0022608 ]], 
- U_first_half: [[-0.02454371 -0.05622721  0.06459723]
- [ 0.04068043 -0.04009736  0.05243475]
- [ 0.07143932 -0.03498072  0.035     ]
- [ 0.07141754 -0.03354214  0.035     ]
- [ 0.05806153 -0.03334337  0.035     ]
- [ 0.02440967  0.00207125  0.035     ]
- [ 0.02457636  0.00150504  0.035     ]
- [-0.04249524  0.03647788  0.04469083]
- [-0.07391795  0.03622199  0.035     ]
- [-0.07454898  0.03918319  0.035     ]
- [-0.06325293  0.05529285  0.035     ]
- [-0.02134637  0.07936104  0.035     ]
- [-0.01275712 -0.01844698  0.03833445]]
-[32mReached: [-18.29527892 -14.6972597    3.31352554] [-18.29527892 -14.6972597    3.31352554] [0m
-Time for one step planner: 0.837188720703125
-Uncertainity at meas_loc [0.17172444]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.003496408462524414
-Uncertainity at meas_loc [0.05665743]
-tensor(0.6214)
-Nodes in optimistic graph: 30589
-init_node 16702 goal_node 25520
-[32mGoal: [-18.359999 -14.679999]  uncertainity: 100 [0m
-Time for finding next goal: 4.114213943481445
+Time before plotting sqp sol: 0.009907722473144531
+Time plotting sqp sol & save fig: 0.10504484176635742
+Time taken 5.119273662567139
+uncertainty:  [0.05468967]
+uncertainty:  [0.0631866]
+uncertainty:  [0.06320561]
+uncertainty:  [0.06339768]
+uncertainty:  [0.06295465]
+uncertainty:  [0.05267881]
+uncertainty:  [0.0500871]
+uncertainty:  [0.07409161]
+uncertainty:  [0.09460468]
+uncertainty:  [0.10165405]
+uncertainty:  [0.10113722]
+uncertainty:  [0.08960236]
+uncertainty:  [0.08313078]
+[32mReached: [-19.76334732 -15.9882447   -3.04741971] [-19.77646276 -15.98341842  -3.02863357] [0m
+Time for one step planner: 9.208796977996826
+Uncertainity at meas_loc [0.08202345]
+query_pts:  [[-19.76272007 -15.98752194]
+ [-19.44992151 -15.98681234]
+ [-19.13712295 -15.98610274]
+ [-18.82432439 -15.98539315]
+ [-18.51152583 -15.98468355]]
+query_meas:  [1.25119746e+00 9.38398093e-01 6.25598729e-01 3.12799364e-01
+ 1.11022302e-15]
+Uncertainity at meas_loc [0.04812093]
+tensor(1.2591, dtype=torch.float64)
+Nodes in optimistic graph: 30294
+init_node 8444 goal_node 25520
+[32mGoal: [-19.32 -15.32]  uncertainity: 100 [0m
+Time for finding next goal: 6.182097911834717
 [96mSolving Constrints[0m
-Time between two solving: 4.32178807258606
-Time solving problem: 0.02575397491455078
-Time for backtracking: 0.04439997673034668
-Sim iter,  9 SQP iter,  0 Alpha,  0.8 Max step size,  0.7489149198501578
-Time solving problem: 0.03018045425415039
-Time for backtracking: 0.08432316780090332
-Sim iter,  9 SQP iter,  1 Alpha,  0.5000000000000001 Max step size,  0.25873667166474723
-Time solving problem: 0.02597808837890625
-Time for backtracking: 0.09606075286865234
-Sim iter,  9 SQP iter,  2 Alpha,  0.5000000000000001 Max step size,  0.21961568690871258
-Time solving problem: 0.02509331703186035
-Time for backtracking: 0.08896350860595703
-Sim iter,  9 SQP iter,  3 Alpha,  0.5000000000000001 Max step size,  0.18640979504845562
-Time solving problem: 0.02477860450744629
-Time for backtracking: 0.10112690925598145
-Sim iter,  9 SQP iter,  4 Alpha,  0.40000000000000013 Max step size,  0.06328985361464529
-Time solving problem: 0.03354907035827637
-Time for backtracking: 0.1313776969909668
-Sim iter,  9 SQP iter,  5 Alpha,  0.20000000000000015 Max step size,  0.0035677249960943264
+Time between two solving: 10.328114748001099
+Time solving problem: 4.021916389465332
+Time for backtracking: 0.036093711853027344
+Sim iter,  4 SQP iter,  0 Alpha,  1.0 Max step size,  1.7934915946609067
+Time before plotting sqp sol: 0.011722803115844727
+Time plotting sqp sol & save fig: 0.10668802261352539
+Time solving problem: 0.04301714897155762
+Time for backtracking: 0.02950572967529297
+Sim iter,  4 SQP iter,  1 Alpha,  1.0 Max step size,  1.9999999999999951
+Time before plotting sqp sol: 0.010816097259521484
+Time plotting sqp sol & save fig: 0.10560059547424316
+Time solving problem: 0.03999018669128418
+Time for backtracking: 0.15529894828796387
+Sim iter,  4 SQP iter,  2 Alpha,  0.30000000000000016 Max step size,  0.19588803165104096
+Time before plotting sqp sol: 0.010436773300170898
+Time plotting sqp sol & save fig: 0.11966776847839355
+Time solving problem: 0.04690265655517578
+Time for backtracking: 0.2079629898071289
+Sim iter,  4 SQP iter,  3 Alpha,  0.30000000000000016 Max step size,  0.14227613075923173
+Time before plotting sqp sol: 0.01511383056640625
+Time plotting sqp sol & save fig: 0.1271343231201172
+Time solving problem: 0.06748270988464355
+Time for backtracking: 0.22494268417358398
+Sim iter,  4 SQP iter,  4 Alpha,  0.20000000000000015 Max step size,  0.024375219299498596
+Break at sqp iter 4, 
+
+
+Time before plotting sqp sol: 0.01429438591003418
+Time plotting sqp sol & save fig: 0.12714076042175293
+Time taken 5.524022817611694
+uncertainty:  [0.04812093]
+uncertainty:  [0.04685084]
+uncertainty:  [0.04684894]
+uncertainty:  [0.04685551]
+uncertainty:  [0.04685391]
+uncertainty:  [0.04556704]
+uncertainty:  [0.05045063]
+uncertainty:  [0.06592702]
+uncertainty:  [0.08060178]
+uncertainty:  [0.08797815]
+uncertainty:  [0.10264187]
+uncertainty:  [0.12688038]
+uncertainty:  [0.14671956]
+[32mReached: [-19.59345011 -15.8668787   -2.70466672] [-19.60869482 -15.96622448  -2.72857029] [0m
+Time for one step planner: 9.83727240562439
+Uncertainity at meas_loc [0.15043413]
+query_pts:  [[-19.59220379 -15.86517894]
+ [-19.31608317 -15.86142634]
+ [-19.03996256 -15.85767374]
+ [-18.76384194 -15.85392114]
+ [-18.48772133 -15.85016854]]
+query_meas:  [1.10458446e+00 8.28438342e-01 5.52292228e-01 2.76146114e-01
+ 1.55431223e-15]
+Uncertainity at meas_loc [0.05570952]
+tensor(1.2574, dtype=torch.float64)
+Nodes in optimistic graph: 30287
+init_node 8444 goal_node 25520
+[32mGoal: [-19.32 -15.32]  uncertainity: 100 [0m
+Time for finding next goal: 6.1936235427856445
+[96mSolving Constrints[0m
+Time between two solving: 10.566039085388184
+Time solving problem: 4.24591851234436
+Time for backtracking: 0.030417203903198242
+Sim iter,  5 SQP iter,  0 Alpha,  1.0 Max step size,  0.9185994896930068
+Time before plotting sqp sol: 0.01528620719909668
+Time plotting sqp sol & save fig: 0.12071371078491211
+Time solving problem: 0.03843379020690918
+Time for backtracking: 0.029909133911132812
+Sim iter,  5 SQP iter,  1 Alpha,  1.0 Max step size,  1.5999999999999985
+Time before plotting sqp sol: 0.011948585510253906
+Time plotting sqp sol & save fig: 0.10840439796447754
+Time solving problem: 0.03824806213378906
+Time for backtracking: 0.06561398506164551
+Sim iter,  5 SQP iter,  2 Alpha,  0.8 Max step size,  0.11863532405450616
+Time before plotting sqp sol: 0.010900020599365234
+Time plotting sqp sol & save fig: 0.11608409881591797
+Time solving problem: 0.040956974029541016
+Time for backtracking: 0.14068818092346191
+Sim iter,  5 SQP iter,  3 Alpha,  0.40000000000000013 Max step size,  0.009453619869724816
+Break at sqp iter 3, 
+
+
+Time before plotting sqp sol: 0.012290716171264648
+Time plotting sqp sol & save fig: 0.11761641502380371
+Time taken 5.144692420959473
+uncertainty:  [0.05680592]
+uncertainty:  [0.05680592]
+uncertainty:  [0.05664127]
+uncertainty:  [0.05653873]
+uncertainty:  [0.05625082]
+uncertainty:  [0.06321109]
+uncertainty:  [0.08606978]
+uncertainty:  [0.30109428]
+uncertainty:  [0.43265314]
+uncertainty:  [0.58863332]
+uncertainty:  [0.74373082]
+uncertainty:  [0.86629268]
+uncertainty:  [0.95169673]
+[32mReached: [-19.45273766 -15.64587923  -2.26904344] [-19.43882923 -15.76265593  -2.36953583] [0m
+Time for one step planner: 9.737860918045044
+Uncertainity at meas_loc [0.96630267]
+query_pts:  [[-19.45262306 -15.64356535]
+ [-19.21124442 -15.63352464]
+ [-18.96986578 -15.62348393]
+ [-18.72848713 -15.61344323]
+ [-18.48710849 -15.60340252]]
+query_meas:  [9.66349542e-01 7.24762157e-01 4.83174771e-01 2.41587386e-01
+ 1.55431223e-15]
+Uncertainity at meas_loc [0.05974791]
+tensor(1.2567, dtype=torch.float64)
+Nodes in optimistic graph: 30125
+init_node 8444 goal_node 25520
+[32mGoal: [-19.32 -15.32]  uncertainity: 100 [0m
+Time for finding next goal: 6.0126426219940186
+[96mSolving Constrints[0m
+Time between two solving: 10.659593343734741
+Time solving problem: 4.221922159194946
+Time for backtracking: 0.10254120826721191
+Sim iter,  6 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.2373167407132306
+Time before plotting sqp sol: 0.010776042938232422
+Time plotting sqp sol & save fig: 0.1253664493560791
+Time solving problem: 0.04037070274353027
+Time for backtracking: 0.06355714797973633
+Sim iter,  6 SQP iter,  1 Alpha,  0.8 Max step size,  0.4489530353459711
+Time before plotting sqp sol: 0.01037907600402832
+Time plotting sqp sol & save fig: 0.12077164649963379
+Time solving problem: 0.04184603691101074
+Time for backtracking: 0.09858107566833496
+Sim iter,  6 SQP iter,  2 Alpha,  0.7000000000000001 Max step size,  0.13361201273745965
+Time before plotting sqp sol: 0.015221595764160156
+Time plotting sqp sol & save fig: 0.13464736938476562
+Time solving problem: 0.030000925064086914
+Time for backtracking: 0.09551024436950684
+Sim iter,  6 SQP iter,  3 Alpha,  0.6000000000000001 Max step size,  0.060763527930424
+Time before plotting sqp sol: 0.011089324951171875
+Time plotting sqp sol & save fig: 0.16937947273254395
+Time solving problem: 0.03668045997619629
+Time for backtracking: 0.11993980407714844
+Sim iter,  6 SQP iter,  4 Alpha,  0.5000000000000001 Max step size,  0.028120019110670053
+Break at sqp iter 4, 
+
+
+Time before plotting sqp sol: 0.011510372161865234
+Time plotting sqp sol & save fig: 0.1306591033935547
+Time taken 5.592363357543945
+uncertainty:  [0.06062867]
+uncertainty:  [0.06296948]
+uncertainty:  [0.06295894]
+uncertainty:  [0.0627909]
+uncertainty:  [0.06293097]
+uncertainty:  [0.15411711]
+uncertainty:  [0.27599848]
+uncertainty:  [0.4427068]
+uncertainty:  [0.64040453]
+uncertainty:  [0.85932429]
+uncertainty:  [1.06216565]
+uncertainty:  [1.21334472]
+uncertainty:  [1.30547889]
+[32mReached: [-19.42043224 -15.39201408  -1.84464193] [-19.36157339 -15.4921616   -1.9223048 ] [0m
+Time for one step planner: 10.328633785247803
+Uncertainity at meas_loc [1.32152224]
+query_pts:  [[-19.4210721  -15.38970161]
+ [-19.18735878 -15.40784819]
+ [-18.95364546 -15.42599476]
+ [-18.71993214 -15.44414134]
+ [-18.48621882 -15.46228791]]
+query_meas:  [9.37667012e-01 7.03250259e-01 4.68833506e-01 2.34416753e-01
+ 9.99200722e-16]
+Uncertainity at meas_loc [0.05983798]
+tensor(1.2565, dtype=torch.float64)
+Nodes in optimistic graph: 30031
+init_node 8444 goal_node 25520
+[32mGoal: [-19.119999 -15.119999]  uncertainity: 100 [0m
+Time for finding next goal: 5.947922229766846
+[96mSolving Constrints[0m
+Time between two solving: 10.736785888671875
+Time solving problem: 4.4337122440338135
+Time for backtracking: 0.10448670387268066
+Sim iter,  7 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.5601970407601611
+Time before plotting sqp sol: 0.013522863388061523
+Time plotting sqp sol & save fig: 0.12839341163635254
+Time solving problem: 0.033081769943237305
+Time for backtracking: 0.15252971649169922
+Sim iter,  7 SQP iter,  1 Alpha,  0.30000000000000016 Max step size,  0.026655293372390143
+Break at sqp iter 1, 
+
+
+Time before plotting sqp sol: 0.010764598846435547
+Time plotting sqp sol & save fig: 0.13473725318908691
+Time taken 5.0119383335113525
+uncertainty:  [0.06088885]
+uncertainty:  [0.06241238]
+uncertainty:  [0.0623735]
+uncertainty:  [0.06192544]
+uncertainty:  [0.0711822]
+uncertainty:  [0.09744103]
+uncertainty:  [0.13872326]
+uncertainty:  [0.19269916]
+uncertainty:  [0.25222367]
+uncertainty:  [0.29948546]
+uncertainty:  [0.32929863]
+uncertainty:  [0.35163098]
+uncertainty:  [0.36946657]
+[32mReached: [-19.43832394 -15.31279352  -1.68539321] [-19.37377712 -15.39327012  -1.79113307] [0m
+Time for one step planner: 9.442347764968872
+Uncertainity at meas_loc [0.37334813]
+query_pts:  [[-19.43871067 -15.31216178]
+ [-19.19858667 -15.35931375]
+ [-18.95846267 -15.40646572]
+ [-18.71833866 -15.45361769]
+ [-18.47821466 -15.50076966]]
+query_meas:  [9.78838861e-01 7.34129146e-01 4.89419430e-01 2.44709715e-01
+ 1.33226763e-15]
+Uncertainity at meas_loc [0.0590839]
+tensor(1.2565, dtype=torch.float64)
+Nodes in optimistic graph: 30020
+init_node 8444 goal_node 25520
+[32mGoal: [-19.08     -15.079999]  uncertainity: 100 [0m
+Time for finding next goal: 5.78658127784729
+[96mSolving Constrints[0m
+Time between two solving: 10.271584033966064
+Time solving problem: 4.251004695892334
+Time for backtracking: 0.08033967018127441
+Sim iter,  8 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.49534715889485104
+Time before plotting sqp sol: 0.011813879013061523
+Time plotting sqp sol & save fig: 0.13213324546813965
+Time solving problem: 0.04599714279174805
+Time for backtracking: 0.08030223846435547
+Sim iter,  8 SQP iter,  1 Alpha,  0.8 Max step size,  0.3509888440169229
+Time before plotting sqp sol: 0.012280464172363281
+Time plotting sqp sol & save fig: 0.14345622062683105
+Time solving problem: 0.0414884090423584
+Time for backtracking: 0.12601709365844727
+Sim iter,  8 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.08809992556555102
+Time before plotting sqp sol: 0.01429891586303711
+Time plotting sqp sol & save fig: 0.12861967086791992
+Time solving problem: 0.03792309761047363
+Time for backtracking: 0.04294753074645996
+Sim iter,  8 SQP iter,  3 Alpha,  0.9 Max step size,  0.1918949730616875
+Time before plotting sqp sol: 0.010479450225830078
+Time plotting sqp sol & save fig: 0.12600445747375488
+Time solving problem: 0.03773975372314453
+Time for backtracking: 0.04383277893066406
+Sim iter,  8 SQP iter,  4 Alpha,  0.9 Max step size,  0.11834336660711012
+Time before plotting sqp sol: 0.009458065032958984
+Time plotting sqp sol & save fig: 0.12345480918884277
+Time solving problem: 0.03443264961242676
+Time for backtracking: 0.030347108840942383
+Sim iter,  8 SQP iter,  5 Alpha,  1.0 Max step size,  0.14730634108737634
+Time before plotting sqp sol: 0.009200096130371094
+Time plotting sqp sol & save fig: 0.12708711624145508
+Time solving problem: 0.03673195838928223
+Time for backtracking: 0.08175921440124512
+Sim iter,  8 SQP iter,  6 Alpha,  0.7000000000000001 Max step size,  0.07581873628112296
+Time before plotting sqp sol: 0.010034322738647461
+Time plotting sqp sol & save fig: 0.13236212730407715
+Time solving problem: 0.0361025333404541
+Time for backtracking: 0.16906094551086426
+Sim iter,  8 SQP iter,  7 Alpha,  0.20000000000000015 Max step size,  0.0005704098100227095
+Break at sqp iter 7, 
+
+
+Time before plotting sqp sol: 0.01022648811340332
+Time plotting sqp sol & save fig: 0.12562346458435059
+Time taken 6.304579496383667
+uncertainty:  [0.0590839]
+uncertainty:  [0.0587532]
+uncertainty:  [0.05874154]
+uncertainty:  [0.05865041]
+uncertainty:  [0.05854047]
+uncertainty:  [0.14033793]
+uncertainty:  [0.23629203]
+uncertainty:  [0.35509418]
+uncertainty:  [0.48296301]
+uncertainty:  [0.61545989]
+uncertainty:  [0.72947892]
+uncertainty:  [0.80380276]
+uncertainty:  [0.84496589]
+[32mReached: [-19.28400814 -15.12891971  -2.11156297] [-19.38478744 -15.13629647  -2.05331233] [0m
+Time for one step planner: 11.029319524765015
+Uncertainity at meas_loc [0.8499229]
+query_pts:  [[-19.28222796 -15.12871454]
+ [-19.07952567 -15.23464791]
+ [-18.87682339 -15.34058128]
+ [-18.6741211  -15.44651465]
+ [-18.47141881 -15.55244802]]
+query_meas:  [9.14856017e-01 6.86142012e-01 4.57428008e-01 2.28714004e-01
+ 6.66133815e-16]
+Uncertainity at meas_loc [0.05976965]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29977
+init_node 8444 goal_node 25520
+[32mGoal: [-19.       -14.999999]  uncertainity: 100 [0m
+Time for finding next goal: 5.818930625915527
+[96mSolving Constrints[0m
+Time between two solving: 10.596482992172241
+Time solving problem: 4.746814489364624
+Time for backtracking: 0.10491776466369629
+Sim iter,  9 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.3058388612282166
+Time before plotting sqp sol: 0.01274728775024414
+Time plotting sqp sol & save fig: 0.15521764755249023
+Time solving problem: 0.031233549118041992
+Time for backtracking: 0.058506011962890625
+Sim iter,  9 SQP iter,  1 Alpha,  0.8 Max step size,  0.9598756202036303
+Time before plotting sqp sol: 0.009299755096435547
+Time plotting sqp sol & save fig: 0.13423895835876465
+Time solving problem: 0.0413053035736084
+Time for backtracking: 0.08144617080688477
+Sim iter,  9 SQP iter,  2 Alpha,  0.8 Max step size,  0.7663732122181157
+Time before plotting sqp sol: 0.012223482131958008
+Time plotting sqp sol & save fig: 0.14267969131469727
+Time solving problem: 0.03646588325500488
+Time for backtracking: 0.13321661949157715
+Sim iter,  9 SQP iter,  3 Alpha,  0.40000000000000013 Max step size,  0.018025097951373636
+Break at sqp iter 3, 
+
+
+Time before plotting sqp sol: 0.011612653732299805
+Time plotting sqp sol & save fig: 0.13271045684814453
+Time taken 5.845840215682983
+uncertainty:  [0.05976965]
+uncertainty:  [0.06027458]
+uncertainty:  [0.06027768]
+uncertainty:  [0.06028606]
+uncertainty:  [0.06054857]
+uncertainty:  [0.12305749]
+uncertainty:  [0.2079733]
+uncertainty:  [0.32249537]
+uncertainty:  [0.44384247]
+uncertainty:  [0.5667001]
+uncertainty:  [0.66796989]
+uncertainty:  [0.73892152]
+uncertainty:  [0.78087464]
+[32mReached: [-19.09023594 -15.02603515  -2.45688174] [-19.18785771 -14.99313534  -2.34658951] [0m
+Time for one step planner: 10.251866102218628
+Uncertainity at meas_loc [0.78690468]
+query_pts:  [[-19.08893948 -15.02546893]
+ [-18.93956148 -15.15261349]
+ [-18.79018349 -15.27975805]
+ [-18.64080549 -15.40690261]
+ [-18.49142749 -15.53404717]]
+query_meas:  [ 7.84647942e-01  5.88485956e-01  3.92323971e-01  1.96161985e-01
+ -1.77635684e-15]
+Uncertainity at meas_loc [0.05964419]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29931
+init_node 8444 goal_node 25520
+[32mGoal: [-18.92     -14.919999]  uncertainity: 100 [0m
+Time for finding next goal: 5.897758722305298
+[96mSolving Constrints[0m
+Time between two solving: 10.351238250732422
+Time solving problem: 4.895041227340698
+Time for backtracking: 0.0767056941986084
+Sim iter,  10 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.36816607292658865
+Time before plotting sqp sol: 0.009805440902709961
+Time plotting sqp sol & save fig: 0.15526318550109863
+Time solving problem: 0.03765511512756348
+Time for backtracking: 0.07518935203552246
+Sim iter,  10 SQP iter,  1 Alpha,  0.7000000000000001 Max step size,  0.613148959072169
+Time before plotting sqp sol: 0.011724233627319336
+Time plotting sqp sol & save fig: 0.13007068634033203
+Time solving problem: 0.031568288803100586
+Time for backtracking: 0.11056756973266602
+Sim iter,  10 SQP iter,  2 Alpha,  0.5000000000000001 Max step size,  0.22298368117220552
+Time before plotting sqp sol: 0.009316682815551758
+Time plotting sqp sol & save fig: 0.133467435836792
+Time solving problem: 0.035393714904785156
+Time for backtracking: 0.12049460411071777
+Sim iter,  10 SQP iter,  3 Alpha,  0.5000000000000001 Max step size,  0.1892685485790817
+Time before plotting sqp sol: 0.011992454528808594
+Time plotting sqp sol & save fig: 0.14474153518676758
+Time solving problem: 0.030696630477905273
+Time for backtracking: 0.1051783561706543
+Sim iter,  10 SQP iter,  4 Alpha,  0.5000000000000001 Max step size,  0.16065114403391
+Time before plotting sqp sol: 0.012121438980102539
+Time plotting sqp sol & save fig: 0.13209319114685059
+Time solving problem: 0.028678178787231445
+Time for backtracking: 0.14141511917114258
+Sim iter,  10 SQP iter,  5 Alpha,  0.30000000000000016 Max step size,  0.016363282926712824
 Break at sqp iter 5, 
 
 
-Time taken 0.7140054702758789
-X_first_half: [[-0.00258861 -0.00331921]
- [-0.00164664 -0.00978272]
- [ 0.00913411 -0.01392328]
- [ 0.09305731 -0.0170917 ]
- [ 0.17682889 -0.01968899]
- [ 0.2041539  -0.02181008]
- [ 0.20216369 -0.02102548]
- [ 0.19999162 -0.02039836]
- [ 0.18823556 -0.01667276]
- [ 0.10325153 -0.01268607]
- [ 0.01847177 -0.00815725]
- [-0.00876301 -0.00292383]
- [-0.00230094 -0.00123626]], 
- U_first_half: [[ 0.00094197 -0.00646351  0.03593535]
- [ 0.01078075 -0.00414056  0.03553457]
- [ 0.0839232  -0.00316841  0.03553474]
- [ 0.08377158 -0.00259729  0.03553603]
- [ 0.02732501 -0.00212108  0.04317846]
- [-0.00199021  0.00078459  0.03587952]
- [-0.00217206  0.00062713  0.03600633]
- [-0.01175606  0.0037256   0.03606901]
- [-0.08498403  0.00398668  0.03612977]
- [-0.08477976  0.00452883  0.03624891]
- [-0.02723478  0.00523342  0.0365456 ]
- [ 0.00646207  0.00168757  0.03731732]
- [-0.00969317 -0.05433467  0.08169002]]
-[32mReached: [-18.34389685 -14.7002637    3.32036895] [-18.34389685 -14.7002637    3.32036895] [0m
-Time for one step planner: 0.897655725479126
-Uncertainity at meas_loc [0.15740085]
-tensor(0.7200, dtype=torch.float64)
-Time for GP update: 0.0036153793334960938
-Uncertainity at meas_loc [0.05606735]
-tensor(0.6196)
-Nodes in optimistic graph: 30589
-init_node 16702 goal_node 25520
-[32mGoal: [-18.359999 -14.639999]  uncertainity: 100 [0m
-Time for finding next goal: 4.04258918762207
+Time before plotting sqp sol: 0.009282350540161133
+Time plotting sqp sol & save fig: 0.13103675842285156
+Time taken 6.581227779388428
+uncertainty:  [0.05964419]
+uncertainty:  [0.05955629]
+uncertainty:  [0.05955582]
+uncertainty:  [0.05953701]
+uncertainty:  [0.06003679]
+uncertainty:  [0.10782507]
+uncertainty:  [0.17924449]
+uncertainty:  [0.27772417]
+uncertainty:  [0.38713492]
+uncertainty:  [0.50335504]
+uncertainty:  [0.60469711]
+uncertainty:  [0.67091067]
+uncertainty:  [0.70440557]
+[32mReached: [-18.93784274 -14.93588083  -2.53559384] [-19.00342714 -14.93416971  -2.47637701] [0m
+Time for one step planner: 10.993258476257324
+Uncertainity at meas_loc [0.70819149]
+query_pts:  [[-18.937351   -14.93542222]
+ [-18.82533259 -15.08209888]
+ [-18.71331418 -15.22877555]
+ [-18.60129577 -15.37545221]
+ [-18.48927736 -15.52212888]]
+query_meas:  [7.38237560e-01 5.53678170e-01 3.69118780e-01 1.84559390e-01
+ 6.66133815e-16]
+Uncertainity at meas_loc [0.05952693]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29914
+init_node 8444 goal_node 25520
+[32mGoal: [-18.8      -14.799999]  uncertainity: 100 [0m
+Time for finding next goal: 5.779782295227051
 [96mSolving Constrints[0m
-Time between two solving: 4.263224840164185
-Time solving problem: 0.02531266212463379
-Time for backtracking: 0.019551992416381836
-Sim iter,  10 SQP iter,  0 Alpha,  1.0 Max step size,  1.0808481754655088
-Time solving problem: 0.025145769119262695
-Time for backtracking: 0.02273416519165039
-Sim iter,  10 SQP iter,  1 Alpha,  1.0 Max step size,  1.9999999999999076
-Time solving problem: 0.027045488357543945
-Time for backtracking: 0.019580841064453125
-Sim iter,  10 SQP iter,  2 Alpha,  1.0 Max step size,  1.9999999999999891
-Time solving problem: 0.0253450870513916
-Time for backtracking: 0.019629955291748047
-Sim iter,  10 SQP iter,  3 Alpha,  1.0 Max step size,  1.9999999999999973
-Time solving problem: 0.025606870651245117
-Time for backtracking: 0.019654512405395508
-Sim iter,  10 SQP iter,  4 Alpha,  1.0 Max step size,  1.9999999999999996
-Time solving problem: 0.025898218154907227
-Time for backtracking: 0.019722938537597656
-Sim iter,  10 SQP iter,  5 Alpha,  1.0 Max step size,  1.9999999999999798
-Time solving problem: 0.027051210403442383
-Time for backtracking: 0.022058486938476562
-Sim iter,  10 SQP iter,  6 Alpha,  1.0 Max step size,  1.999999999999173
-Time solving problem: 0.034158945083618164
-Time for backtracking: 0.030829668045043945
-Sim iter,  10 SQP iter,  7 Alpha,  1.0 Max step size,  1.9999999999991491
-Time solving problem: 0.05002641677856445
-Time for backtracking: 0.03463172912597656
-Sim iter,  10 SQP iter,  8 Alpha,  1.0 Max step size,  1.9999999999999558
-Time solving problem: 0.03462719917297363
-Time for backtracking: 0.019979238510131836
-Sim iter,  10 SQP iter,  9 Alpha,  1.0 Max step size,  1.9999999999998903
-Time solving problem: 0.028394699096679688
-Time for backtracking: 0.025099754333496094
-Sim iter,  10 SQP iter,  10 Alpha,  1.0 Max step size,  1.99999999999989
-Time solving problem: 0.04097414016723633
-Time for backtracking: 0.021189212799072266
-Sim iter,  10 SQP iter,  11 Alpha,  1.0 Max step size,  1.9999999999999996
-Time solving problem: 0.026389598846435547
-Time for backtracking: 0.020072460174560547
-Sim iter,  10 SQP iter,  12 Alpha,  1.0 Max step size,  1.9999999999999998
-Time solving problem: 0.02659320831298828
-Time for backtracking: 0.021001338958740234
-Sim iter,  10 SQP iter,  13 Alpha,  1.0 Max step size,  1.9999999999999996
-Time solving problem: 0.02578425407409668
-Time for backtracking: 0.019811630249023438
-Sim iter,  10 SQP iter,  14 Alpha,  1.0 Max step size,  1.9999999999999791
-Time solving problem: 0.026618003845214844
-Time for backtracking: 0.019893646240234375
-Sim iter,  10 SQP iter,  15 Alpha,  1.0 Max step size,  1.9999999999999796
-Time solving problem: 0.026932954788208008
-Time for backtracking: 0.020870685577392578
-Sim iter,  10 SQP iter,  16 Alpha,  1.0 Max step size,  1.9999999999999996
-Time solving problem: 0.030411958694458008
-Time for backtracking: 0.02199554443359375
-Sim iter,  10 SQP iter,  17 Alpha,  1.0 Max step size,  1.999999999999981
-Time solving problem: 0.02609419822692871
-Time for backtracking: 0.019808053970336914
-Sim iter,  10 SQP iter,  18 Alpha,  1.0 Max step size,  1.9999999999999813
-Time solving problem: 0.025696754455566406
-Time for backtracking: 0.019881010055541992
-Sim iter,  10 SQP iter,  19 Alpha,  1.0 Max step size,  1.9999999999999747
-Time taken 1.0250029563903809
-X_first_half: [[ 0.00000000e+00  0.00000000e+00]
- [ 1.00000000e-01 -2.00000000e-01]
- [ 2.00000000e-01 -4.00000000e-01]
- [ 2.85240335e-01 -6.00000000e-01]
- [ 1.85240335e-01 -8.00000000e-01]
- [ 8.52403348e-02 -1.00000000e+00]
- [-1.47596652e-02 -1.00000000e+00]
- [-1.14759665e-01 -1.00000000e+00]
- [-2.14759665e-01 -8.00000000e-01]
- [-3.00000000e-01 -6.00000000e-01]
- [-2.00000000e-01 -4.00000000e-01]
- [-1.00000000e-01 -2.00000000e-01]
- [-8.32667268e-16 -1.38777878e-15]], 
- U_first_half: [[ 1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [ 8.52403348e-02 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -2.00000000e-01  3.50000000e-02]
- [-1.00000000e-01 -4.51056437e-14  3.50000000e-02]
- [-1.00000000e-01  6.07061326e-14  3.50000000e-02]
- [-1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-8.52403348e-02  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [ 1.00000000e-01  2.00000000e-01  3.50000000e-02]
- [-3.78305770e-02  9.98618892e-02  3.50000000e-02]]
-[32mReached: [-18.34757391 -14.68223639   3.07536895] [-18.34757391 -14.68223639   3.07536895] [0m
-Time for one step planner: 1.2087416648864746
-Uncertainity at meas_loc [0.12968624]
-tensor(0.6800, dtype=torch.float64)
-Time for GP update: 0.0036933422088623047
-Uncertainity at meas_loc [0.05443621]
-tensor(0.6210)
-Nodes in optimistic graph: 30576
-init_node 16702 goal_node 25520
-There was an error running python
+Time between two solving: 10.249539136886597
+Time solving problem: 4.782359838485718
+Time for backtracking: 0.10197591781616211
+Sim iter,  11 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.2153486692342531
+Time before plotting sqp sol: 0.010495662689208984
+Time plotting sqp sol & save fig: 0.1454169750213623
+Time solving problem: 0.03524947166442871
+Time for backtracking: 0.10189676284790039
+Sim iter,  11 SQP iter,  1 Alpha,  0.6000000000000001 Max step size,  0.433690190057344
+Time before plotting sqp sol: 0.010826349258422852
+Time plotting sqp sol & save fig: 0.1439969539642334
+Time solving problem: 0.03413701057434082
+Time for backtracking: 0.10195398330688477
+Sim iter,  11 SQP iter,  2 Alpha,  0.6000000000000001 Max step size,  0.32035347257227387
+Time before plotting sqp sol: 0.010693788528442383
+Time plotting sqp sol & save fig: 0.16031122207641602
+Time solving problem: 0.03421449661254883
+Time for backtracking: 0.09758210182189941
+Sim iter,  11 SQP iter,  3 Alpha,  0.6000000000000001 Max step size,  0.24743329185497187
+Time before plotting sqp sol: 0.010147571563720703
+Time plotting sqp sol & save fig: 0.14105892181396484
+Time solving problem: 0.03271937370300293
+Time for backtracking: 0.11781740188598633
+Sim iter,  11 SQP iter,  4 Alpha,  0.5000000000000001 Max step size,  0.08630473219902729
+Time before plotting sqp sol: 0.011390924453735352
+Time plotting sqp sol & save fig: 0.1434919834136963
+Time solving problem: 0.03310084342956543
+Time for backtracking: 0.13134980201721191
+Sim iter,  11 SQP iter,  5 Alpha,  0.40000000000000013 Max step size,  0.029302182676168465
+Break at sqp iter 5, 
+
+
+Time before plotting sqp sol: 0.010680437088012695
+Time plotting sqp sol & save fig: 0.1494452953338623
+Time taken 6.553887128829956
+uncertainty:  [0.05952693]
+uncertainty:  [0.05887725]
+uncertainty:  [0.05887669]
+uncertainty:  [0.0588686]
+uncertainty:  [0.05895272]
+uncertainty:  [0.09614809]
+uncertainty:  [0.16875815]
+uncertainty:  [0.27945935]
+uncertainty:  [0.40841112]
+uncertainty:  [0.54845944]
+uncertainty:  [0.66995482]
+uncertainty:  [0.74606206]
+uncertainty:  [0.7748549]
+[32mReached: [-18.8549137  -14.79161154  -2.29686636] [-18.85876937 -14.85475533  -2.33222235] [0m
+Time for one step planner: 10.8721764087677
+Uncertainity at meas_loc [0.77801177]
+query_pts:  [[-18.85476173 -14.79111744]
+ [-18.85030782 -14.59954426]
+ [-18.84585391 -14.40797107]
+ [-18.84140001 -14.21639788]
+ [-18.8369461  -14.0248247 ]]
+query_meas:  [ 7.66499817e-01  5.74874863e-01  3.83249909e-01  1.91624954e-01
+ -1.77635684e-15]
+Uncertainity at meas_loc [0.05887286]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29760
+init_node 8444 goal_node 25520
+[32mGoal: [-18.72     -14.719999]  uncertainity: 100 [0m
+Time for finding next goal: 5.58017897605896
+[96mSolving Constrints[0m
+Time between two solving: 9.943820238113403
+Time solving problem: 4.987138748168945
+Time for backtracking: 0.0895686149597168
+Sim iter,  12 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.2944029694729231
+Time before plotting sqp sol: 0.009775876998901367
+Time plotting sqp sol & save fig: 0.1430833339691162
+Time solving problem: 0.04071664810180664
+Time for backtracking: 0.09520387649536133
+Sim iter,  12 SQP iter,  1 Alpha,  0.6000000000000001 Max step size,  0.2053755115043655
+Time before plotting sqp sol: 0.00958704948425293
+Time plotting sqp sol & save fig: 0.15785884857177734
+Time solving problem: 0.03043675422668457
+Time for backtracking: 0.07642626762390137
+Sim iter,  12 SQP iter,  2 Alpha,  0.7000000000000001 Max step size,  0.7692167386242545
+Time before plotting sqp sol: 0.008394241333007812
+Time plotting sqp sol & save fig: 0.14566707611083984
+Time solving problem: 0.034645795822143555
+Time for backtracking: 0.07689929008483887
+Sim iter,  12 SQP iter,  3 Alpha,  0.7000000000000001 Max step size,  0.4832335922444896
+Time before plotting sqp sol: 0.012439489364624023
+Time plotting sqp sol & save fig: 0.1459057331085205
+Time solving problem: 0.033225059509277344
+Time for backtracking: 0.09599137306213379
+Sim iter,  12 SQP iter,  4 Alpha,  0.6000000000000001 Max step size,  0.1438103170519215
+Time before plotting sqp sol: 0.012080907821655273
+Time plotting sqp sol & save fig: 0.14855504035949707
+Time solving problem: 0.0288393497467041
+Time for backtracking: 0.11277031898498535
+Sim iter,  12 SQP iter,  5 Alpha,  0.5000000000000001 Max step size,  0.050161038587695606
+Time before plotting sqp sol: 0.00854635238647461
+Time plotting sqp sol & save fig: 0.14690494537353516
+Time solving problem: 0.03197312355041504
+Time for backtracking: 0.11155533790588379
+Sim iter,  12 SQP iter,  6 Alpha,  0.5000000000000001 Max step size,  0.042576689553291414
+Time before plotting sqp sol: 0.009989738464355469
+Time plotting sqp sol & save fig: 0.14815211296081543
+Time solving problem: 0.031958818435668945
+Time for backtracking: 0.18929433822631836
+Sim iter,  12 SQP iter,  7 Alpha,  0.20000000000000015 Max step size,  0.000867338258226491
+Break at sqp iter 7, 
+
+
+Time before plotting sqp sol: 0.012142181396484375
+Time plotting sqp sol & save fig: 0.14850783348083496
+Time taken 7.336352348327637
+uncertainty:  [0.05887286]
+uncertainty:  [0.05854861]
+uncertainty:  [0.05855034]
+uncertainty:  [0.05855709]
+uncertainty:  [0.0586025]
+uncertainty:  [0.05911608]
+uncertainty:  [0.16527723]
+uncertainty:  [0.28879467]
+uncertainty:  [0.43446989]
+uncertainty:  [0.59036488]
+uncertainty:  [0.72635615]
+uncertainty:  [0.814959]
+uncertainty:  [0.86162761]
+[32mReached: [-18.68730928 -14.75358268  -2.63294477] [-18.75426844 -14.70823306  -2.56780896] [0m
+Time for one step planner: 11.907641887664795
+Uncertainity at meas_loc [0.86646194]
+query_pts:  [[-18.6869036  -14.75396404]
+ [-18.68100999 -14.57301048]
+ [-18.67511637 -14.39205692]
+ [-18.66922275 -14.21110336]
+ [-18.66332913 -14.0301498 ]]
+query_meas:  [ 7.24198043e-01  5.43148533e-01  3.62099022e-01  1.81049511e-01
+ -4.84057239e-14]
+Uncertainity at meas_loc [0.05926204]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29575
+init_node 8444 goal_node 25520
+[32mGoal: [-18.599998 -14.639999]  uncertainity: 100 [0m
+Time for finding next goal: 6.1333677768707275
+[96mSolving Constrints[0m
+Time between two solving: 10.769564867019653
+Time solving problem: 4.79520583152771
+Time for backtracking: 0.10313534736633301
+Sim iter,  13 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.3849470482357961
+Time before plotting sqp sol: 0.011137008666992188
+Time plotting sqp sol & save fig: 0.16409611701965332
+Time solving problem: 0.03469204902648926
+Time for backtracking: 0.12735748291015625
+Sim iter,  13 SQP iter,  1 Alpha,  0.5000000000000001 Max step size,  0.13426953042459105
+Time before plotting sqp sol: 0.012401580810546875
+Time plotting sqp sol & save fig: 0.17588567733764648
+Time solving problem: 0.04025387763977051
+Time for backtracking: 0.08824896812438965
+Sim iter,  13 SQP iter,  2 Alpha,  0.7000000000000001 Max step size,  0.33925502396168294
+Time before plotting sqp sol: 0.013627767562866211
+Time plotting sqp sol & save fig: 0.16715431213378906
+Time solving problem: 0.03563570976257324
+Time for backtracking: 0.1351609230041504
+Sim iter,  13 SQP iter,  3 Alpha,  0.5000000000000001 Max step size,  0.18590241492670012
+Time before plotting sqp sol: 0.016981124877929688
+Time plotting sqp sol & save fig: 0.1535327434539795
+Time solving problem: 0.039301156997680664
+Time for backtracking: 0.17250943183898926
+Sim iter,  13 SQP iter,  4 Alpha,  0.30000000000000016 Max step size,  0.01893527637477945
+Break at sqp iter 4, 
+
+
+Time before plotting sqp sol: 0.014822959899902344
+Time plotting sqp sol & save fig: 0.16557669639587402
+Time taken 6.468360185623169
+uncertainty:  [0.05926204]
+uncertainty:  [0.05908391]
+uncertainty:  [0.05908275]
+uncertainty:  [0.05906765]
+uncertainty:  [0.05882161]
+uncertainty:  [0.05941888]
+uncertainty:  [0.06953131]
+uncertainty:  [0.10012085]
+uncertainty:  [0.14642842]
+uncertainty:  [0.19798494]
+uncertainty:  [0.2261507]
+uncertainty:  [0.25180965]
+uncertainty:  [0.26033831]
+[32mReached: [-18.61860668 -14.70236241  -2.59955262] [-18.6488957  -14.70567336  -2.58591547] [0m
+Time for one step planner: 10.699293613433838
+Uncertainity at meas_loc [0.25987859]
+query_pts:  [[-18.61918411 -14.70272493]
+ [-18.6195812  -14.53450105]
+ [-18.61997828 -14.36627717]
+ [-18.62037537 -14.19805329]
+ [-18.62077245 -14.02982941]]
+query_meas:  [ 6.72897398e-01  5.04673049e-01  3.36448699e-01  1.68224350e-01
+ -8.99280650e-14]
+Uncertainity at meas_loc [0.05720577]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29495
+init_node 8444 goal_node 25520
+[32mGoal: [-18.56     -14.719999]  uncertainity: 100 [0m
+Time for finding next goal: 5.703460693359375
+[96mSolving Constrints[0m
+Time between two solving: 9.98379635810852
+Time solving problem: 4.97195291519165
+Time for backtracking: 0.0806276798248291
+Sim iter,  14 SQP iter,  0 Alpha,  0.7000000000000001 Max step size,  0.45866918984788885
+Time before plotting sqp sol: 0.011340141296386719
+Time plotting sqp sol & save fig: 0.16755890846252441
+Time solving problem: 0.03790163993835449
+Time for backtracking: 0.08884906768798828
+Sim iter,  14 SQP iter,  1 Alpha,  0.7000000000000001 Max step size,  0.22749991816470605
+Time before plotting sqp sol: 0.011093378067016602
+Time plotting sqp sol & save fig: 0.1558091640472412
+Time solving problem: 0.032764434814453125
+Time for backtracking: 0.11458349227905273
+Sim iter,  14 SQP iter,  2 Alpha,  0.5000000000000001 Max step size,  0.03385198782290055
+Break at sqp iter 2, 
+
+
+Time before plotting sqp sol: 0.009362936019897461
+Time plotting sqp sol & save fig: 0.15406107902526855
+Time taken 5.836754322052002
+uncertainty:  [0.05720577]
+uncertainty:  [0.05418455]
+uncertainty:  [0.05417471]
+uncertainty:  [0.05408324]
+uncertainty:  [0.05577918]
+uncertainty:  [0.06331927]
+uncertainty:  [0.07612218]
+uncertainty:  [0.09016667]
+uncertainty:  [0.09658118]
+uncertainty:  [0.0909404]
+uncertainty:  [0.0821659]
+uncertainty:  [0.07672615]
+uncertainty:  [0.07585582]
+[32mReached: [-18.63861906 -14.63991254  -2.28358543] [-18.600587   -14.69201871  -2.34613323] [0m
+Time for one step planner: 10.58721113204956
+Uncertainity at meas_loc [0.07597817]
+query_pts:  [[-18.64038033 -14.64095746]
+ [-18.63618785 -14.4888125 ]
+ [-18.63199536 -14.33666754]
+ [-18.62780288 -14.18452258]
+ [-18.6236104  -14.03237762]]
+query_meas:  [ 6.08810842e-01  4.56608132e-01  3.04405421e-01  1.52202711e-01
+ -2.55351296e-14]
+Uncertainity at meas_loc [0.04669239]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29487
+init_node 8444 goal_node 25520
+[32mGoal: [-18.56     -14.719999]  uncertainity: 100 [0m
+Time for finding next goal: 5.6865293979644775
+[96mSolving Constrints[0m
+Time between two solving: 10.489728927612305
+Time solving problem: 5.0067949295043945
+Time for backtracking: 0.10105514526367188
+Sim iter,  15 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.3267615633262292
+Time before plotting sqp sol: 0.01061105728149414
+Time plotting sqp sol & save fig: 0.16394257545471191
+Time solving problem: 0.031152009963989258
+Time for backtracking: 0.11260724067687988
+Sim iter,  15 SQP iter,  1 Alpha,  0.5000000000000001 Max step size,  0.11397443328818868
+Time before plotting sqp sol: 0.011951684951782227
+Time plotting sqp sol & save fig: 0.16388463973999023
+Time solving problem: 0.03640890121459961
+Time for backtracking: 0.16553926467895508
+Sim iter,  15 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.03869659958999144
+Break at sqp iter 2, 
+
+
+Time before plotting sqp sol: 0.015808820724487305
+Time plotting sqp sol & save fig: 0.17298412322998047
+Time taken 5.993652820587158
+uncertainty:  [0.04669239]
+uncertainty:  [0.04731224]
+uncertainty:  [0.04731983]
+uncertainty:  [0.04733037]
+uncertainty:  [0.04746897]
+uncertainty:  [0.0473708]
+uncertainty:  [0.04715491]
+uncertainty:  [0.04779627]
+uncertainty:  [0.04921096]
+uncertainty:  [0.05170396]
+uncertainty:  [0.05537413]
+uncertainty:  [0.05925375]
+uncertainty:  [0.06397007]
+[32mReached: [-18.67896138 -14.64128883  -2.13494196] [-18.61540108 -14.67899088  -2.21623157] [0m
+Time for one step planner: 10.40774416923523
+Uncertainity at meas_loc [0.06498529]
+query_pts:  [[-18.68010154 -14.64284314]
+ [-18.6806385  -14.4891574 ]
+ [-18.68117546 -14.33547167]
+ [-18.68171242 -14.18178593]
+ [-18.68224937 -14.0281002 ]]
+query_meas:  [ 6.14746690e-01  4.61060017e-01  3.07373345e-01  1.53686672e-01
+ -4.18332036e-13]
+Uncertainity at meas_loc [0.0444328]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29477
+init_node 8444 goal_node 25520
+[32mGoal: [-18.56     -14.719999]  uncertainity: 100 [0m
+Time for finding next goal: 5.734326601028442
+[96mSolving Constrints[0m
+Time between two solving: 10.203928709030151
+Time solving problem: 4.8895580768585205
+Time for backtracking: 0.10248923301696777
+Sim iter,  16 SQP iter,  0 Alpha,  0.6000000000000001 Max step size,  0.3121737447487477
+Time before plotting sqp sol: 0.010534524917602539
+Time plotting sqp sol & save fig: 0.18892621994018555
+Time solving problem: 0.034178733825683594
+Time for backtracking: 0.1428360939025879
+Sim iter,  16 SQP iter,  1 Alpha,  0.40000000000000013 Max step size,  0.04355448086735675
+Time before plotting sqp sol: 0.011483192443847656
+Time plotting sqp sol & save fig: 0.1665048599243164
+Time solving problem: 0.03671741485595703
+Time for backtracking: 0.14713454246520996
+Sim iter,  16 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.04092030586449913
+Time before plotting sqp sol: 0.014676570892333984
+Time plotting sqp sol & save fig: 0.17495298385620117
+Time solving problem: 0.038773298263549805
+Time for backtracking: 0.21453571319580078
+Sim iter,  16 SQP iter,  3 Alpha,  0.10000000000000014 Max step size,  0.0002306726745948673
+Break at sqp iter 3, 
+
+
+Time before plotting sqp sol: 0.00923919677734375
+Time plotting sqp sol & save fig: 0.18469691276550293
+Time taken 6.368434906005859
+uncertainty:  [0.0444328]
+uncertainty:  [0.0488189]
+uncertainty:  [0.04882064]
+uncertainty:  [0.04886945]
+uncertainty:  [0.04958804]
+uncertainty:  [0.05123324]
+uncertainty:  [0.05172356]
+uncertainty:  [0.05409248]
+uncertainty:  [0.05816876]
+uncertainty:  [0.06399961]
+uncertainty:  [0.06979718]
+uncertainty:  [0.07504272]
+uncertainty:  [0.08049324]
+[32mReached: [-18.7302091  -14.67503835  -1.99925019] [-18.62719778 -14.671882    -2.08988778] [0m
+Time for one step planner: 11.085362911224365
+Uncertainity at meas_loc [0.081361]
+query_pts:  [[-18.73121963 -14.67693556]
+ [-18.73256279 -14.51368693]
+ [-18.73390595 -14.35043829]
+ [-18.73524911 -14.18718966]
+ [-18.73659228 -14.02394103]]
+query_meas:  [6.53016627e-01 4.89762470e-01 3.26508313e-01 1.63254157e-01
+ 1.43218770e-14]
+Uncertainity at meas_loc [0.04839237]
+tensor(1.2566, dtype=torch.float64)
+Nodes in optimistic graph: 29466
+init_node 8444 goal_node 25520
+[32mGoal: [-18.56     -14.719999]  uncertainity: 100 [0m
+Time for finding next goal: 5.96820855140686
+[96mSolving Constrints[0m
+Time between two solving: 10.747185945510864
+Time solving problem: 4.977201223373413
+Time for backtracking: 0.12634801864624023
+Sim iter,  17 SQP iter,  0 Alpha,  0.5000000000000001 Max step size,  0.15694811866994351
+Time before plotting sqp sol: 0.011476755142211914
+Time plotting sqp sol & save fig: 0.18252062797546387
+Time solving problem: 0.030884265899658203
+Time for backtracking: 0.11716818809509277
+Sim iter,  17 SQP iter,  1 Alpha,  0.5000000000000001 Max step size,  0.13321756312705324
+Time before plotting sqp sol: 0.01201176643371582
+Time plotting sqp sol & save fig: 0.17639851570129395
+Time solving problem: 0.03546476364135742
+Time for backtracking: 0.1361408233642578
+Sim iter,  17 SQP iter,  2 Alpha,  0.40000000000000013 Max step size,  0.045230027032897135
+Time before plotting sqp sol: 0.011509418487548828
+Time plotting sqp sol & save fig: 0.17231202125549316
+Time solving problem: 0.03259468078613281
+Time for backtracking: 0.20496058464050293
+Sim iter,  17 SQP iter,  3 Alpha,  0.20000000000000015 Max step size,  0.0025496708998765105
+Break at sqp iter 3, 
+
+
+Time before plotting sqp sol: 0.012351512908935547
+Time plotting sqp sol & save fig: 0.18277382850646973
+Time taken 6.423565149307251
+uncertainty:  [0.04890366]
+uncertainty:  [0.05141641]
+uncertainty:  [0.05142626]
+uncertainty:  [0.05145507]
+uncertainty:  [0.05206591]
+uncertainty:  [0.05373633]
+uncertainty:  [0.05457665]
+uncertainty:  [0.05553642]
+uncertainty:  [0.05720003]
+uncertainty:  [0.05957997]
+uncertainty:  [0.06249168]
