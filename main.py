@@ -47,6 +47,10 @@ dir_project = os.path.abspath(os.path.dirname(__file__))
 import shutil
 if os.path.exists(os.path.join(dir_project, "sqp_sols")):
     shutil.rmtree(os.path.join(dir_project, "sqp_sols"))
+inner_loop_plot_path = os.path.join(dir_project, "inner_loop")
+if os.path.exists(inner_loop_plot_path):
+    shutil.rmtree(inner_loop_plot_path)
+os.makedirs(inner_loop_plot_path)
 
 # 1) Load the config file
 with open(dir_project + "/params/" + args.param + ".yaml") as file:
