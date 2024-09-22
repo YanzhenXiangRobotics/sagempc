@@ -30,34 +30,29 @@ def get_idx_from_grid(position, grid_V):
 
 
 def dynamics(x, u):
-    v, omega, theta, dT = u[0], u[1], x[2], u[-1]
-    K0 = torch.stack(
+    v, omega, theta, dT, dv, domega = x[3], x[4], x[2], u[-1], u[0], u[1]
+    f = x + np.stack(
         (
-            v * torch.cos(theta),
-            v * torch.sin(theta),
-            omega,
-            torch.tensor(1.0),
+            v
+            * (
+                np.cos(theta) / 6
+                + np.cos(theta + 0.5 * omega * dT) * 2 / 3
+                + np.cos(theta + omega * dT) / 6
+            )
+            * dT,
+            v
+            * (
+                np.sin(theta) / 6
+                + np.sin(theta + 0.5 * omega * dT) * 2 / 3
+                + np.sin(theta + omega * dT) / 6
+            )
+            * dT,
+            omega * dT,
+            dv,
+            domega,
+            dT,
         )
     )
-    K1 = torch.stack(
-        (
-            v * torch.cos(theta + 0.5 * dT * omega),
-            v * torch.sin(theta + 0.5 * dT * omega),
-            omega,
-            torch.tensor(1.0),
-        )
-    )
-    K2 = K1.clone()
-    K3 = torch.stack(
-        (
-            v * torch.cos(theta + dT * omega),
-            v * torch.sin(theta + dT * omega),
-            omega,
-            torch.tensor(1.0),
-        )
-    )
-
-    f = x + (dT / 6) * (K0 + 2 * K1 + 2 * K2 + K3)
     return f
 
 
@@ -149,7 +144,8 @@ class Agent(object):
         self.get_utility_minimizer = np.array(params["env"]["goal_loc"])
 
         self.state_sim = np.append(
-            np.array(params["env"]["start_loc"]), (params["env"]["start_angle"], 0.0)
+            np.array(params["env"]["start_loc"]),
+            (params["env"]["start_angle"], 0.0, 0.0, 0.0),
         )
 
     def get_gp_sensitivities(self, x_hat, bound, gp):
@@ -322,14 +318,10 @@ class Agent(object):
         self.update_current_location(state[: self.x_dim])
 
     def rollout(self, U):
-        print(f"Apply: {U}, \n Acceleration: {np.diff(U, axis=0)}")
+        # print(f"Apply: {U}, \n Acceleration: {np.diff(U, axis=0)}")
         for i in range(U.shape[0]):
-            self.state_sim = (
-                dynamics(torch.from_numpy(self.state_sim), torch.from_numpy(U[i, :]))
-                .detach()
-                .numpy()
-            )
-        self.update_current_state(self.state_sim[:-1])
+            self.state_sim = dynamics(self.state_sim, U[i, :])
+        self.update_current_state(self.state_sim[:3])
 
     def update_current_state_t(self, x_curr, t_curr):
         self.current_state = np.append(x_curr, t_curr)

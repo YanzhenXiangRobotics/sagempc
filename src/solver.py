@@ -319,8 +319,18 @@ class SEMPC_solver(object):
                     self.fig.savefig(
                         os.path.join("sqp_sols", f"sol_{sim_iter-1}_shifted.png")
                     )
-                    self.ax.set_xlim([self.x_curr[0] - 3.0, self.x_curr[0] + 3.0])
-                    self.ax.set_ylim([self.x_curr[1] - 3.0, self.x_curr[1] + 3.0])
+                    self.ax.set_xlim(
+                        [
+                            self.x_curr[0] - self.local_plot_radius,
+                            self.x_curr[0] + self.local_plot_radius,
+                        ]
+                    )
+                    self.ax.set_ylim(
+                        [
+                            self.x_curr[1] - self.local_plot_radius,
+                            self.x_curr[1] + self.local_plot_radius,
+                        ]
+                    )
                     self.fig.savefig(
                         os.path.join("sqp_sols", f"sol_{sim_iter-1}_final.png")
                     )
@@ -552,7 +562,7 @@ class SEMPC_solver(object):
                 self.fig.savefig(
                     os.path.join("sqp_sols", f"sol_{sim_iter}_{sqp_iter}.png")
                 )
-                if (sqp_iter == self.max_sqp_iter) or self.early_term:
+                if (sqp_iter == self.max_sqp_iter - 1) or self.early_term:
                     len_plot_tmps = len(self.plot_tmps)
                     len_scatter_tmps = len(self.scatter_tmps)
                     for _ in range(len_plot_tmps):

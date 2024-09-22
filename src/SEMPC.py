@@ -254,10 +254,6 @@ class SEMPC(Node):
             self.sempc_solver.plot_tmps.append(tmp_1)
             self.sempc_solver.scatter_tmps.append(tmp_2)
             self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
-            # self.env.fig.savefig("t.png")
-            # tmp_0.remove()
-            # tmp_1.pop(0).remove()
-            # tmp_2.set_visible(False)
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)
@@ -399,178 +395,12 @@ class SEMPC(Node):
                 )
             val = self.players[self.pl_idx].get_lb_at_curr_loc()
 
-        # if self.params["algo"]["strategy"] == "SEpessi":
-        #     w, xi_star = self.players[self.pl_idx].uncertainity_sampling(set="pessi")
-        #     self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        # elif self.params["algo"]["strategy"] == "SEopti":
-        #     w, xi_star = self.players[self.pl_idx].uncertainity_sampling(set="opti")
-        #     self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        # elif self.params["algo"]["strategy"] == "goose":
-        #     # Set the x_g which can be used in the distance cost function
-        #     xi_star = np.array([0.5, -1.6])
-        #     self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        # elif self.params["algo"]["strategy"] == "optiTraj":
-        #     xi_star = self.oracle()
-        #     self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        #     w=100
-        # else:
-        #     V_lower_Cx, V_upper_Cx = self.players[self.pl_idx].get_Cx_bounds(self.players[self.pl_idx].grid_V)
-        #     init_node = self.players[self.pl_idx].get_idx_from_grid(self.players[self.pl_idx].origin)
-        #     curr_node = self.players[self.pl_idx].get_idx_from_grid(torch.from_numpy(self.players[self.pl_idx].current_location))
-        #     self.players[self.pl_idx].update_optimistic_graph(V_upper_Cx-self.eps, init_node, self.q_th,  curr_node, Lc=0)
-        #     goal_node = self.players[self.pl_idx].get_idx_from_grid(torch.from_numpy(self.players[self.pl_idx].get_utility_minimizer))
-        #     self.visu.utility_minimizer = self.players[self.pl_idx].get_utility_minimizer
-        #     t1 = self.players[self.pl_idx].get_optimistic_path(curr_node.item(), goal_node.item())
-        #     t2 = self.players[self.pl_idx].get_optimistic_path(goal_node.item(), init_node.item())
-        #     opti_path = t1 + t2
-        #     self.visu.opti_path = self.players[self.pl_idx].grid_V[opti_path]
-        #     pessi_value = V_lower_Cx[opti_path]
-        #     idx_out_pessi = np.where(pessi_value < self.q_th)[0][0].item()
-        #     xi_star = self.players[self.pl_idx].grid_V[opti_path[idx_out_pessi]].numpy()
-        #     self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        #     w=100
-        # print(bcolors.green + "Goal:", xi_star ,  bcolors.ENDC)
-
-        # # 4) Initialize visu with 1st plot
-        # self.visu.UpdateIter(self.iter, -1)
-        # self.visu.UpdateObjectiveVisu(0, self.players, self.env, 0)
-        # self.visu.UpdateSafeVisu(0, self.players, self.env)
-        # # self.visu.UpdateDynVisu(0, self.players)
-        # self.visu.writer_gp.grab_frame()
-        # # self.visu.writer_dyn.grab_frame()
-        # # self.visu.f_handle["dyn"].savefig("temp1D.png")
-        # self.visu.f_handle["gp"].savefig('temp in prog2.png')
-
-        # 3) Set termination criteria
         self.max_density_sigma = sum(
             [player.max_density_sigma for player in self.players]
         )
         self.data["sum_max_density_sigma"] = []
         self.data["sum_max_density_sigma"].append(self.max_density_sigma)
         print(self.iter, self.max_density_sigma)
-
-    def oracle(self):
-        """_summary_ Setup and solve the oracle MPC problem
-
-        Args:
-            players (_type_): _description_
-            init_safe (_type_): _description_
-
-        Returns:
-            _type_: Goal location for the agent
-        """
-        # x_curr = self.players[self.pl_idx].current_location[0][0].reshape(
-        #     1).numpy()
-        # x_origin = self.players[self.pl_idx].origin[:self.x_dim].numpy()
-        # lbx = np.zeros(self.state_dim+1)
-        # # lbx[:self.x_dim] = np.ones(self.x_dim)*x_origin
-        # lbx[:self.x_dim] = np.ones(self.x_dim)*self.players[self.pl_idx].current_location.reshape(-1)
-        # ubx = lbx.copy()
-        # self.oracle_solver.ocp_solver.set(0, "lbx", lbx.copy())
-        # self.oracle_solver.ocp_solver.set(0, "ubx", ubx.copy())
-        # # self.oracle_solver.ocp_solver.set(self.H, "lbx", lbx.copy() - 1)
-        # # self.oracle_solver.ocp_solver.set(self.H, "ubx", ubx.copy() + 1)
-
-        # Write in MPC style to reach the goal. The main loop is outside
-        # reachability constraint
-        x_curr = self.players[self.pl_idx].current_state[: self.x_dim * 2].reshape(4)
-        x_origin = self.players[self.pl_idx].origin[: self.x_dim].numpy()
-        if torch.is_tensor(x_curr):
-            x_curr = x_curr.numpy()
-        st_curr = np.zeros(self.state_dim + 1)
-        st_curr[: self.x_dim * 2] = np.ones(self.x_dim * 2) * x_curr
-        self.oracle_solver.ocp_solver.set(0, "lbx", st_curr)
-        self.oracle_solver.ocp_solver.set(0, "ubx", st_curr)
-
-        # returnability constraint
-        st_origin = np.zeros(self.state_dim + 2)
-        st_origin[: self.x_dim] = np.ones(self.x_dim) * x_origin
-        st_origin[-1] = 1.0
-        st_origin[-2] = math.pi
-        self.oracle_solver.ocp_solver.set(self.H, "lbx", st_origin)
-        self.oracle_solver.ocp_solver.set(self.H, "ubx", st_origin)
-
-        self.oracle_solver.solve(self.players[self.pl_idx])
-        # highest uncertainity location in safe
-        X, U = self.oracle_solver.get_solution()
-        # print(X, U)
-        self.players[self.pl_idx].update_oracle_XU(X, U)
-        xi_star = X[int(self.H / 2), : self.x_dim]
-        if self.x_dim == 1:
-            xi_star = torch.Tensor([xi_star.item(), -2.0]).reshape(2)
-        # self.players[self.pl_idx].set_maximizer_goal(xi_star)
-        # print(bcolors.green + "Goal:", xi_star ,  bcolors.ENDC)
-
-        # plt.plot(X[:,0],X[:,1])
-        # plt.savefig("temp.png")
-        # save status to the player also its goal location, may be ignote the dict concept now
-        # associate_dict, pessi_associate_dict, acq_density = oracle(
-        #     self, players, init_safe, self.params)
-        # return associate_dict, pessi_associate_dict, acq_density
-        return xi_star
-
-    def receding_horizon(self, player):
-        # diff = (player.planned_measure_loc[0] -
-        #         player.current_location[0][0]).numpy()
-        diff = np.array([100])
-        temp_iter = 0
-        while np.abs(diff.item()) > 1.0e-3 and temp_iter < 50:
-            self.iter += 1
-            temp_iter += 1
-            self.visu.UpdateIter(self.iter, -1)
-            print(bcolors.OKCYAN + "Solving Constrints" + bcolors.ENDC)
-
-            # Write in MPC style to reach the goal. The main loop is outside
-            x_curr = self.players[self.pl_idx].current_location[0][0].reshape(1).numpy()
-            x_origin = self.players[self.pl_idx].origin[0].reshape(1).numpy()
-            self.sempc_solver.ocp_solver.set(0, "lbx", x_curr)
-            self.sempc_solver.ocp_solver.set(0, "ubx", x_curr)
-            self.sempc_solver.ocp_solver.set(self.H, "lbx", x_origin)
-            self.sempc_solver.ocp_solver.set(self.H, "ubx", x_origin)
-
-            # warmstart
-            # if self.flag_new_goal:
-            #     optim.setwarmstartparam(
-            #         player.obj_optim.getx(), player.obj_optim.getu())
-            # else:
-            #     optim.setwarmstartparam(
-            #         player.optim_getx, player.optim_getu)
-
-            # set objective as per desired goal
-            self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
-            X, U, Sl = self.oracle_solver.get_solution()
-
-            # integrator
-            self.env.integrator.set("x", x_curr)
-            self.env.integrator.set("u", U[0])
-            self.env.integrator.solve()
-            x_next = self.env.integrator.get("x")
-            self.players[self.pl_idx].update_current_location(
-                torch.Tensor([x_next.item(), -2.0]).reshape(-1, 2)
-            )
-            diff = X[int(self.H / 2)] - x_curr
-            print(x_curr, " ", diff)
-            # self.visu.UpdateIter(self.iter, -1)
-            # self.visu.UpdateSafeVisu(0, self.players, self.env)
-            # # pt_se_dyn = self.visu.plot_SE_traj(
-            # #     optim, player, fig_dyn, pt_se_dyn)
-            # self.visu.writer_gp.grab_frame()
-            # self.visu.writer_dyn.grab_frame()
-            # self.visu.f_handle["dyn"].savefig("temp1D.png")
-            # self.visu.f_handle["gp"].savefig(
-            #     str(self.iter) + 'temp in prog2.png')
-            # print(self.iter, " ", diff, " cost ",
-            #       self.sempc_solver.ocp_solver.get_cost())
-
-        # set current location as the location to be measured
-        self.players[self.pl_idx].safe_meas_loc = player.current_location
-        goal_dist = (
-            player.planned_measure_loc[0] - player.current_location[0][0]
-        ).numpy()
-        if np.abs(goal_dist.item()) < 1.0e-2:
-            self.flag_reached_xt_goal = True
-        self.prev
-        # apply this input to your environment
 
     def get_current_state_measurement(self):
         try:
@@ -618,34 +448,6 @@ class SEMPC(Node):
         elif angle < -math.pi:
             angle += 2 * math.pi
         return angle
-
-    def _compute_pid_error(self, x_desire):
-        error_pos_global = x_desire - self.x_curr[: self.x_dim]
-        actual_angle = self._angle_helper(self.x_curr[-1])
-        # actual_angle = self.x_curr[-1]
-        R = np.array(
-            [
-                [np.cos(actual_angle), -np.sin(actual_angle)],
-                [np.sin(actual_angle), np.cos(actual_angle)],
-            ]
-        )
-        error_pos_robot = R.T @ error_pos_global
-        error_angle = np.arctan2(error_pos_robot[1], error_pos_robot[0])
-        if error_angle < -0.5 * math.pi:
-            error_angle += math.pi
-        elif error_angle > 0.5 * math.pi:
-            error_angle -= math.pi
-        return error_pos_robot, error_angle
-
-    # def _pos_pid_ctrl(self, error_pos_x, last_error_pos_x):
-    #     return 5.0 * error_pos_x + 5.0 * (error_pos_x - last_error_pos_x)
-
-    # def _angle_pid_ctrl(self, error_angle, last_error_angle):
-    #     return 1.0 * error_angle + 0.5 * (error_angle - last_error_angle)
-
-    def LoS_control(self, path):
-        self.get_current_state_measurement()
-        dist_to_ref = np.linalg.norm(self.x_curr[: self.x_dim] - path, axis=-1)
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
@@ -698,18 +500,7 @@ class SEMPC(Node):
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
-        # self.sempc_solver.ocp_solver.acados_ocp.constraints.x0 =x_curr x_curr.copy()
-        if self.params["algo"]["type"] == "MPC_Xn":
-            pass
-            # st_lb = np.zeros(self.state_dim+1)
-            # st_ub = np.zeros(self.state_dim+1)
-            # st_lb[:self.x_dim] = -np.ones(self.x_dim)*100
-            # st_ub[:self.x_dim] = np.ones(self.x_dim)*100
-            # st_lb[-1] = 1.0
-            # st_ub[-1] = 1.0
-            # self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
-            # self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
-        elif self.params["algo"]["type"] == "MPC_V0" or (
+        if self.params["algo"]["type"] == "MPC_V0" or (
             self.params["algo"]["type"] == "MPC_expander_V0"
         ):
             if self.params["agent"]["dynamics"] == "nova_carter":
@@ -717,8 +508,6 @@ class SEMPC(Node):
                 st_ub = np.zeros(2 * self.x_dim + 1)
                 st_lb[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_min"])
                 st_ub[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_max"])
-                # st_lb[:self.x_dim] = -np.ones(self.x_dim)*100
-                # st_ub[:self.x_dim] = np.ones(self.x_dim)*100
             else:
                 st_lb = np.zeros(self.state_dim + 1)
                 st_ub = np.zeros(self.state_dim + 1)
@@ -832,17 +621,7 @@ class SEMPC(Node):
                     f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.ref_tracker.set_ref_path(X[: self.Hm, : self.x_dim].tolist())
-                # U_cl = np.zeros((self.Hm, self.x_dim))
-                last_v_omega = np.zeros(self.x_dim)
-                for k in range(self.Hm):
-                    x0 = self.players[self.pl_idx].state_sim[:self.state_dim]
-                    x0 = np.concatenate((x0, last_v_omega))
-                    u = self.ref_tracker.solve_for_x0(x0)
-                    u = np.append(u, self.ref_tracker.dt)
-                    self.players[self.pl_idx].rollout(u.reshape(1, -1))
-                    last_v_omega = u[:self.x_dim]
-                    self.ref_tracker.ref_path.pop(0)
+                self.inner_loop_control(X, x_curr)
                 # ref_path_msg = Float64MultiArray()
                 # ref_path_msg.data = (
                 #     np.concatenate(
@@ -943,6 +722,50 @@ class SEMPC(Node):
         # self.prev_goal_dist = goal_dist
         # apply this input to your environment
         self.sim_iter += 1
+
+    def inner_loop_control(self, X, x_curr):
+        self.ref_tracker.set_ref_path(X[: self.Hm, : self.x_dim].tolist())
+        # U_cl = np.zeros((self.Hm, self.x_dim))
+
+        sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black")
+        for k in range(self.Hm):
+            x0 = self.players[self.pl_idx].state_sim[:-1]
+            print(f"x cl: {x0}")
+            X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
+            self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
+            self.ref_tracker.ref_path.pop(0)
+            if self.sempc_solver.debug:
+                curr_loc_plot = self.env.ax.scatter(
+                    x0[0],
+                    x0[1],
+                    c="green",
+                    marker="*",
+                    s=150,
+                )
+                inner_loop_plot = self.env.ax.plot(
+                    X_inner[:, 0],
+                    X_inner[:, 1],
+                    c="blue",
+                    marker="x",
+                )
+                self.env.ax.set_xlim(
+                    [
+                        x_curr[0] - self.sempc_solver.local_plot_radius / 3,
+                        x_curr[0] + self.sempc_solver.local_plot_radius / 3,
+                    ]
+                )
+                self.env.ax.set_ylim(
+                    [
+                        x_curr[1] - self.sempc_solver.local_plot_radius / 3,
+                        x_curr[1] + self.sempc_solver.local_plot_radius / 3,
+                    ]
+                )
+                self.env.fig.savefig(
+                    os.path.join("inner_loop", f"inner_loop_{self.sim_iter}_{k}.png")
+                )
+                inner_loop_plot.pop(0).remove()
+                curr_loc_plot.set_visible(False)
+        sagempc_sol_plot.pop(0).remove()
 
     def not_reached_and_prob_feasible(self):
         """_summary_ The agent safely explores and either reach goal or remove it from safe set

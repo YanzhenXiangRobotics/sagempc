@@ -61,65 +61,75 @@ class MPCRefTracker:
         self.setup_cost()
         self.setup_constraints()
         self.setup_solver_options()
-        self.lbx_end = np.append(
-            params["optimizer"]["x_min"][: self.x_dim], np.zeros(self.x_dim)
+        self.lbx_end = np.concatenate(
+            (
+                params["optimizer"]["x_min"][: self.x_dim],
+                np.zeros(self.x_dim),
+                np.array([0.0]),
+            )
         )
-        self.ubx_end = np.append(
-            params["optimizer"]["x_max"][: self.x_dim], np.zeros(self.x_dim)
+        self.ubx_end = np.concatenate(
+            (
+                params["optimizer"]["x_max"][: self.x_dim],
+                np.zeros(self.x_dim),
+                np.array([params["optimizer"]["Tf"]]),
+            )
         )
 
     def setup_dynamics(self):
         self.x_dim, self.u_dim = 2, 2
         self.state_dim = self.x_dim + 1
 
-        x = ca.SX.sym("x", 5)
-        u = ca.SX.sym("u", 2)
+        x = ca.SX.sym("x", 6)
+        u = ca.SX.sym("u", 3)
         self.ocp.model.x, self.ocp.model.u = x, u
 
-        self.dt = params["optimizer"]["dt"]
-        v, omega, dv, domega, theta = (
-            x[3],
-            x[4],
-            u[0],
-            u[1],
-            x[2],
-        )
+        v, omega, dv, domega, theta, dT = (x[3], x[4], u[0], u[1], x[2], u[-1])
         self.ocp.model.disc_dyn_expr = x + ca.vertcat(
             v
             * (
                 ca.cos(theta) / 6
-                + ca.cos(theta + 0.5 * omega * self.dt) * 2 / 3
-                + ca.cos(theta + omega * self.dt) / 6
+                + ca.cos(theta + 0.5 * omega * dT) * 2 / 3
+                + ca.cos(theta + omega * dT) / 6
             )
-            * self.dt,
+            * dT,
             v
             * (
                 ca.sin(theta) / 6
-                + ca.sin(theta + 0.5 * omega * self.dt) * 2 / 3
-                + ca.sin(theta + omega * self.dt) / 6
+                + ca.sin(theta + 0.5 * omega * dT) * 2 / 3
+                + ca.sin(theta + omega * dT) / 6
             )
-            * self.dt,
-            omega * self.dt,
+            * dT,
+            omega * dT,
             dv,
             domega,
+            dT,
         )
 
     def setup_constraints(self):
-        self.ocp.constraints.lbx = np.array(params["optimizer"]["x_min"])
-        self.ocp.constraints.ubx = np.array(params["optimizer"]["x_max"])
-        self.ocp.constraints.idxbx = np.array([0, 1, 3, 4])
+        self.ocp.constraints.lbx = np.append(
+            np.array(params["optimizer"]["x_min"]), 0.0
+        )
+        self.ocp.constraints.ubx = np.append(
+            np.array(params["optimizer"]["x_max"]), params["optimizer"]["Tf"]
+        )
+        self.ocp.constraints.idxbx = np.array([0, 1, 3, 4, 5])
 
         self.ocp.constraints.x0 = np.append(
-            np.array(self.ref_path[0]), np.array([0.0, 0.0])
+            np.array(self.ref_path[0]), np.array([0.0, 0.0, 0.0])
         )
 
         self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
         self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
-        self.ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
-        self.ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
-        self.ocp.constraints.idxbu = np.arange(self.u_dim)
+        self.ocp.constraints.lbu = np.append(
+            np.array(params["optimizer"]["u_min"]), params["optimizer"]["dt"]
+        )
+        self.ocp.constraints.ubu = np.append(
+            np.array(params["optimizer"]["u_max"]), params["optimizer"]["Tf"]
+        )
+        self.ocp.constraints.idxbu = np.arange(self.u_dim + 1)
 
     def setup_cost(self):
         x_ref = ca.SX.sym("x_ref", self.x_dim)
@@ -151,7 +161,9 @@ class MPCRefTracker:
         self.ocp.solver_options.nlp_solver_ext_qp_res = 1
         self.ocp.solver_options.nlp_solver_type = "SQP_RTI"
 
-        self.ocp_solver = AcadosOcpSolver(self.ocp, json_file="inner_loop_acados_ocp_sempc.json")
+        self.ocp_solver = AcadosOcpSolver(
+            self.ocp, json_file="inner_loop_acados_ocp_sempc.json"
+        )
 
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
@@ -161,8 +173,8 @@ class MPCRefTracker:
                 self.ocp_solver.set(k, "p", np.array(self.ref_path[-1]))
 
     def get_solution(self):
-        X = np.zeros((self.H + 1, self.state_dim + self.x_dim))
-        U = np.zeros((self.H, self.u_dim))
+        X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
+        U = np.zeros((self.H, self.u_dim + 1))
         for k in range(self.H):
             X[k, :] = self.ocp_solver.get(k, "x")
             U[k, :] = self.ocp_solver.get(k, "u")
@@ -175,8 +187,8 @@ class MPCRefTracker:
         self.solver_set_ref_path()
         status = self.ocp_solver.solve()
 
-        self.ocp_solver.set(0, "lbx", x0)
-        self.ocp_solver.set(0, "ubx", x0)
+        self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
+        self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
         self.ocp_solver.set(self.H - 1, "lbx", self.lbx_end)
         self.ocp_solver.set(self.H - 1, "ubx", self.ubx_end)
 
@@ -185,7 +197,7 @@ class MPCRefTracker:
 
         X, U = self.get_solution()
 
-        return X[1, 3:]
+        return X, U
 
     def update_ref_path(self, new_ref_path):
         self.ref_path += new_ref_path
