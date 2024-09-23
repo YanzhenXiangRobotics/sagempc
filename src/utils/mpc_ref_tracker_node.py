@@ -137,7 +137,7 @@ class MPCRefTracker:
         self.ocp.model.p = ca.vertcat(x_ref, w)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.eye(x_ref.shape[0])
+        Q = np.diag([1.0, 1.0, 1.0, 0.1, 0.1, 1.0])
         self.w_terminal = 1.0
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
