@@ -31,6 +31,7 @@ HOST = "127.0.0.1"
 PORT = 65432
 
 from src.utils.mpc_ref_tracker_node import MPCRefTracker
+from src.agent import dynamics
 
 
 class SEMPC(Node):
@@ -620,8 +621,8 @@ class SEMPC(Node):
                 print(
                     f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
-                self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.inner_loop_control(X, x_curr)
+                # self.players[self.pl_idx].update_current_state(X[self.Hm])
+                self.inner_loop_control(X, U, x_curr)
                 # ref_path_msg = Float64MultiArray()
                 # ref_path_msg.data = (
                 #     np.concatenate(
@@ -723,16 +724,20 @@ class SEMPC(Node):
         # apply this input to your environment
         self.sim_iter += 1
 
-    def inner_loop_control(self, X, x_curr):
+    def inner_loop_control(self, X, U, x_curr):
         self.ref_tracker.set_ref_path(X[: self.Hm, : self.x_dim].tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
         sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black")
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim[:-1]
-            print(f"x cl: {x0}")
+            # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
+            # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
+            # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
+            # print("Err 2: ", X[k + 1, :] - self.players[self.pl_idx].state_sim)
+            # print("Pos 2: ", self.players[self.pl_idx].state_sim)
             self.ref_tracker.ref_path.pop(0)
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(

@@ -133,18 +133,20 @@ class MPCRefTracker:
 
     def setup_cost(self):
         x_ref = ca.SX.sym("x_ref", self.x_dim)
-        self.ocp.model.p = x_ref
+        w = ca.SX.sym("w", 1)
+        self.ocp.model.p = ca.vertcat(x_ref, w)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
         Q = np.eye(self.x_dim)
+        self.w_terminal = 1e3
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
-        self.ocp.model.cost_expr_ext_cost = (
+        self.ocp.model.cost_expr_ext_cost = w * (
             (self.ocp.model.x[: self.x_dim] - x_ref).T
             @ Q
             @ (self.ocp.model.x[: self.x_dim] - x_ref)
         )
-        self.ocp.model.cost_expr_ext_cost_e = (
+        self.ocp.model.cost_expr_ext_cost_e = 0.0 * (
             (self.ocp.model.x[: self.x_dim] - x_ref).T
             @ Q
             @ (self.ocp.model.x[: self.x_dim] - x_ref)
@@ -167,10 +169,13 @@ class MPCRefTracker:
 
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
+            w = self.w_terminal if k == 2 else 0.0 
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
+                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), w))
             else:
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[-1]))
+                self.ocp_solver.set(
+                    k, "p", np.append(np.array(self.ref_path[-1]), w)
+                )
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
@@ -179,7 +184,7 @@ class MPCRefTracker:
             X[k, :] = self.ocp_solver.get(k, "x")
             U[k, :] = self.ocp_solver.get(k, "u")
         X[-1, :] = self.ocp_solver.get(self.H, "x")
-        print(f"X: {X}, U: {U}")
+        # print(f"X: {X}, U: {U}")
         return X, U
 
     def solve_for_x0(self, x0):
