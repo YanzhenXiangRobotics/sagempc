@@ -55,7 +55,9 @@ class MPCRefTracker:
         self.ocp.model.name = "nova_carter_discrete_Lc_inner_loop"
         self.H = params["optimizer"]["Hm"]
         self.ref_path = [
-            params_additional["start_loc"] + [params["env"]["start_angle"]]
+            params_additional["start_loc"]
+            + [params["env"]["start_angle"]]
+            + [0.0, 0.0, 0.0]
         ]
         self.setup_dynamics()
         self.setup_cost()
@@ -115,16 +117,14 @@ class MPCRefTracker:
         )
         self.ocp.constraints.idxbx = np.array([0, 1, 3, 4, 5])
 
-        self.ocp.constraints.x0 = np.append(
-            np.array(self.ref_path[0]), np.array([0.0, 0.0, 0.0])
-        )
+        self.ocp.constraints.x0 = np.array(self.ref_path[0])
 
         self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
         self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
         self.ocp.constraints.lbu = np.append(
-            np.array(params["optimizer"]["u_min"]), params["optimizer"]["dt"]
+            np.array(params["optimizer"]["u_min"]), 0.0
         )
         self.ocp.constraints.ubu = np.append(
             np.array(params["optimizer"]["u_max"]), params["optimizer"]["Tf"]
@@ -132,24 +132,20 @@ class MPCRefTracker:
         self.ocp.constraints.idxbu = np.arange(self.u_dim + 1)
 
     def setup_cost(self):
-        x_ref = ca.SX.sym("x_ref", self.x_dim)
+        x_ref = ca.SX.sym("x_ref", self.state_dim + self.x_dim + 1)
         w = ca.SX.sym("w", 1)
         self.ocp.model.p = ca.vertcat(x_ref, w)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.eye(self.x_dim)
-        self.w_terminal = 1e3
+        Q = np.eye(x_ref.shape[0])
+        self.w_terminal = 1.0
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w * (
-            (self.ocp.model.x[: self.x_dim] - x_ref).T
-            @ Q
-            @ (self.ocp.model.x[: self.x_dim] - x_ref)
+            (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
-        self.ocp.model.cost_expr_ext_cost_e = 0.0 * (
-            (self.ocp.model.x[: self.x_dim] - x_ref).T
-            @ Q
-            @ (self.ocp.model.x[: self.x_dim] - x_ref)
+        self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
+            (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
 
     def setup_solver_options(self):
@@ -169,12 +165,11 @@ class MPCRefTracker:
 
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
-            w = self.w_terminal if k == 2 else 0.0 
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), w))
+                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), 1.0))
             else:
                 self.ocp_solver.set(
-                    k, "p", np.append(np.array(self.ref_path[-1]), w)
+                    k, "p", np.append(np.array(self.ref_path[-1]), self.w_terminal)
                 )
 
     def get_solution(self):
@@ -188,17 +183,22 @@ class MPCRefTracker:
         return X, U
 
     def solve_for_x0(self, x0):
-        self.ocp_solver.options_set("rti_phase", 1)
-        self.solver_set_ref_path()
-        status = self.ocp_solver.solve()
+        for i in range(20):
+            self.ocp_solver.options_set("rti_phase", 1)
+            self.solver_set_ref_path()
+            status = self.ocp_solver.solve()
 
-        self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
-        self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
-        self.ocp_solver.set(self.H - 1, "lbx", self.lbx_end)
-        self.ocp_solver.set(self.H - 1, "ubx", self.ubx_end)
+            self.ocp_solver.set(0, "lbx", x0)
+            self.ocp_solver.set(0, "ubx", x0)
+            self.ocp_solver.set(self.H - 1, "lbx", self.lbx_end)
+            self.ocp_solver.set(self.H - 1, "ubx", self.ubx_end)
 
-        self.ocp_solver.options_set("rti_phase", 2)
-        status = self.ocp_solver.solve()
+            self.ocp_solver.options_set("rti_phase", 2)
+
+            status = self.ocp_solver.solve()
+            print(
+                f"SQP iter: {i}, Cost: {self.ocp_solver.get_cost()}, Res: {self.ocp_solver.get_residuals()}"
+            )
 
         X, U = self.get_solution()
 
