@@ -622,7 +622,7 @@ class SEMPC(Node):
                     f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
                 # self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.inner_loop_control(X, U, x_curr)
+                self.inner_loop_control(X, x_curr)
                 # ref_path_msg = Float64MultiArray()
                 # ref_path_msg.data = (
                 #     np.concatenate(
@@ -724,13 +724,15 @@ class SEMPC(Node):
         # apply this input to your environment
         self.sim_iter += 1
 
-    def inner_loop_control(self, X, U, x_curr):
-        self.ref_tracker.set_ref_path(X[: self.Hm, : self.x_dim].tolist())
+    def inner_loop_control(self, X, x_curr):
+        self.ref_tracker.set_ref_path(X[: self.Hm, :].tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
         sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black")
+        t_sim = self.players[self.pl_idx].state_sim[-1].copy()
         for k in range(self.Hm):
-            x0 = self.players[self.pl_idx].state_sim[:-1]
+            x0 = self.players[self.pl_idx].state_sim.copy()
+            x0[-1] -= t_sim
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))

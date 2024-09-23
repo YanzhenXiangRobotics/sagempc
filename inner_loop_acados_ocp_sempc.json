@@ -59,7 +59,7 @@
         "lbu": [
             -0.1,
             -0.2,
-            0.035
+            0.0
         ],
         "lbx": [
             -21.8,
@@ -198,7 +198,7 @@
         "nh": 0,
         "nh_0": 0,
         "nh_e": 0,
-        "np": 3,
+        "np": 7,
         "nphi": 0,
         "nphi_0": 0,
         "nphi_e": 0,
@@ -243,12 +243,12 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaabaaaaaaahhegbaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbd",
-        "cost_expr_ext_cost_0": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaabaaaaaaahhegbaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbd",
+        "cost_expr_ext_cost": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaabaaaaaaahhegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfcdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfcdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfddegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfddeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfedegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfedeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpffdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpffd",
+        "cost_expr_ext_cost_0": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegdaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaabaaaaaaahhegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfcdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfcdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfddegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfddeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfedegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfedeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpffdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpffd",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
-        "cost_expr_ext_cost_e": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegmcaaaaaaaaaaaaaaad",
+        "cost_expr_ext_cost_e": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaegfaaaaaaaaaaaaaaabaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaegbaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfcdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfcdeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfddegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfddeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpfedegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfedeglaaaaaaaaaaaaaaaegcaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaadaaaaaaaihpffdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpffd",
         "cost_psi_expr": null,
         "cost_psi_expr_0": null,
         "cost_psi_expr_e": null,
@@ -272,7 +272,7 @@
         },
         "name": "nova_carter_discrete_Lc_inner_loop",
         "nu_original": null,
-        "p": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaeghaaaaaaaaaaaaaaadaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaacaaaaaaaaaaaaaaadaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbdegpcaaaaaaaaaaaaaabaaaaaaahh",
+        "p": "jhpnnagiieahaaaadaaaaaaaaaaaaaaaaaeglaaaaaaaaaaaaaaahaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaahaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaacaaaaaaaaaaaaaaadaaaaaaaaaaaaaaaeaaaaaaaaaaaaaaafaaaaaaaaaaaaaaagaaaaaaaaaaaaaaahaaaaaaaaaaaaaaaegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfadegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfbdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfcdegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfddegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpfedegpcaaaaaaaaaaaaaahaaaaaaaihpfchfgggpffdegpcaaaaaaaaaaaaaabaaaaaaahh",
         "t": [],
         "t0": null,
         "t_label": "t",
@@ -285,6 +285,10 @@
     },
     "name": "nova_carter_discrete_Lc_inner_loop",
     "parameter_values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0
