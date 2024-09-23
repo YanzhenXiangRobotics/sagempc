@@ -82,9 +82,12 @@ class SEMPC_solver(object):
     def update_x_curr(self, x_curr):
         self.x_curr = x_curr
 
-    def initilization(self, sqp_iter):
-        x_h = self.last_X.copy()
-        u_h = self.last_U.copy()
+    def initilization(self, sqp_iter, x_h, u_h):
+        for stage in range(self.H):
+            # current stage values
+            x_h[stage, :] = self.ocp_solver.get(stage, "x")
+            u_h[stage, :] = self.ocp_solver.get(stage, "u")
+        x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
         if sqp_iter == 0:
             x_h_old = x_h.copy()
             u_h_old = u_h.copy()
@@ -274,6 +277,15 @@ class SEMPC_solver(object):
         return self.time_ckp
 
     def solve(self, player, sim_iter):
+        x_h = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
+        if (
+            self.params["algo"]["type"] == "ret_expander"
+            or self.params["algo"]["type"] == "MPC_expander"
+            or self.params["algo"]["type"] == "MPC_expander_V0"
+        ):
+            u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
+        else:
+            u_h = np.zeros((self.H, self.x_dim + 1))  # u_dim
         self.log_duration("Time between two solving")
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
@@ -298,7 +310,7 @@ class SEMPC_solver(object):
                         self.plot_sqp_sol(sqp_iter, self.last_X, c="orange")
                         self.plot_3D(player)
             self.ocp_solver.options_set("rti_phase", 1)
-            x_h, u_h = self.initilization(sqp_iter)
+            x_h, u_h = self.initilization(sqp_iter, x_h, u_h)
             if self.debug:
                 if sqp_iter == 0:
                     self.plot_sqp_sol(sqp_iter, x_h, u_h[self.Hm, -self.x_dim :])
