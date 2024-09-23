@@ -499,6 +499,7 @@ class SEMPC(Node):
             x_curr = x_curr.numpy()
         st_curr = np.zeros(self.state_dim + self.x_dim + 1)  # 4
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
+        print(f"St curr: {st_curr}")
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
         if self.params["algo"]["type"] == "MPC_V0" or (
@@ -619,7 +620,7 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 print(
-                    f"X_first_half: {X[:self.Hm, 3:5]}, \n U_first_half: {U[:self.Hm, :3]}"
+                    f"X_first_half: {X[:self.Hm, :]}, \n U_first_half: {U[:self.Hm, :3]}"
                 )
                 # self.players[self.pl_idx].update_current_state(X[self.Hm])
                 self.inner_loop_control(X, x_curr)
@@ -662,6 +663,7 @@ class SEMPC(Node):
                 )
             )
         else:
+            print(f"Red dot loc: {x_curr}")
             self.env.legend_handles.append(
                 self.env.ax.scatter(
                     x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
