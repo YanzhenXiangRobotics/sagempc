@@ -59,6 +59,8 @@ class MPCRefTracker:
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
+        self.w_terminal = 10.0
+        self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.setup_dynamics()
         self.setup_cost()
         self.setup_constraints()
@@ -137,7 +139,7 @@ class MPCRefTracker:
         self.ocp.model.p = ca.vertcat(x_ref, w)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag([1e3, 1e3, 1.0, 0.1, 0.1, 1e3])
+        Q = np.diag([1.0, 1.0, 1.0, 0.5, 0.5, 1.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w * (
@@ -166,12 +168,14 @@ class MPCRefTracker:
         )
 
     def solver_set_ref_path(self):
+        w = 1.0
         for k in range(self.H + 1):
+            w += 0.1
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), 1.0))
+                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), w))
             else:
                 self.ocp_solver.set(
-                    k, "p", np.append(np.array(self.ref_path[-1]), 1.0)
+                    k, "p", np.append(np.array(self.ref_path[-1]), w)
                 )
 
     def get_solution(self):
