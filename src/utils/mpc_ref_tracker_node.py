@@ -53,7 +53,18 @@ class MPCRefTracker:
         self.ocp = AcadosOcp()
         self.ocp.model = AcadosModel()
         self.ocp.model.name = "nova_carter_discrete_Lc_inner_loop"
-        self.H = params["optimizer"]["Hm"]
+
+        self.init_params()
+        self.setup_dynamics()
+        self.setup_cost()
+        self.setup_constraints()
+        self.setup_solver_options()
+
+    def init_params(self):
+        self.x_dim, self.u_dim = 2, 2
+        self.state_dim = self.x_dim + 1
+        self.H = params["optimizer"]["H"]
+        self.Hm = params["optimizer"]["H"]
         self.ref_path = [
             params_additional["start_loc"]
             + [params["env"]["start_angle"]]
@@ -61,29 +72,31 @@ class MPCRefTracker:
         ]
         self.w_terminal = 1.0
         self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
-        self.setup_dynamics()
-        self.setup_cost()
-        self.setup_constraints()
-        self.setup_solver_options()
-        self.lbx_end = np.concatenate(
+        self.lbx_middle = np.concatenate(
             (
                 params["optimizer"]["x_min"][: self.x_dim],
                 np.zeros(self.x_dim),
+                np.array([0.0]),
             )
         )
-        self.ubx_end = np.concatenate(
+        self.ubx_middle = np.concatenate(
             (
                 params["optimizer"]["x_max"][: self.x_dim],
                 np.zeros(self.x_dim),
+                np.array([params["optimizer"]["Tf"]]),
             )
         )
+        self.lbx_final = np.append(
+            params["optimizer"]["x_min"], params["optimizer"]["Tf"]
+        )
+        self.ubx_final = np.append(
+            params["optimizer"]["x_max"], params["optimizer"]["Tf"]
+        )
+        self.pos_scale_base = 0.1
 
     def setup_dynamics(self):
-        self.x_dim, self.u_dim = 2, 2
-        self.state_dim = self.x_dim + 1
-
-        x = ca.SX.sym("x", 6)
-        u = ca.SX.sym("u", 3)
+        x = ca.SX.sym("x", self.state_dim + self.x_dim + 1)
+        u = ca.SX.sym("u", self.u_dim + 1)
         self.ocp.model.x, self.ocp.model.u = x, u
 
         v, omega, dv, domega, theta, dT = (x[3], x[4], u[0], u[1], x[2], u[-1])
@@ -170,7 +183,11 @@ class MPCRefTracker:
         self.T_final = self.ref_path[-1][-1]
         for k in range(self.H + 1):
             if k < len(self.ref_path):
-                pos_scale = 0.1 + abs(self.ref_path[k - 1][3]) if k > 0 else 0.1
+                pos_scale = (
+                    self.pos_scale_base + abs(self.ref_path[k - 1][self.state_dim])
+                    if k > 0
+                    else self.pos_scale_base
+                )
                 self.ocp_solver.set(
                     k,
                     "p",
@@ -179,7 +196,7 @@ class MPCRefTracker:
                     ),
                 )
             else:
-                pos_scale = 0.1 + abs(self.ref_path[-1][3])
+                pos_scale = self.pos_scale_base + abs(self.ref_path[-1][self.state_dim])
                 self.T_final += params["optimizer"]["dt"]
                 self.ocp_solver.set(
                     k,
@@ -208,30 +225,24 @@ class MPCRefTracker:
         # print(f"X: {X}, U: {U}")
         return X, U
 
-    def ref_path_offset_time(self):
+    def ref_path_zero_init_time(self):
         T0 = self.ref_path[0][-1]
         for k in range(len(self.ref_path)):
             self.ref_path[k][-1] -= T0
 
     def solve_for_x0(self, x0):
-        self.ref_path_offset_time()
+        self.ref_path_zero_init_time()
         for i in range(5):
             self.ocp_solver.options_set("rti_phase", 1)
             self.solver_set_ref_path()
             status = self.ocp_solver.solve()
 
-            self.ocp_solver.set(0, "lbx", np.append(x0[:-1], 0.0))
-            self.ocp_solver.set(0, "ubx", np.append(x0[:-1], 0.0))
-            self.ocp_solver.set(
-                self.H - 1,
-                "lbx",
-                np.append(self.lbx_end, (self.H - 1) * params["optimizer"]["dt"]),
-            )
-            self.ocp_solver.set(
-                self.H - 1,
-                "ubx",
-                np.append(self.ubx_end, params["optimizer"]["Tf"]),
-            )
+            self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
+            self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
+            self.ocp_solver.set(self.Hm - 1, "lbx", self.lbx_middle)
+            self.ocp_solver.set(self.Hm - 1, "ubx", self.ubx_middle)
+            self.ocp_solver.set(self.H, "lbx", self.lbx_final)
+            self.ocp_solver.set(self.H, "ubx", self.ubx_final)
 
             self.ocp_solver.options_set("rti_phase", 2)
 
@@ -241,6 +252,7 @@ class MPCRefTracker:
             )
 
         X, U = self.get_solution()
+        self.ref_path.pop(0)
 
         return X, U
 

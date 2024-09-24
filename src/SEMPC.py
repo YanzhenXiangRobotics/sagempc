@@ -727,25 +727,26 @@ class SEMPC(Node):
         self.sim_iter += 1
 
     def inner_loop_control(self, X, x_curr):
-        self.ref_tracker.set_ref_path(X[: self.Hm, :].tolist())
+        self.ref_tracker.set_ref_path(X.tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
-        sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x")
-        t_sim = self.players[self.pl_idx].state_sim[-1].copy()
+        sagempc_sol_plot = self.env.ax.plot(
+            X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x"
+        )
         for k in range(self.Hm):
-            x0 = self.players[self.pl_idx].state_sim.copy()
-            x0[-1] -= t_sim
+            x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
             if k == 0:
-                print("Ol-Cl diff: ", X_inner - X[:self.Hm + 1, :])
-            print(f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}")
+                print("Ol-Cl diff: ", X_inner - X)
+            print(
+                f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
+            )
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
             # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
             # print("Err 2: ", X[k + 1, :] - self.players[self.pl_idx].state_sim)
             # print("Pos 2: ", self.players[self.pl_idx].state_sim)
-            self.ref_tracker.ref_path.pop(0)
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(
                     x0[0],
