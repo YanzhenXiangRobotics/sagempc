@@ -59,8 +59,8 @@ class MPCRefTracker:
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
-        self.w_terminal = 10.0
-        self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
+        self.w_terminal = 2.4
+        self.w = np.linspace(1.1, self.w_terminal, self.H + 1)
         self.setup_dynamics()
         self.setup_cost()
         self.setup_constraints()
@@ -168,15 +168,15 @@ class MPCRefTracker:
         )
 
     def solver_set_ref_path(self):
-        w = 1.0
         for k in range(self.H + 1):
-            w += 0.1
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), w))
+                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), self.w[k]))
+                print(self.w[k], "\n")
             else:
                 self.ocp_solver.set(
-                    k, "p", np.append(np.array(self.ref_path[-1]), w)
+                    k, "p", np.append(np.array(self.ref_path[-1]), self.w[k])
                 )
+                print(self.w[k], "\n")
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
