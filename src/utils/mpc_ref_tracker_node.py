@@ -59,8 +59,8 @@ class MPCRefTracker:
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
-        self.w_terminal = 2.4
-        self.w = np.linspace(1.1, self.w_terminal, self.H + 1)
+        self.w_terminal = 1.0
+        self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.setup_dynamics()
         self.setup_cost()
         self.setup_constraints()
@@ -136,10 +136,11 @@ class MPCRefTracker:
     def setup_cost(self):
         x_ref = ca.SX.sym("x_ref", self.state_dim + self.x_dim + 1)
         w = ca.SX.sym("w", 1)
-        self.ocp.model.p = ca.vertcat(x_ref, w)
+        pos_scale = ca.SX.sym("pos_scale", 1)
+        self.ocp.model.p = ca.vertcat(x_ref, w, pos_scale)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag([1.0, 1.0, 1.0, 0.5, 0.5, 1.0])
+        Q = np.diag([1.0 * pos_scale, 1.0 * pos_scale, 1.0, 0.5, 0.5, 1.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w * (
@@ -170,13 +171,23 @@ class MPCRefTracker:
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), self.w[k]))
-                print(self.w[k], "\n")
-            else:
+                pos_scale = 0.1 + abs(self.ref_path[k - 1][3]) if k > 0 else 0.1
                 self.ocp_solver.set(
-                    k, "p", np.append(np.array(self.ref_path[-1]), self.w[k])
+                    k,
+                    "p",
+                    np.concatenate(
+                        (np.array(self.ref_path[k]), np.array([self.w[k], pos_scale]))
+                    ),
                 )
-                print(self.w[k], "\n")
+            else:
+                pos_scale = 0.1 + abs(self.ref_path[-1][3])
+                self.ocp_solver.set(
+                    k,
+                    "p",
+                    np.concatenate(
+                        (np.array(self.ref_path[-1]), np.array([self.w[k], pos_scale]))
+                    ),
+                )
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
