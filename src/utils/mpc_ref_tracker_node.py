@@ -92,7 +92,7 @@ class MPCRefTracker:
         self.ubx_final = np.append(
             params["optimizer"]["x_max"], params["optimizer"]["Tf"]
         )
-        self.pos_scale_base = 0.1
+        self.pos_scale_base = 1e-3
 
     def setup_dynamics(self):
         x = ca.SX.sym("x", self.state_dim + self.x_dim + 1)
@@ -133,6 +133,7 @@ class MPCRefTracker:
         self.ocp.constraints.x0 = np.array(self.ref_path[0])
 
         self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
+        self.ocp.constraints.lbx_e[-1] = params["optimizer"]["Tf"]
         self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
@@ -151,7 +152,7 @@ class MPCRefTracker:
         self.ocp.model.p = ca.vertcat(x_ref, w, pos_scale)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag([1.0 * pos_scale, 1.0 * pos_scale, 1.0, 0.5, 0.5, 1.0])
+        Q = np.diag([1e4 * pos_scale, 1e4 * pos_scale, 1.0, 4.0, 10.0, 10.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w * (
@@ -184,7 +185,12 @@ class MPCRefTracker:
         for k in range(self.H + 1):
             if k < len(self.ref_path):
                 pos_scale = (
-                    self.pos_scale_base + abs(self.ref_path[k - 1][self.state_dim])
+                    self.pos_scale_base
+                    + 100.0
+                    * np.linalg.norm(
+                        np.array(self.ref_path[k][: self.x_dim])
+                        - np.array(self.ref_path[k - 1][: self.x_dim])
+                    )
                     if k > 0
                     else self.pos_scale_base
                 )
@@ -196,7 +202,7 @@ class MPCRefTracker:
                     ),
                 )
             else:
-                pos_scale = self.pos_scale_base + abs(self.ref_path[-1][self.state_dim])
+                pos_scale = self.pos_scale_base
                 self.T_final += params["optimizer"]["dt"]
                 self.ocp_solver.set(
                     k,
@@ -214,6 +220,7 @@ class MPCRefTracker:
                         )
                     ),
                 )
+            print(f"Stage: {k}, Pos scale: {pos_scale}")
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
