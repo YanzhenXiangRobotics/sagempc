@@ -508,8 +508,12 @@ class SEMPC(Node):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_lb = np.zeros(2 * self.x_dim + 1)
                 st_ub = np.zeros(2 * self.x_dim + 1)
-                st_lb[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_min"])
-                st_ub[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_max"])
+                st_lb[: self.x_dim] = np.array(self.params["optimizer"]["x_min"])[
+                    : self.x_dim
+                ]
+                st_ub[: self.x_dim] = np.array(self.params["optimizer"]["x_max"])[
+                    : self.x_dim
+                ]
             else:
                 st_lb = np.zeros(self.state_dim + 1)
                 st_ub = np.zeros(self.state_dim + 1)
@@ -756,8 +760,8 @@ class SEMPC(Node):
                     s=150,
                 )
                 inner_loop_plot = self.env.ax.plot(
-                    X_inner[:, 0],
-                    X_inner[:, 1],
+                    X_inner[: self.Hm, 0],
+                    X_inner[: self.Hm, 1],
                     c="blue",
                     marker="x",
                 )

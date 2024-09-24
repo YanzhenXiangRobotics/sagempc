@@ -176,7 +176,7 @@ def concat_const_val(ocp, params):
         [ocp.constraints.idxbx_e, np.array([ocp.model.x.shape[0] - 1])]
     )
 
-    ocp.constraints.lbx = np.concatenate([ocp.constraints.lbx, np.array([0])])
+    ocp.constraints.lbx = np.concatenate([ocp.constraints.lbx, np.array([0.0])])
     ocp.constraints.ubx = np.concatenate(
         [ocp.constraints.ubx, np.array([params["optimizer"]["Tf"]])]
     )
