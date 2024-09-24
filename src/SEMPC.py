@@ -737,6 +737,8 @@ class SEMPC(Node):
             x0[-1] -= t_sim
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
+            if k == 0:
+                print("Ol-Cl diff: ", X_inner - X[:self.Hm + 1, :])
             print(f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}")
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
