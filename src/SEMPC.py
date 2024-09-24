@@ -508,12 +508,8 @@ class SEMPC(Node):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_lb = np.zeros(2 * self.x_dim + 1)
                 st_ub = np.zeros(2 * self.x_dim + 1)
-                st_lb[: self.x_dim] = np.array(self.params["optimizer"]["x_min"])[
-                    : self.x_dim
-                ]
-                st_ub[: self.x_dim] = np.array(self.params["optimizer"]["x_max"])[
-                    : self.x_dim
-                ]
+                st_lb[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_min"])
+                st_ub[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_max"])
             else:
                 st_lb = np.zeros(self.state_dim + 1)
                 st_ub = np.zeros(self.state_dim + 1)
@@ -734,9 +730,7 @@ class SEMPC(Node):
         self.ref_tracker.set_ref_path(X.tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
-        sagempc_sol_plot = self.env.ax.plot(
-            X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x"
-        )
+        sagempc_sol_plot = self.env.ax.plot(X[:self.Hm, 0], X[:self.Hm, 1], c="black", marker="x")
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
@@ -760,8 +754,8 @@ class SEMPC(Node):
                     s=150,
                 )
                 inner_loop_plot = self.env.ax.plot(
-                    X_inner[: self.Hm, 0],
-                    X_inner[: self.Hm, 1],
+                    X_inner[:self.Hm, 0],
+                    X_inner[:self.Hm, 1],
                     c="blue",
                     marker="x",
                 )
