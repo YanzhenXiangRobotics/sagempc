@@ -69,14 +69,12 @@ class MPCRefTracker:
             (
                 params["optimizer"]["x_min"][: self.x_dim],
                 np.zeros(self.x_dim),
-                np.array([0.0]),
             )
         )
         self.ubx_end = np.concatenate(
             (
                 params["optimizer"]["x_max"][: self.x_dim],
                 np.zeros(self.x_dim),
-                np.array([params["optimizer"]["Tf"]]),
             )
         )
 
@@ -126,7 +124,7 @@ class MPCRefTracker:
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
         self.ocp.constraints.lbu = np.append(
-            np.array(params["optimizer"]["u_min"]), 0.0
+            np.array(params["optimizer"]["u_min"]), params["optimizer"]["dt"]
         )
         self.ocp.constraints.ubu = np.append(
             np.array(params["optimizer"]["u_max"]), params["optimizer"]["Tf"]
@@ -169,6 +167,7 @@ class MPCRefTracker:
         )
 
     def solver_set_ref_path(self):
+        self.T_final = self.ref_path[-1][-1]
         for k in range(self.H + 1):
             if k < len(self.ref_path):
                 pos_scale = 0.1 + abs(self.ref_path[k - 1][3]) if k > 0 else 0.1
@@ -181,11 +180,21 @@ class MPCRefTracker:
                 )
             else:
                 pos_scale = 0.1 + abs(self.ref_path[-1][3])
+                self.T_final += params["optimizer"]["dt"]
                 self.ocp_solver.set(
                     k,
                     "p",
                     np.concatenate(
-                        (np.array(self.ref_path[-1]), np.array([self.w[k], pos_scale]))
+                        (
+                            np.array(self.ref_path[-1])[:-1],
+                            np.array(
+                                [
+                                    self.T_final,
+                                    self.w[k],
+                                    pos_scale,
+                                ]
+                            ),
+                        )
                     ),
                 )
 
@@ -199,16 +208,30 @@ class MPCRefTracker:
         # print(f"X: {X}, U: {U}")
         return X, U
 
+    def ref_path_offset_time(self):
+        T0 = self.ref_path[0][-1]
+        for k in range(len(self.ref_path)):
+            self.ref_path[k][-1] -= T0
+
     def solve_for_x0(self, x0):
+        self.ref_path_offset_time()
         for i in range(5):
             self.ocp_solver.options_set("rti_phase", 1)
             self.solver_set_ref_path()
             status = self.ocp_solver.solve()
 
-            self.ocp_solver.set(0, "lbx", x0)
-            self.ocp_solver.set(0, "ubx", x0)
-            self.ocp_solver.set(self.H - 1, "lbx", self.lbx_end)
-            self.ocp_solver.set(self.H - 1, "ubx", self.ubx_end)
+            self.ocp_solver.set(0, "lbx", np.append(x0[:-1], 0.0))
+            self.ocp_solver.set(0, "ubx", np.append(x0[:-1], 0.0))
+            self.ocp_solver.set(
+                self.H - 1,
+                "lbx",
+                np.append(self.lbx_end, (self.H - 1) * params["optimizer"]["dt"]),
+            )
+            self.ocp_solver.set(
+                self.H - 1,
+                "ubx",
+                np.append(self.ubx_end, params["optimizer"]["Tf"]),
+            )
 
             self.ocp_solver.options_set("rti_phase", 2)
 

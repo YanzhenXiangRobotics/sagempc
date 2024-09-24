@@ -739,7 +739,7 @@ class SEMPC(Node):
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
             if k == 0:
                 print("Ol-Cl diff: ", X_inner - X[:self.Hm + 1, :])
-            print(f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}")
+            print(f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}")
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
             # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
