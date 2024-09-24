@@ -137,14 +137,16 @@ class MPCRefTracker:
         self.ocp.model.p = ca.vertcat(x_ref, w)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag([1.0, 1.0, 1.0, 0.1, 0.1, 1.0])
-        self.w_terminal = 1.0
+        Q = np.diag([1e3, 1e3, 1.0, 0.1, 0.1, 1e3])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w * (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
-        self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
+        # self.ocp.model.cost_expr_ext_cost_e = 5.0 * (
+        #     (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
+        # )
+        self.ocp.model.cost_expr_ext_cost_e = 1.0 * (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
 
@@ -154,7 +156,7 @@ class MPCRefTracker:
         self.ocp.solver_options.qp_solver_warm_start = 1
         self.ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
         self.ocp.solver_options.hessian_approx = "GAUSS_NEWTON"
-        self.ocp.solver_options.levenberg_marquardt = 1.0e-1
+        self.ocp.solver_options.levenberg_marquardt = 1.0e-2
         self.ocp.solver_options.integrator_type = "DISCRETE"
         self.ocp.solver_options.nlp_solver_ext_qp_res = 1
         self.ocp.solver_options.nlp_solver_type = "SQP_RTI"
@@ -169,7 +171,7 @@ class MPCRefTracker:
                 self.ocp_solver.set(k, "p", np.append(np.array(self.ref_path[k]), 1.0))
             else:
                 self.ocp_solver.set(
-                    k, "p", np.append(np.array(self.ref_path[-1]), self.w_terminal)
+                    k, "p", np.append(np.array(self.ref_path[-1]), 1.0)
                 )
 
     def get_solution(self):
@@ -183,7 +185,7 @@ class MPCRefTracker:
         return X, U
 
     def solve_for_x0(self, x0):
-        for i in range(20):
+        for i in range(5):
             self.ocp_solver.options_set("rti_phase", 1)
             self.solver_set_ref_path()
             status = self.ocp_solver.solve()

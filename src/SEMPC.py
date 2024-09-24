@@ -620,7 +620,7 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 print(
-                    f"X_first_half: {X[:self.Hm, :]}, \n U_first_half: {U[:self.Hm, :3]}"
+                    f"X first half: {X[:self.Hm, :]}, \n U first half: {U[:self.Hm, :3]}"
                 )
                 # self.players[self.pl_idx].update_current_state(X[self.Hm])
                 self.inner_loop_control(X, x_curr)
@@ -730,13 +730,14 @@ class SEMPC(Node):
         self.ref_tracker.set_ref_path(X[: self.Hm, :].tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
-        sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black")
+        sagempc_sol_plot = self.env.ax.plot(X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x")
         t_sim = self.players[self.pl_idx].state_sim[-1].copy()
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim.copy()
             x0[-1] -= t_sim
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
+            print(f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}")
             self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
             # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
