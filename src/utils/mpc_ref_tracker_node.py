@@ -70,8 +70,8 @@ class MPCRefTracker:
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
-        self.w_terminal = 1.0
-        self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
+        # self.w_terminal = 1.0
+        # self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.lbx_middle = np.concatenate(
             (
                 params["optimizer"]["x_min"][: self.x_dim],
@@ -147,21 +147,23 @@ class MPCRefTracker:
 
     def setup_cost(self):
         x_ref = ca.SX.sym("x_ref", self.state_dim + self.x_dim + 1)
-        w = ca.SX.sym("w", 1)
-        pos_scale = ca.SX.sym("pos_scale", 1)
-        self.ocp.model.p = ca.vertcat(x_ref, w, pos_scale)
+        w_speed = ca.SX.sym("w", 1)
+        w_pos = ca.SX.sym("w_pos", 1)
+        self.ocp.model.p = ca.vertcat(x_ref, w_speed, w_pos)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag([1e4 * pos_scale, 1e4 * pos_scale, 1.0, 4.0, 10.0, 10.0])
+        Q = np.diag(
+            [1e4 * w_pos, 1e4 * w_pos, 1.0, 4.0 * w_speed, 10.0 * w_speed, 10.0]
+        )
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
-        self.ocp.model.cost_expr_ext_cost = w * (
+        self.ocp.model.cost_expr_ext_cost = (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
         # self.ocp.model.cost_expr_ext_cost_e = 5.0 * (
         #     (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         # )
-        self.ocp.model.cost_expr_ext_cost_e = 1.0 * (
+        self.ocp.model.cost_expr_ext_cost_e = (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
 
@@ -184,7 +186,7 @@ class MPCRefTracker:
         self.T_final = self.ref_path[-1][-1]
         for k in range(self.H + 1):
             if k < len(self.ref_path):
-                pos_scale = (
+                w_pos = (
                     self.pos_scale_base
                     + 100.0
                     * np.linalg.norm(
@@ -198,11 +200,11 @@ class MPCRefTracker:
                     k,
                     "p",
                     np.concatenate(
-                        (np.array(self.ref_path[k]), np.array([self.w[k], pos_scale]))
+                        (np.array(self.ref_path[k]), np.array([1.0, w_pos]))
                     ),
                 )
             else:
-                pos_scale = self.pos_scale_base
+                w_pos = self.pos_scale_base
                 self.T_final += params["optimizer"]["dt"]
                 self.ocp_solver.set(
                     k,
@@ -213,14 +215,14 @@ class MPCRefTracker:
                             np.array(
                                 [
                                     self.T_final,
-                                    self.w[k],
-                                    pos_scale,
+                                    0.0,
+                                    w_pos,
                                 ]
                             ),
                         )
                     ),
                 )
-            print(f"Stage: {k}, Pos scale: {pos_scale}")
+            print(f"Stage: {k}, Pos scale: {w_pos}")
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
@@ -265,11 +267,11 @@ class MPCRefTracker:
 
     def update_ref_path(self, new_ref_path):
         self.ref_path += new_ref_path
-        print(f"Ref path: {self.ref_path}")
+        print(f"Ref path: {np.array(self.ref_path)}")
 
     def set_ref_path(self, ref_path):
         self.ref_path = ref_path
-        print(f"Ref path: {self.ref_path}")
+        print(f"Ref path: {np.array(self.ref_path)}")
 
 
 class MPCRefTrackerNode(Node):
