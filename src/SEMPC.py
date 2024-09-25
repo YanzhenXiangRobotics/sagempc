@@ -634,9 +634,6 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
-                print(
-                    f"X first half: {X[:self.Hm, :]}, \n U first half: {U[:self.Hm, :3]}"
-                )
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
                 # self.inner_loop_control(X, x_curr)
                 # ref_path_msg = Float64MultiArray()
