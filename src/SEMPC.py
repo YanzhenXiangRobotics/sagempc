@@ -637,8 +637,8 @@ class SEMPC(Node):
                 print(
                     f"X first half: {X[:self.Hm, :]}, \n U first half: {U[:self.Hm, :3]}"
                 )
-                # self.players[self.pl_idx].update_current_state(X[self.Hm])
-                self.inner_loop_control(X, x_curr)
+                self.players[self.pl_idx].update_current_state(X[self.Hm])
+                # self.inner_loop_control(X, x_curr)
                 # ref_path_msg = Float64MultiArray()
                 # ref_path_msg.data = (
                 #     np.concatenate(
