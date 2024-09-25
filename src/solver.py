@@ -78,6 +78,7 @@ class SEMPC_solver(object):
         self.debug = self.params["experiment"]["debug"]
         self.time_ckp = time.time()
         self.local_plot_radius = 0.3
+        self.z_initialized = False
 
     def update_x_curr(self, x_curr):
         self.x_curr = x_curr
@@ -113,12 +114,12 @@ class SEMPC_solver(object):
             else:
                 x_h_old = x_h.copy()
                 u_h_old = u_h.copy()
-                if (
-                    self.params["algo"]["type"] == "ret_expander"
-                    or self.params["algo"]["type"] == "MPC_expander"
-                    or self.params["algo"]["type"] == "MPC_expander_V0"
-                ):
-                    u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
+                # if (
+                #     self.params["algo"]["type"] == "ret_expander"
+                #     or self.params["algo"]["type"] == "MPC_expander"
+                #     or self.params["algo"]["type"] == "MPC_expander_V0"
+                # ):
+                #     u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
                 # initialize the first SQP iteration.
                 for stage in range(self.H):
                     if stage < (self.H - self.Hm):
@@ -137,14 +138,17 @@ class SEMPC_solver(object):
                         dt = (1.0 - half_time) / self.Hm
                         x_init = x_h_old[self.H, :].copy()  # reached the final state
                         x_init[-1] = half_time + dt * (stage - self.Hm)
-                        z_init = x_init[0 : self.x_dim]
-                        # z_init = u_init[-self.x_dim :]
+                        if not self.z_initialized:
+                            z_init = x_init[: self.x_dim]
+                        else:
+                            z_init = u_init[-self.x_dim :]
                         if (
                             self.params["algo"]["type"] == "ret_expander"
                             or self.params["algo"]["type"] == "MPC_expander"
                             or self.params["algo"]["type"] == "MPC_expander_V0"
                         ):
                             u_init = np.concatenate([np.array([0.0, 0.0, dt]), z_init])
+                            self.z_initialized = True
                         else:
                             u_init = np.array([0.0, 0.0, dt])
                         self.ocp_solver.set(stage, "x", x_init)
@@ -710,10 +714,14 @@ class SEMPC_solver(object):
         #     )
         # ) and (alpha > 0.02):
         # self.log_duration()
-        while any(
-            LB_cz_val_next
-            - Lc * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
-            < self.params["common"]["constraint"]
+        while (
+            any(
+                LB_cz_val_next
+                - Lc
+                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+                < self.params["common"]["constraint"]
+            )
+            # or (gp_val_next[-1] < self.params["common"]["constraint"])
         ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
