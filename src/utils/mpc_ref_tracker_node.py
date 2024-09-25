@@ -66,14 +66,14 @@ class MPCRefTracker:
         self.x_dim, self.u_dim = 2, 2
         self.state_dim = self.x_dim + 1
         self.H = params["optimizer"]["H"]
-        self.Hm = params["optimizer"]["H"]
+        self.Hm = params["optimizer"]["Hm"]
         self.ref_path = [
             params_additional["start_loc"]
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
-        # self.w_terminal = 1.0
-        # self.w = np.linspace(1.0, self.w_terminal, self.H + 1)
+        self.w_terminal = 10.0
+        self.w_horizons = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.lbx_middle = np.concatenate(
             (
                 params["optimizer"]["x_min"][: self.x_dim],
@@ -88,12 +88,8 @@ class MPCRefTracker:
                 np.array([params["optimizer"]["Tf"]]),
             )
         )
-        self.lbx_final = np.append(
-            params["optimizer"]["x_min"], params["optimizer"]["Tf"]
-        )
-        self.ubx_final = np.append(
-            params["optimizer"]["x_max"], params["optimizer"]["Tf"]
-        )
+        self.lbx_final = self.lbx_middle.copy()
+        self.ubx_final = self.ubx_middle.copy()
         self.pos_scale_base = 1e-3
 
     def setup_dynamics(self):
@@ -112,9 +108,20 @@ class MPCRefTracker:
 
         self.ocp.constraints.x0 = np.array(self.ref_path[0])
 
-        self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
-        self.ocp.constraints.lbx_e[-1] = params["optimizer"]["Tf"]
-        self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
+        self.ocp.constraints.lbx_e = np.concatenate(
+            (
+                self.ocp.constraints.lbx.copy()[: self.x_dim],
+                np.zeros(self.x_dim),
+                np.array([params["optimizer"]["Tf"]]),
+            )
+        )
+        self.ocp.constraints.ubx_e = np.concatenate(
+            (
+                self.ocp.constraints.ubx.copy()[: self.x_dim],
+                np.zeros(self.x_dim),
+                np.array([params["optimizer"]["Tf"]]),
+            )
+        )
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
         self.ocp.constraints.lbu = np.append(
@@ -129,7 +136,8 @@ class MPCRefTracker:
         x_ref = ca.SX.sym("x_ref", self.state_dim + self.x_dim + 1)
         w_speed = ca.SX.sym("w", 1)
         w_pos = ca.SX.sym("w_pos", 1)
-        self.ocp.model.p = ca.vertcat(x_ref, w_speed, w_pos)
+        w_horizon = ca.SX.sym("w_horizon", 1)
+        self.ocp.model.p = ca.vertcat(x_ref, w_speed, w_pos, w_horizon)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
         Q = np.diag(
@@ -137,13 +145,13 @@ class MPCRefTracker:
         )
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
-        self.ocp.model.cost_expr_ext_cost = (
+        self.ocp.model.cost_expr_ext_cost = w_horizon * (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
         # self.ocp.model.cost_expr_ext_cost_e = 5.0 * (
         #     (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         # )
-        self.ocp.model.cost_expr_ext_cost_e = (
+        self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
             (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
         )
 
@@ -180,7 +188,10 @@ class MPCRefTracker:
                     k,
                     "p",
                     np.concatenate(
-                        (np.array(self.ref_path[k]), np.array([1.0, w_pos]))
+                        (
+                            np.array(self.ref_path[k]),
+                            np.array([1.0, w_pos, self.w_horizons[k]]),
+                        )
                     ),
                 )
             else:
@@ -192,13 +203,7 @@ class MPCRefTracker:
                     np.concatenate(
                         (
                             np.array(self.ref_path[-1])[:-1],
-                            np.array(
-                                [
-                                    self.T_final,
-                                    0.0,
-                                    w_pos,
-                                ]
-                            ),
+                            np.array([self.T_final, 0.0, w_pos, self.w_horizons[k]]),
                         )
                     ),
                 )
@@ -228,8 +233,8 @@ class MPCRefTracker:
 
             self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
             self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
-            self.ocp_solver.set(self.Hm - 1, "lbx", self.lbx_middle)
-            self.ocp_solver.set(self.Hm - 1, "ubx", self.ubx_middle)
+            self.ocp_solver.set(self.Hm, "lbx", self.lbx_middle)
+            self.ocp_solver.set(self.Hm, "ubx", self.ubx_middle)
             self.ocp_solver.set(self.H, "lbx", self.lbx_final)
             self.ocp_solver.set(self.H, "ubx", self.ubx_final)
 

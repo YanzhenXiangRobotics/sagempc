@@ -518,8 +518,12 @@ class SEMPC(Node):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_lb = np.zeros(2 * self.x_dim + 1)
                 st_ub = np.zeros(2 * self.x_dim + 1)
-                st_lb[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_min"])
-                st_ub[: 2 * self.x_dim] = np.array(self.params["optimizer"]["x_max"])
+                st_lb[: self.x_dim] = np.array(self.params["optimizer"]["x_min"])[
+                    : self.x_dim
+                ]
+                st_ub[: self.x_dim] = np.array(self.params["optimizer"]["x_max"])[
+                    : self.x_dim
+                ]
             else:
                 st_lb = np.zeros(self.state_dim + 1)
                 st_ub = np.zeros(self.state_dim + 1)
@@ -553,8 +557,8 @@ class SEMPC(Node):
             lbx_m[2:] = np.array([0.0, 0.0, 0.0])
             ubx_m = st_ub.copy()
             ubx_m[2:4] = np.array([0.0, 0.0])
-            self.sempc_solver.ocp_solver.set(self.Hm - 1, "lbx", lbx_m)
-            self.sempc_solver.ocp_solver.set(self.Hm - 1, "ubx", ubx_m)
+            self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
+            self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
@@ -776,16 +780,21 @@ class SEMPC(Node):
                     marker="x",
                     markersize=5,
                 )
+                radius = (
+                    self.sempc_solver.local_plot_radius * 3
+                    if self.sim_iter < 10
+                    else self.sempc_solver.local_plot_radius / 3
+                )
                 self.env.ax.set_xlim(
                     [
-                        x_curr[0] - self.sempc_solver.local_plot_radius * 3,
-                        x_curr[0] + self.sempc_solver.local_plot_radius * 3,
+                        x_curr[0] - radius,
+                        x_curr[0] + radius,
                     ]
                 )
                 self.env.ax.set_ylim(
                     [
-                        x_curr[1] - self.sempc_solver.local_plot_radius * 3,
-                        x_curr[1] + self.sempc_solver.local_plot_radius * 3,
+                        x_curr[1] - radius,
+                        x_curr[1] + radius,
                     ]
                 )
                 self.env.fig.savefig(

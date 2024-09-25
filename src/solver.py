@@ -89,65 +89,88 @@ class SEMPC_solver(object):
             u_h[stage, :] = self.ocp_solver.get(stage, "u")
         x_h[self.H, :] = self.ocp_solver.get(self.H, "x")
         if sqp_iter == 0:
-            x_h_old = x_h.copy()
-            u_h_old = u_h.copy()
-            if (
-                self.params["algo"]["type"] == "ret_expander"
-                or self.params["algo"]["type"] == "MPC_expander"
-                or self.params["algo"]["type"] == "MPC_expander_V0"
-            ):
-                u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
-            # initialize the first SQP iteration.
-            for stage in range(self.H):
-                if stage < (self.H - self.Hm):
-                    # current stage values
-                    x_init = x_h_old[stage + self.Hm, :].copy()
-                    u_init = u_h_old[stage + self.Hm, :].copy()
-                    x_init[-1] = (
-                        x_h_old[stage + self.Hm, -1] - x_h_old[self.Hm, -1]
-                    ).copy()
-                    self.ocp_solver.set(stage, "x", x_init)
-                    self.ocp_solver.set(stage, "u", u_init)
-                    x_h[stage, :] = x_init.copy()
-                    u_h[stage, :] = u_init.copy()
-                    half_time = x_init[-1].copy()
-                else:
-                    dt = (1.0 - half_time) / self.Hm
-                    x_init = x_h_old[self.H, :].copy()  # reached the final state
-                    x_init[-1] = half_time + dt * (stage - self.Hm)
-                    z_init = x_init[0 : self.x_dim]
-                    if (
-                        self.params["algo"]["type"] == "ret_expander"
-                        or self.params["algo"]["type"] == "MPC_expander"
-                        or self.params["algo"]["type"] == "MPC_expander_V0"
-                    ):
-                        u_init = np.concatenate([np.array([0.0, 0.0, dt]), z_init])
+            if self.params["optimizer"]["Hm"] == self.params["optimizer"]["H"]:
+                u_h_old = u_h.copy()
+                t = 0.0
+                for stage in range(self.H):
+                    x_h[stage, :] = np.concatenate(
+                        (self.x_curr, np.zeros(self.x_dim), np.array([t]))
+                    )
+                    self.ocp_solver.set(stage, "x", x_h[stage, :])
+                    u_h[stage, :] = np.concatenate(
+                        (
+                            np.zeros(self.x_dim),
+                            np.array([self.params["optimizer"]["dt"]]),
+                            u_h_old[-1, -self.x_dim :],
+                        )
+                    )
+                    self.ocp_solver.set(stage, "u", u_h[stage, :])
+                    t += self.params["optimizer"]["dt"]
+                x_h[-1, :] = np.concatenate(
+                    (self.x_curr, np.zeros(self.x_dim), np.array([t]))
+                )
+                self.ocp_solver.set(self.H, "x", x_h[-1, :])
+            else:
+                x_h_old = x_h.copy()
+                u_h_old = u_h.copy()
+                if (
+                    self.params["algo"]["type"] == "ret_expander"
+                    or self.params["algo"]["type"] == "MPC_expander"
+                    or self.params["algo"]["type"] == "MPC_expander_V0"
+                ):
+                    u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
+                # initialize the first SQP iteration.
+                for stage in range(self.H):
+                    if stage < (self.H - self.Hm):
+                        # current stage values
+                        x_init = x_h_old[stage + self.Hm, :].copy()
+                        u_init = u_h_old[stage + self.Hm, :].copy()
+                        x_init[-1] = (
+                            x_h_old[stage + self.Hm, -1] - x_h_old[self.Hm, -1]
+                        ).copy()
+                        self.ocp_solver.set(stage, "x", x_init)
+                        self.ocp_solver.set(stage, "u", u_init)
+                        x_h[stage, :] = x_init.copy()
+                        u_h[stage, :] = u_init.copy()
+                        half_time = x_init[-1].copy()
                     else:
-                        u_init = np.array([0.0, 0.0, dt])
-                    self.ocp_solver.set(stage, "x", x_init)
-                    self.ocp_solver.set(stage, "u", u_init)
-                    x_h[stage, :] = x_init.copy()
-                    u_h[stage, :] = u_init.copy()
-            self.ocp_solver.set(self.H, "x", x_init)
-            x_init[-1] = half_time + dt * (self.H - self.Hm)
-            x_h[self.H, :] = x_init.copy()
-            # x0 = np.zeros(self.state_dim)
-            # x0[:self.x_dim] = np.ones(self.x_dim)*0.72
-            # x0=np.concatenate([x0, np.array([0.0])])
-            # x_init=x0.copy()
-            # # x_init = self.ocp_solver.get(0, "x")
-            # u_init = self.ocp_solver.get(0, "u")
-            # Ts = 1/200
-            # # MPC controller
-            # x_init = np.array([0.72,0.72,0.0,0.0, 0.0])
-            # u_init = np.array([-0.2,-0.2, Ts])
+                        dt = (1.0 - half_time) / self.Hm
+                        x_init = x_h_old[self.H, :].copy()  # reached the final state
+                        x_init[-1] = half_time + dt * (stage - self.Hm)
+                        z_init = x_init[0 : self.x_dim]
+                        # z_init = u_init[-self.x_dim :]
+                        if (
+                            self.params["algo"]["type"] == "ret_expander"
+                            or self.params["algo"]["type"] == "MPC_expander"
+                            or self.params["algo"]["type"] == "MPC_expander_V0"
+                        ):
+                            u_init = np.concatenate([np.array([0.0, 0.0, dt]), z_init])
+                        else:
+                            u_init = np.array([0.0, 0.0, dt])
+                        self.ocp_solver.set(stage, "x", x_init)
+                        self.ocp_solver.set(stage, "u", u_init)
+                        x_h[stage, :] = x_init.copy()
+                        u_h[stage, :] = u_init.copy()
+                self.ocp_solver.set(self.H, "x", x_init)
+                x_init[-1] = half_time + dt * (self.H - self.Hm)
+                x_h[self.H, :] = x_init.copy()
+                # x0 = np.zeros(self.state_dim)
+                # x0[:self.x_dim] = np.ones(self.x_dim)*0.72
+                # x0=np.concatenate([x0, np.array([0.0])])
+                # x_init=x0.copy()
+                # # x_init = self.ocp_solver.get(0, "x")
+                # u_init = self.ocp_solver.get(0, "u")
+                # Ts = 1/200
+                # # MPC controller
+                # x_init = np.array([0.72,0.72,0.0,0.0, 0.0])
+                # u_init = np.array([-0.2,-0.2, Ts])
 
-            #     x_h[stage, :] = x_init
-            #     u_h[stage, :] = u_init
-            # x_h[self.H, :] = x_init
-            # self.ocp_solver.set(self.H, "x", x_init)
-        # if sqp_iter == 0:
-        #     print("Diff: ", x_h[:-1, : self.x_dim] - u_h[:, -self.x_dim :])
+                #     x_h[stage, :] = x_init
+                #     u_h[stage, :] = u_init
+                # x_h[self.H, :] = x_init
+                # self.ocp_solver.set(self.H, "x", x_init)
+            # if sqp_iter == 0:
+            #     print("Diff: ", x_h[:-1, : self.x_dim] - u_h[:, -self.x_dim :])
         return x_h, u_h
 
     def path_init(self, path):
@@ -687,14 +710,10 @@ class SEMPC_solver(object):
         #     )
         # ) and (alpha > 0.02):
         # self.log_duration()
-        while (
-            any(
-                LB_cz_val_next[self.Hm]
-                - Lc
-                * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
-                < self.params["common"]["constraint"]
-            )
-            or (gp_val_next[-1] < self.params["common"]["constraint"])
+        while any(
+            LB_cz_val_next
+            - Lc * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
+            < self.params["common"]["constraint"]
         ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
