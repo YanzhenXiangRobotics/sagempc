@@ -133,11 +133,11 @@ class SEMPC_solver(object):
                         self.ocp_solver.set(stage, "u", u_init)
                         x_h[stage, :] = x_init.copy()
                         u_h[stage, :] = u_init.copy()
-                        half_time = x_init[-1].copy()
+                        half_time = x_init[-1].copy() + u_init[2]
                     else:
                         dt = (1.0 - half_time) / self.Hm
                         x_init = x_h_old[self.H, :].copy()  # reached the final state
-                        x_init[-1] = half_time + dt * (stage - self.Hm)
+                        x_init[-1] = half_time + dt * (stage - (self.H - self.Hm))
                         z_init = x_init[: self.x_dim]
                         # if not self.z_initialized:
                         #     z_init = x_init[: self.x_dim]
@@ -157,7 +157,7 @@ class SEMPC_solver(object):
                         x_h[stage, :] = x_init.copy()
                         u_h[stage, :] = u_init.copy()
                 self.ocp_solver.set(self.H, "x", x_init)
-                x_init[-1] = half_time + dt * (self.H - self.Hm)
+                x_init[-1] = half_time + dt * self.Hm
                 x_h[self.H, :] = x_init.copy()
                 # x0 = np.zeros(self.state_dim)
                 # x0[:self.x_dim] = np.ones(self.x_dim)*0.72
@@ -739,7 +739,7 @@ class SEMPC_solver(object):
         for i in range(self.H):
             self.ocp_solver.set(i, "x", X[i, :])
             self.ocp_solver.set(i, "u", U[i, :])
-        self.ocp_solver.set(i, "x", X[self.H, :])
+        self.ocp_solver.set(self.H, "x", X[self.H, :])
 
     def get_solver_status():
         return None
