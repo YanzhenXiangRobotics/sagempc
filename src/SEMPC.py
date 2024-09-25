@@ -450,6 +450,16 @@ class SEMPC(Node):
             angle += 2 * math.pi
         return angle
 
+    def apply_control_once(self, u):
+        msg = Twist()
+        self.get_current_state_measurement()
+        start = self.t_curr
+        while self.t_curr - start < u[-1]:
+            msg.linear.x = u[0]
+            msg.angular.z = u[1]
+            self.publisher.publish(msg)
+            self.get_current_state_measurement()
+
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
         # for i in range(U.shape[0] - 1):
@@ -569,9 +579,10 @@ class SEMPC(Node):
         self.visu.time_record(end_time - start_time)
         # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
-            self.apply_control(
-                X[: self.Hm, : self.x_dim], X[: self.Hm, 3:5], U[: self.Hm, 2]
-            )
+            # self.apply_control(
+            #     X[: self.Hm, : self.x_dim], X[: self.Hm, 3:5], U[: self.Hm, 2]
+            # )
+            self.inner_loop_control(X, x_curr)
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -730,7 +741,9 @@ class SEMPC(Node):
         self.ref_tracker.set_ref_path(X.tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
 
-        sagempc_sol_plot = self.env.ax.plot(X[:self.Hm, 0], X[:self.Hm, 1], c="black", marker="x")
+        sagempc_sol_plot = self.env.ax.plot(
+            X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
+        )
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
@@ -740,7 +753,10 @@ class SEMPC(Node):
             print(
                 f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
             )
-            self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
+            if self.use_isaac_sim:
+                self.apply_control_once(U_inner[0, :])
+            else:
+                self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
             # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
             # print("Err 2: ", X[k + 1, :] - self.players[self.pl_idx].state_sim)
@@ -754,21 +770,22 @@ class SEMPC(Node):
                     s=150,
                 )
                 inner_loop_plot = self.env.ax.plot(
-                    X_inner[:self.Hm, 0],
-                    X_inner[:self.Hm, 1],
+                    X_inner[: self.Hm, 0],
+                    X_inner[: self.Hm, 1],
                     c="blue",
                     marker="x",
+                    markersize=5,
                 )
                 self.env.ax.set_xlim(
                     [
-                        x_curr[0] - self.sempc_solver.local_plot_radius / 3,
-                        x_curr[0] + self.sempc_solver.local_plot_radius / 3,
+                        x_curr[0] - self.sempc_solver.local_plot_radius * 3,
+                        x_curr[0] + self.sempc_solver.local_plot_radius * 3,
                     ]
                 )
                 self.env.ax.set_ylim(
                     [
-                        x_curr[1] - self.sempc_solver.local_plot_radius / 3,
-                        x_curr[1] + self.sempc_solver.local_plot_radius / 3,
+                        x_curr[1] - self.sempc_solver.local_plot_radius * 3,
+                        x_curr[1] + self.sempc_solver.local_plot_radius * 3,
                     ]
                 )
                 self.env.fig.savefig(

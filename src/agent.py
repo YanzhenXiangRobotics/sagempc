@@ -30,7 +30,7 @@ def get_idx_from_grid(position, grid_V):
 
 
 def dynamics(x, u):
-    v, omega, theta, dT, dv, domega = x[3], x[4], x[2], u[-1], u[0], u[1]
+    v, omega, theta, dT, a, alpha = x[3], x[4], x[2], u[-1], u[0], u[1]
     f = x + np.stack(
         (
             v
@@ -48,8 +48,8 @@ def dynamics(x, u):
             )
             * dT,
             omega * dT,
-            dv,
-            domega,
+            a * dT,
+            alpha * dT,
             dT,
         )
     )

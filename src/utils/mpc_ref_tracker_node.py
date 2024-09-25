@@ -1,6 +1,8 @@
 import numpy as np
 import casadi as ca
 from acados_template import AcadosOcp, AcadosModel, AcadosOcpSolver
+from src.utils.model import export_nova_carter_discrete_Lc_rk4
+
 import rclpy
 from rclpy.node import Node
 from tf_transformations import (
@@ -95,31 +97,9 @@ class MPCRefTracker:
         self.pos_scale_base = 1e-3
 
     def setup_dynamics(self):
-        x = ca.SX.sym("x", self.state_dim + self.x_dim + 1)
-        u = ca.SX.sym("u", self.u_dim + 1)
-        self.ocp.model.x, self.ocp.model.u = x, u
-
-        v, omega, dv, domega, theta, dT = (x[3], x[4], u[0], u[1], x[2], u[-1])
-        self.ocp.model.disc_dyn_expr = x + ca.vertcat(
-            v
-            * (
-                ca.cos(theta) / 6
-                + ca.cos(theta + 0.5 * omega * dT) * 2 / 3
-                + ca.cos(theta + omega * dT) / 6
-            )
-            * dT,
-            v
-            * (
-                ca.sin(theta) / 6
-                + ca.sin(theta + 0.5 * omega * dT) * 2 / 3
-                + ca.sin(theta + omega * dT) / 6
-            )
-            * dT,
-            omega * dT,
-            dv,
-            domega,
-            dT,
-        )
+        self.ocp.model = export_nova_carter_discrete_Lc_rk4()
+        self.ocp.model.u = self.ocp.model.u[:-2]
+        self.ocp.model.name = "inner_loop_" + self.ocp.model.name
 
     def setup_constraints(self):
         self.ocp.constraints.lbx = np.append(
