@@ -114,12 +114,12 @@ class SEMPC_solver(object):
             else:
                 x_h_old = x_h.copy()
                 u_h_old = u_h.copy()
-                # if (
-                #     self.params["algo"]["type"] == "ret_expander"
-                #     or self.params["algo"]["type"] == "MPC_expander"
-                #     or self.params["algo"]["type"] == "MPC_expander_V0"
-                # ):
-                #     u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
+                if (
+                    self.params["algo"]["type"] == "ret_expander"
+                    or self.params["algo"]["type"] == "MPC_expander"
+                    or self.params["algo"]["type"] == "MPC_expander_V0"
+                ):
+                    u_h_old[:, -self.x_dim :] = x_h_old[:-1, : self.x_dim].copy()
                 # initialize the first SQP iteration.
                 for stage in range(self.H):
                     if stage < (self.H - self.Hm):
@@ -139,10 +139,10 @@ class SEMPC_solver(object):
                         x_init = x_h_old[self.H, :].copy()  # reached the final state
                         x_init[-1] = half_time + dt * (stage - (self.H - self.Hm))
                         z_init = x_init[: self.x_dim]
-                        if not self.z_initialized:
-                            z_init = x_init[: self.x_dim]
-                        else:
-                            z_init = u_init[-self.x_dim :]
+                        # if not self.z_initialized:
+                        #     z_init = x_init[: self.x_dim]
+                        # else:
+                        #     z_init = u_init[-self.x_dim :]
                         if (
                             self.params["algo"]["type"] == "ret_expander"
                             or self.params["algo"]["type"] == "MPC_expander"
@@ -643,7 +643,7 @@ class SEMPC_solver(object):
                 * np.linalg.norm(X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1)
                 < self.params["common"]["constraint"]
             )
-            # or (gp_val_next[-1] < self.params["common"]["constraint"])
+            or (gp_val_next[-1] < self.params["common"]["constraint"])
         ) and (alpha > 0.02):
             # while (any(gp_val_next < self.params["common"]["constraint"])) and (
             #     alpha >= 0.0
