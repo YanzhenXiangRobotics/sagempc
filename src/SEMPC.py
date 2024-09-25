@@ -634,43 +634,20 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.get_current_state_measurement()
             else:
-                self.players[self.pl_idx].update_current_state(X[self.Hm])
-                # self.inner_loop_control(X, x_curr)
-                # ref_path_msg = Float64MultiArray()
-                # ref_path_msg.data = (
-                #     np.concatenate(
-                #         (
-                #             X[: self.Hm + 1, : self.x_dim],
-                #             X[: self.Hm + 1, self.state_dim].reshape(-1, 1),
-                #         ),
-                #         axis=-1,
-                #     )
-                #     .flatten()
-                #     .tolist()
-                # )
-                # self.ref_path_publisher.publish(ref_path_msg)
-                # self.players[self.pl_idx].rollout(U[: self.Hm, :])
+                # self.players[self.pl_idx].update_current_state(X[self.Hm])
+                self.inner_loop_control(X, x_curr)
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
-
-        # assert np.isclose(x_curr,X[self.Hm]).all()
-        # self.visu.UpdateIter(self.iter+i, -1)
-        # self.visu.UpdateSafeVisu(0, self.players, self.env)
-        # self.visu.writer_gp.grab_frame()
-        # self.visu.writer_dyn.grab_frame()
-        # self.visu.f_handle["dyn"].savefig("temp1D.png")
-        # self.visu.f_handle["gp"].savefig(
-        #     str(self.iter) + 'temp in prog2.png')
         if self.use_isaac_sim:
             self.env.legend_handles.append(
                 self.env.ax.scatter(
                     self.x_curr[0],
                     self.x_curr[1],
                     color="red",
-                    s=6,
+                    s=150,
                     label="actual trajectory",
                 )
             )
