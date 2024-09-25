@@ -72,7 +72,7 @@ class MPCRefTracker:
             + [params["env"]["start_angle"]]
             + [0.0, 0.0, 0.0]
         ]
-        self.w_terminal = 10.0
+        self.w_terminal = 1.0
         self.w_horizons = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.lbx_middle = np.concatenate(
             (
