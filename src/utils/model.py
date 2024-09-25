@@ -469,12 +469,13 @@ def export_nova_carter_discrete_Lc_rk4():
     model.name = "nova_carter_discrete_Lc"
 
     x = ca.SX.sym("x", 6)
-    x_dot = ca.SX.sym("x", x.shape[0])
+    x_dot = ca.vertcat(ca.SX.sym("x_dot", x.shape[0] - 1), 1.0)
     u = ca.SX.sym("u", 3)
     z = ca.SX.sym("z", 2)
-    model.x, model.u, model.xdot = x, ca.vertcat(u, z), x_dot
+    u = ca.vertcat(u, z)
+    model.x, model.u, model.xdot = x, u, x_dot
 
-    v, omega, a, alpha, theta, dT = x[3], x[4], u[0], u[1], x[2], u[-1]
+    theta, v, omega, a, alpha, dT = x[2], x[3], x[4], u[0], u[1], u[2]
 
     model.f_expl_expr = ca.vertcat(
         v * ca.cos(theta), v * ca.sin(theta), omega, a, alpha, 1.0
