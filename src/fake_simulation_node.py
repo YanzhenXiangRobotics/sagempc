@@ -1,5 +1,7 @@
 import rclpy
 from rclpy.node import Node
+from rosgraph_msgs.msg import Clock
+from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import Twist
 import numpy as np
 import math
@@ -11,9 +13,6 @@ dir_here = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(dir_here)
 from utils.world import World
 from utils.obstacle import Rectangle, DiamondSquare
-
-HOST = "127.0.0.1"
-PORT = 65432
 
 import time
 
@@ -47,10 +46,15 @@ with open(
 class FakeSimulationNode(Node):
     def __init__(self):
         super().__init__("fake_simulation_node")
-        self.subscriber = self.create_subscription(
-            Twist, "/cmd_vel", self.listener_callback, 10
+        self.cmd_vel_subscriber = self.create_subscription(
+            Twist, "/cmd_vel", self.cmd_vel_listener_callback, 10
         )
-        self.timer = self.create_timer(1 / 100, self.on_timer)
+        self.simulation_timer = self.create_timer(1 / 100, self.simulation_on_timer)
+        self.clock_publisher = self.create_publisher(Clock, "/clock", 10)
+        self.pose_publisher = self.create_publisher(Float32MultiArray, "/pose", 10)
+        self.min_dist_publisher = self.create_publisher(
+            Float32MultiArray, "/min_dist", 10
+        )
         self.pose = np.append(
             np.array(params["start_loc"]), params_0["env"]["start_angle"]
         )
@@ -97,17 +101,12 @@ class FakeSimulationNode(Node):
         # )
         self.begin = time.time()
 
-    def setup_socket(self):
-        self.s = MLSocket()
-        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.s.bind((HOST, PORT))
-        self.s.listen(5)
-
-    def listener_callback(self, msg):
+    def cmd_vel_listener_callback(self, msg):
         self.u = np.array([msg.linear.x, msg.angular.z])
         # print(self.u)
 
     def dynamics(self):
+        print("Running dynamics: ", self.u, self.dt)
         self.pose = np.array(
             [
                 self.pose[0] + self.u[0] * np.cos(self.pose[2]) * self.dt,
@@ -116,37 +115,40 @@ class FakeSimulationNode(Node):
             ]
         )
 
-    def on_timer(self):
+    def simulation_on_timer(self):
+        # begin = time.time()
+        # while time.time() - begin < 10.0:
+        #     pass
         last_t = self.t
         self.t = time.time() - self.begin
         if last_t != -1.0:
             self.dt = self.t - last_t
-            # print(self.dt)
-            # if self.dt > 2.0:
-            #     print(self.u)
             self.dynamics()
             min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
-            # min_dist += np.random.uniform(-0.05, 0.05)
-            # min_dist_angle += np.random.uniform(-0.1, 0.1)
-            data_to_send = np.concatenate(
-                (
-                    self.pose,
-                    np.array([min_dist_angle]),
-                    np.array([min_dist]),
-                    np.array([self.t]),
-                )
-            )
-            # print(f"To send {data_to_send}")
-            conn, _ = self.s.accept()
-            conn.sendall(data_to_send)
-            conn.close()
-            self.t = time.time() - self.begin
-            # print(f"Sent {data_to_send}")
+            self.publish_clock()
+            self.publish_pose()
+            self.publish_min_dist(min_dist, min_dist_angle)
+
+    def publish_clock(self):
+        # print("Clock: ", self.t)
+        msg_clock = Clock()
+        msg_clock.clock.sec = math.floor(self.t)
+        msg_clock.clock.nanosec = int((self.t - msg_clock.clock.sec) * 1e9)
+        self.clock_publisher.publish(msg_clock)
+
+    def publish_pose(self):
+        msg_pose = Float32MultiArray()
+        msg_pose.data = self.pose.tolist()
+        self.pose_publisher.publish(msg_pose)
+
+    def publish_min_dist(self, min_dist, min_dist_angle):
+        msg_min_dist = Float32MultiArray()
+        msg_min_dist.data = [min_dist, min_dist_angle]
+        self.min_dist_publisher.publish(msg_min_dist)
 
 
 if __name__ == "__main__":
     rclpy.init()
     sim = FakeSimulationNode()
     sim.world.plot(show=False)
-    sim.setup_socket()
     rclpy.spin(sim)

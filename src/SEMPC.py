@@ -35,17 +35,18 @@ from src.agent import dynamics
 
 
 class SEMPC(Node):
-    def __init__(self, params, env, visu) -> None:
+    def __init__(self, params, env, visu, cmd_vel_publisher) -> None:
         super().__init__("sempc")
         # self.oracle_solver = Oracle_solver(params)
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.debug = params["experiment"]["debug"]
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
-        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
-        self.ref_path_publisher = self.create_publisher(
-            Float64MultiArray, "/ref_path", 10
-        )
+        self.publisher = cmd_vel_publisher
+        # self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        # self.ref_path_publisher = self.create_publisher(
+        #     Float64MultiArray, "/ref_path", 10
+        # )
         # self.complete_subscriber = self.create_subscription(
         #     Int32, "/complete", self.clock_listener_callback, 10
         # )
@@ -330,7 +331,7 @@ class SEMPC(Node):
     def sempc_initialization(self):
         if self.use_isaac_sim:
             while not self.obtained_init_state:
-                self.get_current_state_measurement()
+                # self.get_current_state_measurement()
                 print("waiting...")
             print("initialized location", self.get_safe_init())
         else:
@@ -356,10 +357,10 @@ class SEMPC(Node):
             state = np.zeros(self.state_dim + 1)
             state[: self.x_dim] = init
             state[self.x_dim] = self.params["env"]["start_angle"]
-            if self.use_isaac_sim:
-                self.get_current_state_measurement()
-            else:
-                player.update_current_state(state)
+            # if self.use_isaac_sim:
+            #     self.get_current_state_measurement()
+            # else:
+            player.update_current_state(state)
 
         associate_dict = {}
         associate_dict[0] = []
@@ -373,7 +374,7 @@ class SEMPC(Node):
         val = -100
         while val <= self.q_th:
             if self.use_isaac_sim:
-                self.get_current_state_measurement()
+                # self.get_current_state_measurement()
                 if self.params["experiment"]["batch_update"]:
                     query_pts = self.query_pts
                     query_meas = self.query_meas
@@ -404,45 +405,45 @@ class SEMPC(Node):
         self.data["sum_max_density_sigma"].append(self.max_density_sigma)
         print(self.iter, self.max_density_sigma)
 
-    def get_current_state_measurement(self):
-        try:
-            s = MLSocket()
-            s.connect((HOST, PORT))
-            data = s.recv(1024)
-            s.close()
+    # def get_current_state_measurement(self):
+    #     try:
+    #         s = MLSocket()
+    #         s.connect((HOST, PORT))
+    #         data = s.recv(1024)
+    #         s.close()
 
-            self.x_curr = data[: self.state_dim]
-            min_dist_angle = data[self.state_dim]
-            min_dist = data[self.state_dim + 1]
-            self.t_curr = data[-1]
+    #         self.x_curr = data[: self.state_dim]
+    #         min_dist_angle = data[self.state_dim]
+    #         min_dist = data[self.state_dim + 1]
+    #         self.t_curr = data[-1]
 
-            query_pts_x_start = self.x_curr[0]
-            query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
-            # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
-            num_pts = self.params["experiment"]["batch_size"]
-            query_pts_x = np.linspace(
-                query_pts_x_start,
-                query_pts_x_end,
-                num_pts,
-            )
-            query_pts_y = np.linspace(
-                self.x_curr[1],
-                self.x_curr[1]
-                + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
-                len(query_pts_x),
-            )
-            self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
-            self.query_meas = np.linspace(
-                min_dist,
-                min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
-                len(query_pts_x),
-            )
-            self.obtained_init_state = True
+    #         query_pts_x_start = self.x_curr[0]
+    #         query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
+    #         # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
+    #         num_pts = self.params["experiment"]["batch_size"]
+    #         query_pts_x = np.linspace(
+    #             query_pts_x_start,
+    #             query_pts_x_end,
+    #             num_pts,
+    #         )
+    #         query_pts_y = np.linspace(
+    #             self.x_curr[1],
+    #             self.x_curr[1]
+    #             + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
+    #             len(query_pts_x),
+    #         )
+    #         self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
+    #         self.query_meas = np.linspace(
+    #             min_dist,
+    #             min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
+    #             len(query_pts_x),
+    #         )
+    #         self.obtained_init_state = True
 
-            self.players[self.pl_idx].update_current_state(self.x_curr)
+    #         self.players[self.pl_idx].update_current_state(self.x_curr)
 
-        except Exception as e:
-            print(e)
+    #     except Exception as e:
+    #         print(e)
 
     def _angle_helper(self, angle):
         if angle > math.pi:
@@ -453,25 +454,25 @@ class SEMPC(Node):
 
     def apply_control_once(self, u):
         msg = Twist()
-        self.get_current_state_measurement()
+        # self.get_current_state_measurement()
         start = self.t_curr
         while self.t_curr - start < u[-1]:
             msg.linear.x = u[0]
             msg.angular.z = u[1]
             self.publisher.publish(msg)
-            self.get_current_state_measurement()
+            # self.get_current_state_measurement()
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
         # for i in range(U.shape[0] - 1):
         for i in range(self.Hm):
-            self.get_current_state_measurement()
+            # self.get_current_state_measurement()
             start = self.t_curr
             while self.t_curr - start < duration[i]:
                 msg.linear.x = ctrl[i, 0]
                 msg.angular.z = ctrl[i, 1]
                 self.publisher.publish(msg)
-                self.get_current_state_measurement()
+                # self.get_current_state_measurement()
                 # print(
                 #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
                 # )
@@ -635,7 +636,8 @@ class SEMPC(Node):
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
         else:
             if self.use_isaac_sim:
-                self.get_current_state_measurement()
+                # self.get_current_state_measurement()
+                pass
             else:
                 # self.players[self.pl_idx].update_current_state(X[self.Hm])
                 self.inner_loop_control(X, x_curr)
@@ -795,7 +797,8 @@ class SEMPC(Node):
         # this while loops ensures we collect measurement only at constraint and not all along
         # the path
         # self.receding_horizon(self.players[self.pl_idx])
-        ckp = time.time()
+        if self.debug:
+            ckp = time.time()
         self.one_step_planner()
         if self.debug:
             print(f"Time for one step planner: {time.time() - ckp}")
@@ -815,7 +818,7 @@ class SEMPC(Node):
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
             if self.use_isaac_sim:
-                self.get_current_state_measurement()
+                # self.get_current_state_measurement()
                 if self.params["experiment"]["batch_update"]:
                     query_pts = self.query_pts
                     query_meas = self.query_meas
@@ -883,3 +886,34 @@ class SEMPC(Node):
         self.visu.writer_dyn.grab_frame()
         self.visu.f_handle["dyn"].savefig("temp1D.png")
         self.visu.f_handle["gp"].savefig("temp in prog2.png")
+
+    def update_sim_time(self, t_curr):
+        self.t_curr = t_curr
+        
+    def update_current_state(self, x_curr):
+        self.x_curr = x_curr
+        self.obtained_init_state = True
+        self.players[self.pl_idx].update_current_state(self.x_curr)
+        
+    def update_min_dist(self, min_dist_data):
+        min_dist, min_dist_angle = min_dist_data[0], min_dist_data[1]
+        query_pts_x_start = self.x_curr[0]
+        query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
+        num_pts = self.params["experiment"]["batch_size"]
+        query_pts_x = np.linspace(
+            query_pts_x_start,
+            query_pts_x_end,
+            num_pts,
+        )
+        query_pts_y = np.linspace(
+            self.x_curr[1],
+            self.x_curr[1]
+            + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
+            len(query_pts_x),
+        )
+        self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
+        self.query_meas = np.linspace(
+            min_dist,
+            min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
+            len(query_pts_x),
+        )
