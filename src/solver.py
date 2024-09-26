@@ -380,7 +380,8 @@ class SEMPC_solver(object):
             u_h = np.zeros((self.H, self.x_dim + 1 + self.x_dim))  # u_dim
         else:
             u_h = np.zeros((self.H, self.x_dim + 1))  # u_dim
-        self.log_duration("Time between two solving")
+        if self.debug:
+            self.log_duration("Time between two solving")
         w = 1e-3 * np.ones(self.H + 1)
         we = 1e-8 * np.ones(self.H + 1)
         we[int(self.H - 1)] = 10000
@@ -507,7 +508,8 @@ class SEMPC_solver(object):
             # print("cost res", self.ocp_solver.get_cost(), self.ocp_solver.get_residuals())
 
             X_raw, U_raw, Sl = self.get_solution()
-            ckp = self.log_duration("Time solving problem")
+            if self.debug:
+                ckp = self.log_duration("Time solving problem")
             # print(
             #     "cost ",
             #     self.ocp_solver.get_cost(),
@@ -537,25 +539,27 @@ class SEMPC_solver(object):
                 X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
+            if self.debug:    
                 self.log_duration("Time for backtracking", ckp)
             else:
                 alpha = 1.0
                 X, U = X_raw.copy(), U_raw.copy()
             max_step_size = np.max((np.max(abs(X - x_h)), np.max(abs(U - u_h))))
-            print(
-                "Sim iter: ",
-                sim_iter,
-                "SQP iter: ",
-                sqp_iter,
-                "Alpha: ",
-                alpha,
-                "Max step size: ",
-                max_step_size,
-                "\nX: ",
-                X,
-                "\nU: ",
-                U,
-            )
+            if self.debug:
+                print(
+                    "Sim iter: ",
+                    sim_iter,
+                    "SQP iter: ",
+                    sqp_iter,
+                    "Alpha: ",
+                    alpha,
+                    "Max step size: ",
+                    max_step_size,
+                    "\nX: ",
+                    X,
+                    "\nU: ",
+                    U,
+                )
 
             self.set_solution(X, U)
 

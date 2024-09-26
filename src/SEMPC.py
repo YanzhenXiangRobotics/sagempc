@@ -39,6 +39,7 @@ class SEMPC(Node):
         super().__init__("sempc")
         # self.oracle_solver = Oracle_solver(params)
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
+        self.debug = params["experiment"]["debug"]
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
         self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -459,6 +460,8 @@ class SEMPC(Node):
             msg.angular.z = u[1]
             self.publisher.publish(msg)
             self.get_current_state_measurement()
+        # msg = Twist()
+        # self.publisher.publish(msg)
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
@@ -475,7 +478,8 @@ class SEMPC(Node):
                 #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
                 # )
             uncertainty = self.players[self.pl_idx].get_width_at_curr_loc()
-            print("uncertainty: ", uncertainty)
+            if self.debug:
+                print("uncertainty: ", uncertainty)
             # if uncertainty > 2.0 * self.params["common"]["epsilon"]:
             #     break
         msg = Twist()
@@ -509,7 +513,8 @@ class SEMPC(Node):
             x_curr = x_curr.numpy()
         st_curr = np.zeros(self.state_dim + self.x_dim + 1)  # 4
         st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
-        print(f"St curr: {st_curr}")
+        if self.debug:
+            print(f"St curr: {st_curr}")
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
         self.sempc_solver.ocp_solver.set(0, "ubx", st_curr)
         if self.params["algo"]["type"] == "MPC_V0" or (
@@ -647,12 +652,13 @@ class SEMPC(Node):
                     self.x_curr[0],
                     self.x_curr[1],
                     color="red",
-                    s=150,
+                    s=6,
                     label="actual trajectory",
                 )
             )
         else:
-            print(f"Red dot loc: {x_curr}")
+            if self.debug:
+                print(f"Red dot loc: {x_curr}")
             self.env.legend_handles.append(
                 self.env.ax.scatter(
                     x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
@@ -725,14 +731,19 @@ class SEMPC(Node):
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
+            before = time.time()
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
-            if k == 0:
-                print("Ol-Cl diff: ", X_inner - X)
-            print(
-                f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
-            )
+            print(f"Time solving CL: {time.time() - before}")
+            if self.debug:
+                if k == 0:
+                    print("Ol-Cl diff: ", X_inner - X)
+                print(
+                    f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
+                )
             if self.use_isaac_sim:
-                self.apply_control_once(U_inner[0, :])
+                self.apply_control_once(
+                    np.append(X_inner[1, self.state_dim : self.state_dim + self.x_dim], U_inner[1, -1])
+                )
             else:
                 self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
@@ -788,7 +799,8 @@ class SEMPC(Node):
         # self.receding_horizon(self.players[self.pl_idx])
         ckp = time.time()
         self.one_step_planner()
-        print(f"Time for one step planner: {time.time() - ckp}")
+        if self.debug:
+            print(f"Time for one step planner: {time.time() - ckp}")
         # if self.flag_reached_xt_goal:
         #     self.visu.UpdateIter(self.iter, -1)
         #     self.visu.UpdateSafeVisu(0, self.players, self.env)
@@ -828,7 +840,8 @@ class SEMPC(Node):
                     self.params,
                     self.env,
                 )
-                print(f"Time for GP update: {time.time() - ckp}")
+                if self.debug:
+                    print(f"Time for GP update: {time.time() - ckp}")
             print(
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),

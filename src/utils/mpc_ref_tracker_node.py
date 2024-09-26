@@ -91,6 +91,7 @@ class MPCRefTracker:
         self.lbx_final = self.lbx_middle.copy()
         self.ubx_final = self.ubx_middle.copy()
         self.pos_scale_base = 1e-3
+        self.debug = params["experiment"]["debug"]
 
     def setup_dynamics(self):
         self.ocp.model = export_nova_carter_discrete_Lc_rk4()
@@ -207,7 +208,8 @@ class MPCRefTracker:
                         )
                     ),
                 )
-            print(f"Stage: {k}, Pos scale: {w_pos}")
+            if self.debug:
+                print(f"Stage: {k}, Pos scale: {w_pos}")
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
@@ -226,7 +228,7 @@ class MPCRefTracker:
 
     def solve_for_x0(self, x0):
         self.ref_path_zero_init_time()
-        for i in range(5):
+        for i in range(3):
             self.ocp_solver.options_set("rti_phase", 1)
             self.solver_set_ref_path()
             status = self.ocp_solver.solve()
@@ -241,9 +243,10 @@ class MPCRefTracker:
             self.ocp_solver.options_set("rti_phase", 2)
 
             status = self.ocp_solver.solve()
-            print(
-                f"SQP iter: {i}, Cost: {self.ocp_solver.get_cost()}, Res: {self.ocp_solver.get_residuals()}"
-            )
+            if self.debug:
+                print(
+                    f"SQP iter: {i}, Cost: {self.ocp_solver.get_cost()}, Res: {self.ocp_solver.get_residuals()}"
+                )
 
         X, U = self.get_solution()
         self.ref_path.pop(0)
@@ -252,11 +255,13 @@ class MPCRefTracker:
 
     def update_ref_path(self, new_ref_path):
         self.ref_path += new_ref_path
-        print(f"Ref path: {np.array(self.ref_path)}")
+        if self.debug:
+            print(f"Ref path: {np.array(self.ref_path)}")
 
     def set_ref_path(self, ref_path):
         self.ref_path = ref_path
-        print(f"Ref path: {np.array(self.ref_path)}")
+        if self.debug:
+            print(f"Ref path: {np.array(self.ref_path)}")
 
 
 class MPCRefTrackerNode(Node):
