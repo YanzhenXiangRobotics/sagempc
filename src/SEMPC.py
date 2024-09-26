@@ -460,8 +460,6 @@ class SEMPC(Node):
             msg.angular.z = u[1]
             self.publisher.publish(msg)
             self.get_current_state_measurement()
-        # msg = Twist()
-        # self.publisher.publish(msg)
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
@@ -724,10 +722,10 @@ class SEMPC(Node):
     def inner_loop_control(self, X, x_curr):
         self.ref_tracker.set_ref_path(X.tolist())
         # U_cl = np.zeros((self.Hm, self.x_dim))
-
-        sagempc_sol_plot = self.env.ax.plot(
-            X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
-        )
+        if self.sempc_solver.debug:
+            sagempc_sol_plot = self.env.ax.plot(
+                X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
+            )
         for k in range(self.Hm):
             x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
@@ -746,10 +744,6 @@ class SEMPC(Node):
                 )
             else:
                 self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
-            # self.players[self.pl_idx].rollout(U[k, : self.x_dim + 1].reshape(1, -1))
-            # print("Err 1: ", X[k + 1, :] - dynamics(X[k, :], U[k, : self.x_dim + 1]))
-            # print("Err 2: ", X[k + 1, :] - self.players[self.pl_idx].state_sim)
-            # print("Pos 2: ", self.players[self.pl_idx].state_sim)
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(
                     x0[0],
@@ -787,7 +781,11 @@ class SEMPC(Node):
                 )
                 inner_loop_plot.pop(0).remove()
                 curr_loc_plot.set_visible(False)
-        sagempc_sol_plot.pop(0).remove()
+        if self.sempc_solver.debug:
+            sagempc_sol_plot.pop(0).remove()
+        if self.use_isaac_sim:    
+            msg = Twist()
+            self.publisher.publish(msg)
 
     def not_reached_and_prob_feasible(self):
         """_summary_ The agent safely explores and either reach goal or remove it from safe set

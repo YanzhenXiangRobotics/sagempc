@@ -108,7 +108,6 @@ class FakeSimulationNode(Node):
         # print(self.u)
 
     def dynamics(self):
-        print(self.u, self.dt)
         self.pose = np.array(
             [
                 self.pose[0] + self.u[0] * np.cos(self.pose[2]) * self.dt,
@@ -141,6 +140,7 @@ class FakeSimulationNode(Node):
             conn, _ = self.s.accept()
             conn.sendall(data_to_send)
             conn.close()
+            self.t = time.time() - self.begin
             # print(f"Sent {data_to_send}")
 
 
