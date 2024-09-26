@@ -301,7 +301,7 @@ class SEMPC_solver(object):
             x_h, u_h[self.Hm, -self.x_dim :]
         )
         lastX_plot, lastX_m_plot = self.plot_sqp_sol(self.last_X, c="orange")
-        self.plot_3D(player)
+        
         self.ax.set_xlim(
             [
                 self.x_curr[0] - self.local_plot_radius,

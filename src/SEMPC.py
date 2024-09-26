@@ -597,61 +597,51 @@ class SEMPC(Node):
         if np.abs(goal_dist) < 1.0e-2:
             self.flag_reached_xt_goal = True
         self.sim_iter += 1
-        return X, U
-        # if self.use_isaac_sim:
-        #     self.env.legend_handles.append(
-        #         self.env.ax.scatter(
-        #             self.x_curr[0],
-        #             self.x_curr[1],
-        #             color="red",
-        #             s=6,
-        #             label="actual trajectory",
-        #         )
-        #     )
-        # else:
-        #     if self.debug:
-        #         print(f"Red dot loc: {x_curr}")
-        #     self.env.legend_handles.append(
-        #         self.env.ax.scatter(
-        #             x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
-        #         )
-        #     )
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        # if not self.has_legend:
-        #     # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
-        #     self.env.ax.legend(handles=self.env.legend_handles)
-        #     self.has_legend = True
-        # if self.params["agent"]["dynamics"] == "nova_carter":
-        #     # self.env.ax.set_xlim([-21.8, -9.0])
-        #     # self.env.ax.set_ylim([-21.8, -4.0])
+        
+        self.env.legend_handles.append(
+            self.env.ax.scatter(
+                    x_curr[0],
+                    x_curr[1],
+                    color="red",
+                    s=6,
+                    label="actual trajectory",
+                )
+            )
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        if not self.has_legend:
+            # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
+            self.env.ax.legend(handles=self.env.legend_handles)
+            self.has_legend = True
+        if self.params["agent"]["dynamics"] == "nova_carter":
 
-        #     self.env.ax.set_xlim(
-        #         [
-        #             self.params["env"]["start"][0],
-        #             self.params["env"]["goal_loc"][0] + 3.0,
-        #         ]
-        #     )
-        #     self.env.ax.set_ylim(
-        #         [
-        #             self.params["env"]["start"][1],
-        #             self.params["env"]["goal_loc"][1] + 0.5,
-        #         ]
-        #     )
-        #     self.env.ax.grid()
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        # # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
-        # self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
-        # len_plot_tmps = len(self.sempc_solver.plot_tmps)
-        # len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
-        # len_threeD_tmps = len(self.sempc_solver.threeD_tmps)
-        # for _ in range(len_plot_tmps):
-        #     self.sempc_solver.plot_tmps.pop(0).remove()
-        # for _ in range(len_scatter_tmps):
-        #     self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
-        # for _ in range(len_threeD_tmps):
-        #     self.sempc_solver.threeD_tmps.pop(0).remove()
-        # if self.use_isaac_sim:
-        #     x_curr = self.x_curr
+            self.env.ax.set_xlim(
+                [
+                    self.params["env"]["start"][0],
+                    self.params["env"]["goal_loc"][0] + 3.0,
+                ]
+            )
+            self.env.ax.set_ylim(
+                [
+                    self.params["env"]["start"][1],
+                    self.params["env"]["goal_loc"][1] + 0.5,
+                ]
+            )
+            self.env.ax.grid()
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
+        len_plot_tmps = len(self.sempc_solver.plot_tmps)
+        len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
+        len_threeD_tmps = len(self.sempc_solver.threeD_tmps)
+        for _ in range(len_plot_tmps):
+            self.sempc_solver.plot_tmps.pop(0).remove()
+        for _ in range(len_scatter_tmps):
+            self.sempc_solver.scatter_tmps.pop(0).set_visible(False)
+        for _ in range(len_threeD_tmps):
+            self.sempc_solver.threeD_tmps.pop(0).remove()
+        
+        return X, U
+        
 
     def inner_loop_control(self, X, x_curr):
         self.ref_tracker.set_ref_path(X.tolist())
