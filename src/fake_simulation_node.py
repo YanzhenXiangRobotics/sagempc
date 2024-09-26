@@ -52,6 +52,7 @@ class FakeSimulationNode(Node):
         self.simulation_timer = self.create_timer(1 / 100, self.simulation_on_timer)
         self.clock_publisher = self.create_publisher(Clock, "/clock", 10)
         self.pose_publisher = self.create_publisher(Float32MultiArray, "/pose", 10)
+        self.vel_publisher = self.create_publisher(Float32MultiArray, "/vel", 10)
         self.min_dist_publisher = self.create_publisher(
             Float32MultiArray, "/min_dist", 10
         )
@@ -100,13 +101,15 @@ class FakeSimulationNode(Node):
         #     )
         # )
         self.begin = time.time()
+        self.last_pose = None
+        self.x_dim = 2
 
     def cmd_vel_listener_callback(self, msg):
         self.u = np.array([msg.linear.x, msg.angular.z])
-        # print(self.u)
+        print("Cmd vel: ", self.u)
 
     def dynamics(self):
-        print("Running dynamics: ", self.u, self.dt)
+        print("Running dynamics: ", self.pose, self.u, self.dt)
         self.pose = np.array(
             [
                 self.pose[0] + self.u[0] * np.cos(self.pose[2]) * self.dt,
@@ -117,29 +120,47 @@ class FakeSimulationNode(Node):
 
     def simulation_on_timer(self):
         # begin = time.time()
-        # while time.time() - begin < 10.0:
-        #     pass
-        last_t = self.t
+        # while time.time() - begin < 10.0:last_pose
+        self.last_t = self.t
         self.t = time.time() - self.begin
-        if last_t != -1.0:
-            self.dt = self.t - last_t
+        if self.last_t != -1.0:
+            self.dt = self.t - self.last_t
             self.dynamics()
             min_dist, min_dist_angle = self.world.min_dist_to_obsc(self.pose[:2])
-            self.publish_clock()
+            # self.publish_clock()
             self.publish_pose()
+            self.publish_velocity()
             self.publish_min_dist(min_dist, min_dist_angle)
 
-    def publish_clock(self):
-        # print("Clock: ", self.t)
-        msg_clock = Clock()
-        msg_clock.clock.sec = math.floor(self.t)
-        msg_clock.clock.nanosec = int((self.t - msg_clock.clock.sec) * 1e9)
-        self.clock_publisher.publish(msg_clock)
+    # def publish_clock(self):
+    #     # print("Clock: ", self.t)
+    #     msg_clock = Clock()
+    #     msg_clock.clock.sec = math.floor(self.t)
+    #     msg_clock.clock.nanosec = int((self.t - msg_clock.clock.sec) * 1e9)
+    #     self.clock_publisher.publish(msg_clock)
 
     def publish_pose(self):
         msg_pose = Float32MultiArray()
         msg_pose.data = self.pose.tolist()
         self.pose_publisher.publish(msg_pose)
+        print("Publishing pose: ", msg_pose.data)
+
+    def publish_velocity(self):
+        msg_vel = Float32MultiArray()
+        if self.last_pose is None:
+            msg_vel.data = [0.0, 0.0]
+        else:
+            dtheta = self.pose[self.x_dim] - self.last_pose[self.x_dim]
+            dpos = np.linalg.norm(
+                self.pose[: self.x_dim] - self.last_pose[: self.x_dim]
+            )
+            darc = dpos if dtheta == 0.0 else dpos * dtheta / (2 * np.sin(dtheta / 2))
+            v = darc / self.dt
+            omega = dtheta / self.dt
+            msg_vel.data = [v, omega]
+        print("Publishing velocity: ", msg_vel.data[0], msg_vel.data[1])
+        self.vel_publisher.publish(msg_vel)
+        self.last_pose = self.pose
 
     def publish_min_dist(self, min_dist, min_dist_angle):
         msg_min_dist = Float32MultiArray()

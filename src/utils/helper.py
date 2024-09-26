@@ -63,7 +63,7 @@ def TrainAndUpdateConstraint(query_pt, agent_key, players, params, env):
             players[i].communicate_constraint([train["Cx_X"]], [train["Cx_Y"]])
 
 
-def TrainAndUpdateConstraint_isaac_sim(
+def train_and_update_constraint(
     query_pt, query_meas, agent_key, players, params
 ):  
     print("query_pts: ", query_pt)

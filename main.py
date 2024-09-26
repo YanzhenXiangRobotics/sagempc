@@ -28,6 +28,7 @@ from src.utils.helper import (
 from src.utils.initializer import get_players_initialized
 from src.utils.plotting import plot_1D, plot_2D
 from src.visu import Visu
+from src.utils.helper import train_and_update_constraint
 
 warnings.filterwarnings("ignore")
 plt.rcParams["figure.figsize"] = [12, 6]
@@ -130,19 +131,24 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 import time
+from src.utils.mpc_ref_tracker_node import MPCRefTracker
 
 
 class MainNode(Node):
     def __init__(self):
         super().__init__("main_node")
         self.timer = self.create_timer(1 / 100, self.on_timer)
-        self.clock_subscriber = self.create_subscription(
-            Clock, "/clock", self.clock_listener_callback, 10
+        self.mpc_tracking_timer = self.create_timer(1 / 20, self.mpc_tracking)
+        # self.clock_subscriber = self.create_subscription(
+        #     Clock, "/clock", self.clock_listener_callback, 10
+        # )
+        # if params["experiment"]["use_fake_sim"]:
+        self.pose_subscriber = self.create_subscription(
+            Float32MultiArray, "/pose", self.pose_listener_callback, 10
         )
-        if params["experiment"]["use_fake_sim"]:
-            self.pose_subscriber = self.create_subscription(
-                Float32MultiArray, "/pose", self.pose_listener_callback, 10
-            )
+        self.velocity_subscriber = self.create_subscription(
+            Float32MultiArray, "/vel", self.velocity_listener_callback, 10
+        )
         self.min_dist_subscriber = self.create_subscription(
             Float32MultiArray, "/min_dist", self.min_dist_listener_callback, 10
         )
@@ -150,55 +156,126 @@ class MainNode(Node):
         self.sempc = SEMPC(params, env, visu, self.cmd_vel_publisher)
         self.w = 100
         self.running_condition_true = True
-        self.sempc.players[self.sempc.pl_idx].feasible = True
+        self.ref_tracker = MPCRefTracker()
+        self.x_dim = self.sempc.x_dim
+        self.state_dim = self.sempc.state_dim
+        self.phase = 0
+        self.sempc_initialized = False
+        self.min_dist_obtained = False
+        self.pose_obtained = False
+        self.velocity_obtained = False
 
     def on_timer(self):
-        if self.running_condition_true:
-            self.sempc.not_reached_and_prob_feasible()
-
-            if self.w < self.sempc.params["common"]["epsilon"]:
-                self.sempc.players[self.sempc.pl_idx].feasible = False
-            else:
-                ckp = time.time()
-                self.w = self.sempc.set_next_goal()
-                print(f"Time for finding next goal: {time.time() - ckp}")
-
-            if self.sempc.params["algo"]["objective"] == "GO":
-                self.running_condition_true = (
-                    not np.linalg.norm(
-                        self.sempc.visu.utility_minimizer
-                        - self.sempc.players[self.sempc.pl_idx].current_location
-                    )
-                    < self.sempc.params["visu"]["step_size"]
+        if self.sempc_initialized and (self.phase == 0):
+            if self.running_condition_true:
+                train_and_update_constraint(
+                    self.query_pts,
+                    self.query_meas,
+                    self.sempc.pl_idx,
+                    self.sempc.players,
+                    self.sempc.params,
                 )
-            elif self.sempc.params["algo"]["objective"] == "SE":
-                self.running_condition_true = self.sempc.players[self.sempc.pl_idx].feasible
-            else:
-                raise NameError("Objective is not clear")
-            print("Number of samples", self.sempc.players[self.sempc.pl_idx].Cx_X_train.shape)
-        else:
-            print("avg time", np.mean(visu.iteration_time))
-            visu.save_data()
-            exit()
 
-    def clock_listener_callback(self, msg):
-        t_curr = msg.clock.sec + 1e-9 * msg.clock.nanosec
-        self.sempc.update_sim_time(t_curr)
+                if self.w < self.sempc.params["common"]["epsilon"]:
+                    self.sempc.players[self.sempc.pl_idx].feasible = False
+                else:
+                    ckp = time.time()
+                    self.w = self.sempc.set_next_goal()
+                    print(f"Time for finding next goal: {time.time() - ckp}")
+
+                if self.sempc.params["algo"]["objective"] == "GO":
+                    self.running_condition_true = (
+                        not np.linalg.norm(
+                            self.sempc.visu.utility_minimizer
+                            - self.sempc.players[self.sempc.pl_idx].current_location
+                        )
+                        < self.sempc.params["visu"]["step_size"]
+                    )
+                elif self.sempc.params["algo"]["objective"] == "SE":
+                    self.running_condition_true = self.sempc.players[
+                        self.sempc.pl_idx
+                    ].feasible
+                else:
+                    raise NameError("Objective is not clear")
+                print(
+                    "Number of samples",
+                    self.sempc.players[self.sempc.pl_idx].Cx_X_train.shape,
+                )
+                X, _ = self.sempc.one_step_planner(x_curr=self.pose)
+                self.ref_tracker.set_ref_path(X.tolist())
+            else:
+                print("avg time", np.mean(visu.iteration_time))
+                visu.save_data()
+                exit()
+            self.phase = 1
+
+    def mpc_tracking(self):
+        if (self.phase == 1) and self.pose_obtained and self.velocity_obtained:
+            x0 = np.concatenate((self.pose, np.array([self.v]), np.array([self.omega])))
+            X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
+            msg_cmd_vel = Twist()
+            msg_cmd_vel.linear.x = X_inner[1, self.state_dim]
+            msg_cmd_vel.angular.z = X_inner[1, self.state_dim + 1]
+            begin = time.time()
+            while time.time() - begin < U_inner[1, -1]:
+                self.cmd_vel_publisher.publish(msg_cmd_vel)
+                print("Publishing: ", msg_cmd_vel.linear.x, msg_cmd_vel.angular.z)
+            if len(self.ref_tracker.ref_path) == 0:
+                self.phase = 0
+
+    # def clock_listener_callback(self, msg):
+    #     t_curr = msg.clock.sec + 1e-9 * msg.clock.nanosec
+    #     self.sempc.update_sim_time(t_curr)
 
     def pose_listener_callback(self, msg):
-        self.sempc.update_current_state(msg.data)
+        self.pose_obtained = True
+        print("Get pose: ", msg.data)
+        self.pose = np.array([msg.data[0], msg.data[1], msg.data[2]])
+        if (not self.sempc_initialized) and (self.min_dist_obtained):
+            self.sempc.sempc_initialization(self.query_pts, self.query_meas)
+            self.sempc.players[self.sempc.pl_idx].feasible = True
+            self.sempc_initialized = True
+        if self.sempc_initialized:
+            self.sempc.players[self.sempc.pl_idx].update_current_state(self.pose)
+    
+    def velocity_listener_callback(self, msg):
+        self.velocity_obtained = True
+        self.v, self.omega = msg.data[0], msg.data[1]
+        print("Get v: ", self.v, " omega: ", self.omega)
 
     def min_dist_listener_callback(self, msg):
-        self.sempc.update_min_dist(msg.data)
+        min_dist, min_dist_angle = msg.data[0], msg.data[1]
+        print("Get min dist: ", min_dist, " min dist angle: ", min_dist_angle)
+        self.min_dist_obtained = True
+        query_pts_x_start = self.pose[0]
+        query_pts_x_end = self.pose[0] + min_dist * np.cos(min_dist_angle)
+        num_pts = params["experiment"]["batch_size"]
+        query_pts_x = np.linspace(
+            query_pts_x_start,
+            query_pts_x_end,
+            num_pts,
+        )
+        query_pts_y = np.linspace(
+            self.pose[1],
+            self.pose[1] + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
+            len(query_pts_x),
+        )
+        self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
+        self.query_meas = np.linspace(
+            min_dist,
+            min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
+            len(query_pts_x),
+        )
+
 
 if __name__ == "__main__":
     rclpy.init()
     main_node = MainNode()
     rclpy.spin(main_node)
-    
+
     main_node.destroy_node()
     main_node.shutdown()
-    
+
 # se_mpc.sempc_main()
 # print("avg time", np.mean(visu.iteration_time))
 # visu.save_data()

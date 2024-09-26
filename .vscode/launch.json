@@ -22,11 +22,12 @@
                     "params_cluttered_car"        ]           
         },
         {
-            "name": "fake_node",
+            "name": "fake_simulation_node",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/fake_simulation_node.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": [">", "output_fake_simulation_node.txt"]
         },
         {
             "name": "block_world_generator",
