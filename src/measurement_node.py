@@ -123,6 +123,7 @@ class MeasurementNode(Node):
 
     def clock_listener_callback(self, msg):
         sim_time = self.convert_to_sim_time(msg.clock)
+        # print("Sim time: ", sim_time)
         try:
             self.pose_3D = self.get_pose_3D()
             if self.min_dist != -1.0:
@@ -146,6 +147,7 @@ class MeasurementNode(Node):
             print(e)
 
     def min_dist_listener_callback(self, msg):
+        print("min_dist_listener_callback")
         try:
             ranges = np.array(msg.ranges)
             # choice = np.round(np.linspace(1, len(ranges)-1, num=36)).astype(int)
