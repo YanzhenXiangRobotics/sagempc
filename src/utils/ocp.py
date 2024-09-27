@@ -426,7 +426,7 @@ def concat_penalty_expander(ocp, model_x, x_lin, model_z, z_lin):
     return ocp
 
 
-def sempc_const_val(ocp, params, x_dim, n_order):
+def sempc_const_val(ocp, params, x_dim, n_order, x0):
     # constraints
     eps = params["common"]["epsilon"]  # - 0.05
     if params["agent"]["dynamics"] == "bicycle":
@@ -452,10 +452,10 @@ def sempc_const_val(ocp, params, x_dim, n_order):
         # ubx = params["optimizer"]["u_max"][0]*np.ones(n_order*x_dim)
         # ubx[:x_dim] = params["optimizer"]["x_max"]*np.ones(x_dim)
 
-    x0 = np.zeros(ocp.model.x.shape[0])
-    x0[:x_dim] = np.array(params["env"]["start_loc"][:x_dim])  # np.ones(x_dim)*0.72
-    if params["agent"]["dynamics"] == "nova_carter":
-        x0[x_dim] = params["env"]["start_angle"]
+    # x0 = np.zeros(ocp.model.x.shape[0])
+    # x0[:x_dim] = np.array(params["env"]["start_loc"][:x_dim])  # np.ones(x_dim)*0.72
+    # if params["agent"]["dynamics"] == "nova_carter":
+    #     x0[x_dim] = params["env"]["start_angle"]
     ocp.constraints.x0 = x0.copy()
 
     ocp.constraints.lbx_e = lbx.copy()
@@ -544,7 +544,7 @@ def sempc_set_options(ocp, params):
     return ocp
 
 
-def export_sempc_ocp(params):
+def export_sempc_ocp(params, x0):
     ocp = AcadosOcp()
     name_prefix = (
         params["algo"]["type"]
@@ -610,7 +610,7 @@ def export_sempc_ocp(params):
 
     ocp = sempc_cost_expr(ocp, model_x, model_u, x_dim, w, xg, var, params)
 
-    ocp = sempc_const_val(ocp, params, x_dim, n_order)
+    ocp = sempc_const_val(ocp, params, x_dim, n_order, x0)
 
     ocp = concat_const_val(ocp, params)
 

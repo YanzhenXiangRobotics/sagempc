@@ -51,7 +51,7 @@ with open(
 
 
 class MPCRefTracker:
-    def __init__(self) -> None:
+    def __init__(self, constraint_x0) -> None:
         self.ocp = AcadosOcp()
         self.ocp.model = AcadosModel()
         self.ocp.model.name = "nova_carter_discrete_Lc_inner_loop"
@@ -59,7 +59,7 @@ class MPCRefTracker:
         self.init_params()
         self.setup_dynamics()
         self.setup_cost()
-        self.setup_constraints()
+        self.setup_constraints(constraint_x0)
         self.setup_solver_options()
 
     def init_params(self):
@@ -67,11 +67,7 @@ class MPCRefTracker:
         self.state_dim = self.x_dim + 1
         self.H = params["optimizer"]["H"]
         self.Hm = params["optimizer"]["Hm"]
-        self.ref_path = [
-            params_additional["start_loc"]
-            + [params["env"]["start_angle"]]
-            + [0.0, 0.0, 0.0]
-        ]
+        self.ref_path = []
         self.w_terminal = 1.0
         self.w_horizons = np.linspace(1.0, self.w_terminal, self.H + 1)
         self.lbx_middle = np.concatenate(
@@ -98,7 +94,7 @@ class MPCRefTracker:
         self.ocp.model.u = self.ocp.model.u[:-2]
         self.ocp.model.name = "inner_loop_" + self.ocp.model.name
 
-    def setup_constraints(self):
+    def setup_constraints(self, constraint_x0):
         self.ocp.constraints.lbx = np.append(
             np.array(params["optimizer"]["x_min"]), 0.0
         )
@@ -107,7 +103,7 @@ class MPCRefTracker:
         )
         self.ocp.constraints.idxbx = np.array([0, 1, 3, 4, 5])
 
-        self.ocp.constraints.x0 = np.array(self.ref_path[0])
+        self.ocp.constraints.x0 = constraint_x0
 
         self.ocp.constraints.lbx_e = np.concatenate(
             (

@@ -49,16 +49,6 @@ class SEMPC(Node):
         # self.complete_subscriber = self.create_subscription(
         #     Int32, "/complete", self.clock_listener_callback, 10
         # )
-        self.sempc_solver = SEMPC_solver(
-            params,
-            env.VisuGrid,
-            env.ax,
-            env.legend_handles,
-            env.fig,
-            visu,
-            self.fig_dir,
-            self.publisher,
-        )
         self.visu = visu
         self.params = params
         self.iter = -1
@@ -83,11 +73,41 @@ class SEMPC(Node):
             self.state_dim = self.n_orer * self.x_dim
         self.obtained_init_state = False
         self.sempc_initialization()
+        self.sempc_solver = SEMPC_solver(
+            params,
+            env.VisuGrid,
+            env.ax,
+            env.legend_handles,
+            env.fig,
+            visu,
+            self.fig_dir,
+            self.publisher,
+            np.concatenate(
+                (
+                    self.x_curr,
+                    self.vel_curr,
+                    np.zeros(
+                        1,
+                    ),
+                )
+            ),
+        )
         self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
         self.has_legend = False
-        self.ref_tracker = MPCRefTracker()
+        self.ref_tracker = MPCRefTracker(
+            constraint_x0=np.concatenate(
+                (
+                    self.x_curr,
+                    self.vel_curr,
+                    np.zeros(
+                        1,
+                    ),
+                )
+            )
+        )
+        self.alpha = 10.0
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -241,21 +261,21 @@ class SEMPC(Node):
                 )
             self.players[self.pl_idx].set_maximizer_goal(xi_star)
             w = 100
-
-            (tmp_1,) = self.env.ax.plot(
-                self.visu.opti_path[:, 0],
-                self.visu.opti_path[:, 1],
-                c="violet",
-                linewidth=0.5,
-                label="A* path",
-            )
-            tmp_2 = self.env.ax.scatter(
-                xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
-            )
-            self.sempc_solver.threeD_tmps.append(tmp_0)
-            self.sempc_solver.plot_tmps.append(tmp_1)
-            self.sempc_solver.scatter_tmps.append(tmp_2)
-            self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
+            if hasattr(self, "sempc_solver"):
+                (tmp_1,) = self.env.ax.plot(
+                    self.visu.opti_path[:, 0],
+                    self.visu.opti_path[:, 1],
+                    c="violet",
+                    linewidth=0.5,
+                    label="A* path",
+                )
+                tmp_2 = self.env.ax.scatter(
+                    xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
+                )
+                self.sempc_solver.threeD_tmps.append(tmp_0)
+                self.sempc_solver.plot_tmps.append(tmp_1)
+                self.sempc_solver.scatter_tmps.append(tmp_2)
+                self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)
@@ -412,8 +432,9 @@ class SEMPC(Node):
             s.close()
 
             self.x_curr = data[: self.state_dim]
-            min_dist_angle = data[self.state_dim]
-            min_dist = data[self.state_dim + 1]
+            self.vel_curr = data[self.state_dim : self.state_dim + self.x_dim]
+            min_dist_angle = data[self.state_dim + self.x_dim]
+            min_dist = data[self.state_dim + self.x_dim + 1]
             self.t_curr = data[-1]
 
             query_pts_x_start = self.x_curr[0]
@@ -453,13 +474,13 @@ class SEMPC(Node):
 
     def apply_control_once(self, u):
         msg = Twist()
-        self.get_current_state_measurement()
-        start = self.t_curr
-        while self.t_curr - start < u[-1]:
+        # self.get_current_state_measurement()
+        start = time.time()
+        while time.time() - start < u[-1] * 4.9:
             msg.linear.x = u[0]
             msg.angular.z = u[1]
             self.publisher.publish(msg)
-            self.get_current_state_measurement()
+            # self.get_current_state_measurement()
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
@@ -589,7 +610,7 @@ class SEMPC(Node):
             # self.apply_control(
             #     X[: self.Hm, : self.x_dim], X[: self.Hm, 3:5], U[: self.Hm, 2]
             # )
-            self.inner_loop_control(X, x_curr)
+            self.inner_loop_control(X, U, x_curr)
         val = (
             2
             * self.players[self.pl_idx].Cx_beta
@@ -727,9 +748,17 @@ class SEMPC(Node):
                 X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
             )
         for k in range(self.Hm):
-            x0 = self.players[self.pl_idx].state_sim[:-1].copy()
+            if self.use_isaac_sim:
+                self.get_current_state_measurement()
+                if k == 0:
+                    self.vel_curr = np.zeros(self.x_dim)
+                self.vel_curr *= self.alpha
+                x0 = np.concatenate((self.x_curr, self.vel_curr))
+            else:
+                x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
             before = time.time()
+            print("x0: ", x0)
             X_inner, U_inner = self.ref_tracker.solve_for_x0(x0)
             print(f"Time solving CL: {time.time() - before}")
             if self.debug:
@@ -741,13 +770,14 @@ class SEMPC(Node):
             if self.use_isaac_sim:
                 self.apply_control_once(
                     np.append(
-                        X_inner[1, self.state_dim : self.state_dim + self.x_dim],
-                        U_inner[1, -1],
+                        X_inner[1, self.state_dim : self.state_dim + self.x_dim]
+                        / self.alpha,
+                        U_inner[1, -1] * self.alpha,
                     )
                 )
             else:
-                # self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
-                self.players[self.pl_idx].rollout(U[k, : -self.x_dim].reshape(1, -1))
+                self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
+                # self.players[self.pl_idx].rollout(U[k, : -self.x_dim].reshape(1, -1))
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(
                     x0[0],

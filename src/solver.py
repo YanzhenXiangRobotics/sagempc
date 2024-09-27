@@ -20,9 +20,18 @@ import time
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
     def __init__(
-        self, params, grids_coupled, ax, legend_handles, fig, visu, fig_dir, publisher
+        self,
+        params,
+        grids_coupled,
+        ax,
+        legend_handles,
+        fig,
+        visu,
+        fig_dir,
+        publisher,
+        x0,
     ) -> None:
-        ocp = export_sempc_ocp(params)
+        ocp = export_sempc_ocp(params, x0)
         self.name_prefix = (
             params["algo"]["type"]
             + "_env_"
@@ -539,7 +548,7 @@ class SEMPC_solver(object):
                 X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
-            if self.debug:    
+            if self.debug:
                 self.log_duration("Time for backtracking", ckp)
             else:
                 alpha = 1.0

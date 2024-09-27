@@ -1,7 +1,7 @@
 from isaacsim import SimulationApp
 
 # Example ROS2 bridge sample showing manual control over messages
-simulation_app = SimulationApp({"renderer": "RayTracedLighting", "headless": False})
+simulation_app = SimulationApp({"renderer": "RayTracedLighting", "headless": True})
 import carb
 import omni
 import omni.graph.core as og
@@ -36,7 +36,7 @@ print("Loading Complete")
 # simulation_context = SimulationContext(
 #     stage_units_in_meters=1.0, physics_dt=1e-2, rendering_dt=1e-2
 # )
-simulation_context = SimulationContext(stage_units_in_meters=1.0)
+simulation_context = SimulationContext(stage_units_in_meters=1.0, physics_dt=1.0/600.0)
 
 
 simulation_context.play()
