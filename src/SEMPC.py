@@ -109,6 +109,9 @@ class SEMPC(Node):
         )
         self.alpha = 5.0
         self.begin = time.time()
+        self.last_vel = np.zeros(
+            self.x_dim,
+        )
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -482,13 +485,16 @@ class SEMPC(Node):
         msg = Twist()
         # self.get_current_state_measurement()
         start = time.time()
-        while time.time() - start < u[-1] * 4.9:
-            msg.linear.x = u[0]
-            msg.angular.z = u[1]
-            self.publisher.publish(msg)
-            # print(
-            #     f"Starting from {start - self.begin} until {start + u[-1] * 4.9 - self.begin} at {time.time() - self.begin}, applied {u[:self.x_dim]}"
-            # )
+        msg.linear.x = u[0]
+        msg.angular.z = u[1]
+        self.publisher.publish(msg)
+        i = 0
+        while time.time() - start < u[-1] * 6.67:
+            i += 1
+            if i % 100 == 0:
+                print(
+                    f"Starting from {start - self.begin} until {start + u[-1] * 4.9 - self.begin} at {time.time() - self.begin}, applied {u[:self.x_dim]}"
+                )
             # self.get_current_state_measurement()
         msg = Twist()
         self.publisher.publish(msg)
@@ -764,7 +770,7 @@ class SEMPC(Node):
                 if k == 0:
                     self.vel_curr = np.zeros(self.x_dim)
                 self.vel_curr *= self.alpha
-                x0 = np.concatenate((self.x_curr, self.vel_curr))
+                x0 = np.concatenate((self.x_curr, self.last_vel))
             else:
                 x0 = self.players[self.pl_idx].state_sim[:-1].copy()
             # print("Pos 1: ", self.players[self.pl_idx].state_sim)
@@ -779,13 +785,14 @@ class SEMPC(Node):
                     f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
                 )
             if self.use_isaac_sim:
+                vel = X_inner[1, self.state_dim : self.state_dim + self.x_dim]
                 # self.apply_control_once(
                 #     np.append(
-                #         X_inner[1, self.state_dim : self.state_dim + self.x_dim]
-                #         / self.alpha,
+                #         vel / self.alpha,
                 #         U_inner[1, -1] * self.alpha,
                 #     )
                 # )
+                self.last_vel = vel.copy()
                 self.apply_control_once(
                     np.append(
                         X[k + 1, self.state_dim : self.state_dim + self.x_dim]

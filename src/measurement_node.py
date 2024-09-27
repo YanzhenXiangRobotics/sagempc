@@ -105,7 +105,7 @@ class MeasurementNode(Node):
 
     def get_pose_3D(self):
         world_2_chassis_imu = self.tf_buffer.lookup_transform(
-            "world", "chassis_imu", time=rclpy.time.Time()
+            "world", "base_link", time=rclpy.time.Time()
         )
         trans = world_2_chassis_imu.transform.translation
         orient = world_2_chassis_imu.transform.rotation
