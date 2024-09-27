@@ -786,20 +786,20 @@ class SEMPC(Node):
                 )
             if self.use_isaac_sim:
                 vel = X_inner[1, self.state_dim : self.state_dim + self.x_dim]
-                # self.apply_control_once(
-                #     np.append(
-                #         vel / self.alpha,
-                #         U_inner[1, -1] * self.alpha,
-                #     )
-                # )
-                self.last_vel = vel.copy()
                 self.apply_control_once(
                     np.append(
-                        X[k + 1, self.state_dim : self.state_dim + self.x_dim]
-                        / self.alpha,
-                        U[k + 1, self.x_dim] * self.alpha,
+                        vel / self.alpha,
+                        U_inner[1, -1] * self.alpha,
                     )
                 )
+                self.last_vel = vel.copy()
+                # self.apply_control_once(
+                #     np.append(
+                #         X[k + 1, self.state_dim : self.state_dim + self.x_dim]
+                #         / self.alpha,
+                #         U[k + 1, self.x_dim] * self.alpha,
+                #     )
+                # )
             else:
                 self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
                 # self.players[self.pl_idx].rollout(U[k, : -self.x_dim].reshape(1, -1))
