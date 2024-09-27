@@ -108,6 +108,7 @@ class SEMPC(Node):
             )
         )
         self.alpha = 10.0
+        self.begin = time.time()
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -270,7 +271,12 @@ class SEMPC(Node):
                     label="A* path",
                 )
                 tmp_2 = self.env.ax.scatter(
-                    xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
+                    xi_star[0],
+                    xi_star[1],
+                    marker="x",
+                    s=30,
+                    c="violet",
+                    label="next goal",
                 )
                 self.sempc_solver.threeD_tmps.append(tmp_0)
                 self.sempc_solver.plot_tmps.append(tmp_1)
@@ -480,6 +486,9 @@ class SEMPC(Node):
             msg.linear.x = u[0]
             msg.angular.z = u[1]
             self.publisher.publish(msg)
+            print(
+                f"Starting from {start - self.begin} until {start + u[-1] * 4.9 - self.begin} at {time.time() - self.begin}, applied {u[:self.x_dim]}"
+            )
             # self.get_current_state_measurement()
 
     def apply_control(self, path, ctrl, duration):
@@ -768,11 +777,18 @@ class SEMPC(Node):
                     f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
                 )
             if self.use_isaac_sim:
+                # self.apply_control_once(
+                #     np.append(
+                #         X_inner[1, self.state_dim : self.state_dim + self.x_dim]
+                #         / self.alpha,
+                #         U_inner[1, -1] * self.alpha,
+                #     )
+                # )
                 self.apply_control_once(
                     np.append(
-                        X_inner[1, self.state_dim : self.state_dim + self.x_dim]
+                        X[k + 1, self.state_dim : self.state_dim + self.x_dim]
                         / self.alpha,
-                        U_inner[1, -1] * self.alpha,
+                        U[k + 1, self.x_dim] * self.alpha,
                     )
                 )
             else:
