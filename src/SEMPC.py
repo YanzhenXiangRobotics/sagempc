@@ -107,7 +107,7 @@ class SEMPC(Node):
                 )
             )
         )
-        self.alpha = 10.0
+        self.alpha = 5.0
         self.begin = time.time()
 
     def get_optimistic_path(self, node, goal_node, init_node):
@@ -486,10 +486,12 @@ class SEMPC(Node):
             msg.linear.x = u[0]
             msg.angular.z = u[1]
             self.publisher.publish(msg)
-            print(
-                f"Starting from {start - self.begin} until {start + u[-1] * 4.9 - self.begin} at {time.time() - self.begin}, applied {u[:self.x_dim]}"
-            )
+            # print(
+            #     f"Starting from {start - self.begin} until {start + u[-1] * 4.9 - self.begin} at {time.time() - self.begin}, applied {u[:self.x_dim]}"
+            # )
             # self.get_current_state_measurement()
+        msg = Twist()
+        self.publisher.publish(msg)
 
     def apply_control(self, path, ctrl, duration):
         msg = Twist()
