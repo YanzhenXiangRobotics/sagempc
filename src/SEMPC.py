@@ -573,7 +573,7 @@ class SEMPC(Node):
             #     self.sempc_solver.ocp_solver.set(self.Hm, "ubx", pt_in_exp_ub)
         return x_curr
 
-    def one_step_planner_plot(self, x_curr):
+    def one_step_planner_plot(self, X, x_curr):
         if self.use_isaac_sim:
             self.env.legend_handles.append(
                 self.env.ax.scatter(
@@ -592,6 +592,14 @@ class SEMPC(Node):
                     x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
                 )
             )
+            self.env.legend_handles.append(
+                self.env.ax.plot(
+                    X[: self.Hm, 0],
+                    X[: self.Hm, 1],
+                    color="black",
+                    # linewidth=10,
+                )
+            )
             self.sempc_solver.plot_3D(self.players[self.pl_idx])
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # if not self.has_legend:
@@ -604,14 +612,14 @@ class SEMPC(Node):
 
             self.env.ax.set_xlim(
                 [
-                    self.params["env"]["start"][0],
+                    self.params["env"]["start"][0] + 0.5,
                     self.params["env"]["goal_loc"][0] + 0.5,
                 ]
             )
             self.env.ax.set_ylim(
                 [
-                    self.params["env"]["start"][1],
-                    self.params["env"]["goal_loc"][1] + 0.5,
+                    self.params["env"]["start"][1] + 0.5,
+                    self.params["env"]["goal_loc"][1] + 0.1,
                 ]
             )
             # self.env.ax.grid()
@@ -688,32 +696,33 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 ckp = time.time()
-                X_cl, U_cl = self.inner_loop_control(X, x_curr)
+                self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
+                # X_cl, U_cl = self.inner_loop_control(X, x_curr)
                 print(f"Time for inner-loop control: {time.time() - ckp}")
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
-        # self.visu.record(
-        #     X,
-        #     U,
-        #     self.players[self.pl_idx].get_next_to_go_loc(),
-        #     self.pl_idx,
-        #     self.players,
-        # )
         self.visu.record(
-            X_cl,
-            U_cl,
+            X,
+            U,
             self.players[self.pl_idx].get_next_to_go_loc(),
             self.pl_idx,
             self.players,
         )
-        
+        # self.visu.record(
+        #     X_cl,
+        #     U_cl,
+        #     self.players[self.pl_idx].get_next_to_go_loc(),
+        #     self.pl_idx,
+        #     self.players,
+        # )
+
         if self.use_isaac_sim:
             x_curr = self.x_curr
         ckp = time.time()
-        self.one_step_planner_plot(x_curr)
+        self.one_step_planner_plot(X, x_curr)
         print(f"Time for plotting at each sim iter: {time.time() - ckp}")
         print(
             bcolors.green + "Reached:",

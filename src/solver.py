@@ -328,10 +328,24 @@ class SEMPC_solver(object):
         GP_vals_next = LB_cz_val_next - np.linalg.norm(
             X[:-1, : self.x_dim] - U[:, -self.x_dim :], axis=-1
         )
-        GP_val_next = GP_vals_next[self.Hm]
-        if GP_val_next < self.params["common"]["constraint"]:
+        GP_val_next_terminal, _ = player.get_gp_sensitivities(
+            X[-1, : self.x_dim].reshape(1, -1), "LB", "Cx"
+        )
+        tmp, _ = player.get_gp_sensitivities(
+            X[:, : self.x_dim], "LB", "Cx"
+        )
+        GP_val_next_terminal_2 = tmp[-1]
+        print(
+            "Hm & final diff: ",
+            np.linalg.norm(X[self.Hm, : self.x_dim] - X[-1, : self.x_dim]),
+        )
+        # GP_val_next = GP_vals_next[self.Hm]
+        print(GP_val_next_terminal, GP_val_next_terminal_2)
+        if any(GP_vals_next < self.params["common"]["constraint"]) or (
+            GP_val_next_terminal < self.params["common"]["constraint"]
+        ):
             print("Unsafe !!!")
-            print(f"GP_val_next: {GP_val_next}")
+            # print(f"GP_val_next: {GP_val_next}")
 
     def plot_sol(self, X, U, sqp_iter, sim_iter):
         self.log_duration("Time before plotting sqp sol")
@@ -539,8 +553,11 @@ class SEMPC_solver(object):
                 X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
-            if self.debug:    
-                self.log_duration("Time for backtracking", ckp)
+                gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+                # if alpha != 1.0:
+                #     print(f"After Backtracking... {gp_val_next[-1]}, {alpha}")
+                if self.debug:
+                    self.log_duration("Time for backtracking", ckp)
             else:
                 alpha = 1.0
                 X, U = X_raw.copy(), U_raw.copy()
@@ -564,8 +581,8 @@ class SEMPC_solver(object):
             self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
-            if self.debug:
-                self.log_unsafe(X, U, player)
+            # if self.debug:
+            self.log_unsafe(X, U, player)
             if max_step_size < 0.04:
                 print(f"Break at sqp iter {sqp_iter}, \n\n")
                 self.early_term = True
@@ -650,7 +667,7 @@ class SEMPC_solver(object):
             #         print("backtrack_H")
             # print("Backtracking")
             backtracking_printed = True
-            # print(f"Backtracking... alpha={alpha}")
+            print(f"Backtracking... {gp_val_next[-1]}, {alpha}")
             alpha -= 0.1
             X = alpha * X + (1 - alpha) * x_h
             U = alpha * U + (1 - alpha) * u_h
