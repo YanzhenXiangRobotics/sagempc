@@ -166,17 +166,17 @@ dt_torch = np.empty(0)
 for iter in range(num_iters):
     len_traj = len(visu.state_traj[iter])
     time, pose = (
-        visu.state_traj[iter][: int(len_traj / 2)][:, -1],
-        visu.state_traj[iter][: int(len_traj / 2)][:, :3],
+        visu.state_traj[iter][: 25][:, -1],
+        visu.state_traj[iter][: 25][:, :3],
     )
     vel_torch = np.concatenate(
-        (vel_torch, visu.state_traj[iter][: int(len_traj / 2)][:, 3])
+        (vel_torch, visu.state_traj[iter][: 25][:, 3])
     )
     input_torch = np.concatenate(
-        (input_torch, visu.input_traj[iter][: int(len_traj / 2)][:, :2])
+        (input_torch, visu.input_traj[iter][: 25][:, :2])
     )
     dt_torch = np.concatenate(
-        (dt_torch, visu.input_traj[iter][: int(len_traj / 2)][:, 2])
+        (dt_torch, visu.input_traj[iter][: 25][:, 2])
     )
     pose_torch = np.concatenate((pose_torch, pose))
     time_torch = np.concatenate(
@@ -251,23 +251,23 @@ for iter in range(0, num_iters):
     visu.utility_minimizer = visu.utility_minimizer_list[iter]
 
     visu.temp_objects["Cx"] = visu.plot_safe_GP(visu.f_handle["gp"])
-    common_time = np.arange(0, visu.state_traj[iter][int(len_traj / 2)][-1], 0.01)
+    common_time = np.arange(0, visu.state_traj[iter][25][-1], 0.01)
     intrep_pose = np.vstack(
         (
             np.interp(
                 common_time,
-                visu.state_traj[iter][: int(len_traj / 2)][:, -1],
-                visu.state_traj[iter][: int(len_traj / 2)][:, 0],
+                visu.state_traj[iter][: 25][:, -1],
+                visu.state_traj[iter][: 25][:, 0],
             ),
             np.interp(
                 common_time,
-                visu.state_traj[iter][: int(len_traj / 2)][:, -1],
-                visu.state_traj[iter][: int(len_traj / 2)][:, 1],
+                visu.state_traj[iter][: 25][:, -1],
+                visu.state_traj[iter][: 25][:, 1],
             ),
             np.interp(
                 common_time,
-                visu.state_traj[iter][: int(len_traj / 2)][:, -1],
-                visu.state_traj[iter][: int(len_traj / 2)][:, 2],
+                visu.state_traj[iter][: 25][:, -1],
+                visu.state_traj[iter][: 25][:, 2],
             ),
         )
     ).transpose()
