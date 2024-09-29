@@ -663,13 +663,13 @@ class SEMPC(Node):
         # )
         # print("slack", Sl, "uncertainity", X[self.Hm], val)#, "z-x",np.linalg.norm(X[:-1,0:2] - U[:,3:5]))
         # self.visu.record(X, U, X[self.Hm], self.pl_idx, self.players)
-        # self.visu.record(
-        #     X,
-        #     U,
-        #     self.players[self.pl_idx].get_next_to_go_loc(),
-        #     self.pl_idx,
-        #     self.players,
-        # )
+        self.visu.record(
+            X,
+            U,
+            self.players[self.pl_idx].get_next_to_go_loc(),
+            self.pl_idx,
+            self.players,
+        )
 
         # Environement simulation
         # x_curr = X[0]

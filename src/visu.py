@@ -14,6 +14,7 @@ class Visu:
         grid_V,
         safe_boundary,
         true_constraint_function,
+        true_objective_func,
         opt_goal,
         optimal_feasible_boundary,
         params,
@@ -83,13 +84,13 @@ class Visu:
         ax.set_yticks([])
         # ax.set_aspect('equal', 'box')
         ax.set_xlim(
-            self.env_params["start"],
-            self.env_params["start"]
+            self.env_params["start"][0],
+            self.env_params["start"][0]
             + self.visu_params["step_size"] * self.env_params["shape"]["x"],
         )
         ax.set_ylim(
-            self.env_params["start"],
-            self.env_params["start"]
+            self.env_params["start"][1],
+            self.env_params["start"][1]
             + self.visu_params["step_size"] * self.env_params["shape"]["y"],
         )
         fig_dyn, ax2 = plt.subplots()  # plt.subplots(2,2)
@@ -238,19 +239,19 @@ class Visu:
         # ax.savefig("check2.png")
         # ax.close()
         ax.axis("equal")
-        if self.use_goose:
-            ax.set_title(
-                "Iteration "
-                + str(self.n_iter)
-                + " Goose Iter "
-                + str(self.goose_step)
-                + " Agent "
-                + str(self.Fx_agent_key)
-            )
-        else:
-            ax.set_title(
-                "Iteration " + str(self.n_iter) + " Agent " + str(self.Fx_agent_key)
-            )
+        # if self.use_goose:
+        #     ax.set_title(
+        #         "Iteration "
+        #         + str(self.n_iter)
+        #         + " Goose Iter "
+        #         + str(self.goose_step)
+        #         + " Agent "
+        #         + str(self.Fx_agent_key)
+        #     )
+        # else:
+        ax.set_title(
+            "Iteration " + str(self.n_iter) + " Agent " + str(self.Fx_agent_key)
+        )
         return rm
 
     def plot1Dobj_GP(self, f_handle):
@@ -534,13 +535,13 @@ class Visu:
         ax.set_title("Iteration " + str(self.n_iter))
         ax.set_aspect("equal", "box")
         ax.set_xlim(
-            self.env_params["start"] + 0.2,
-            self.env_params["start"]
+            self.env_params["start"][0] + 0.2,
+            self.env_params["start"][0]
             + self.visu_params["step_size"] * (self.env_params["shape"]["x"] - 1),
         )
         ax.set_ylim(
-            self.env_params["start"],
-            self.env_params["start"]
+            self.env_params["start"][1],
+            self.env_params["start"][1]
             + self.visu_params["step_size"] * (self.env_params["shape"]["y"] - 1),
         )
 

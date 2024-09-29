@@ -75,6 +75,9 @@ class ContiWorld:
         self.epsilon = common_params["epsilon"]
         self.params = params
         self.env_data = {}
+        self.__Fx = torch.norm(
+                self.VisuGrid - torch.Tensor(env_params["goal_loc"]), 2, dim=1
+            )
         if env_params["generate"] == True:
             global SingleTaskGP
             if self.block_env:
@@ -90,15 +93,12 @@ class ContiWorld:
                 self.__Cx = torch.tensor(self.__Cx)
             else:
                 self.__Cx = self.true_constraint_sampling()
-            if not self.block_env:
-                self.__Fx = self.true_density_sampling()
             self.__init_safe = {}
             init = self.__get_safe_init()
             self.__init_safe["loc"] = init[0]
             self.__init_safe["idx"] = init[1]
             self.env_data["Cx"] = self.__Cx
-            if not self.block_env:
-                self.env_data["Fx"] = self.__Fx
+            self.env_data["Fx"] = self.__Fx
             if self.block_env:
                 self.env_data["Cx_gt"] = self.__Cx
             else:
@@ -139,13 +139,10 @@ class ContiWorld:
                 self.__Cx = self.Cx_model_cont.posterior(
                     self.VisuGrid
                 ).mvn.mean.detach()
-            self.Fx_model_cont = self.env_data["Fx_model"]
+            # self.Fx_model_cont = self.env_data["Fx_model"]
             # print("Lipschitz", self.get_true_lipschitz())
             # self.__Fx = self.Fx_model_cont.posterior(
             #     self.VisuGrid).mvn.mean.detach()
-            self.__Fx = torch.norm(
-                self.VisuGrid - torch.Tensor(env_params["goal_loc"]), 2, dim=1
-            )
             init = {}
             init["loc"] = []
             init["idx"] = []

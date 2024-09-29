@@ -116,6 +116,7 @@ visu = Visu(
     grid_V=env.VisuGrid,
     safe_boundary=env.get_safe_init()["Cx_X"],
     true_constraint_function=opt.true_constraint_function,
+    true_objective_func=opt.true_density,
     opt_goal=opt.opt_goal,
     optimal_feasible_boundary=opt.optimal_feasible_boundary,
     params=params,

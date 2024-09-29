@@ -11,13 +11,13 @@ import warnings
 from src.utils.helper import get_frame_writer
 from src.visu import Visu
 import yaml
-from environment import ContiWorld
+from src.environment import ContiWorld
 from src.ground_truth import GroundTruth
 from src.utils.initializer import get_players_initialized
 warnings.filterwarnings('ignore')
 plt.rcParams['figure.figsize'] = [12, 6]
 
-workspace = "safe-mpc"
+workspace = "sagempc"
 
 parser = argparse.ArgumentParser(description='A foo that bars')
 # parser.add_argument('-param', default="params_plt_obstacle_car")  # params
@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(description='A foo that bars')
 # parser.add_argument('-param', default="params_plt_cluttered_car")  # params
 # parser.add_argument('-env', type=int, default=4)
 # parser.add_argument('-i', type=int, default=6)  # initialized at origin
-parser.add_argument('-param', default="params_plt_2D")  # params
+parser.add_argument('-param', default="params_nova_carter_isaac_sim")  # params
 parser.add_argument('-env', type=int, default=0)
 parser.add_argument('-i', type=int, default=8)  # initialized at origin
 args = parser.parse_args()
