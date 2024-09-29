@@ -46,7 +46,9 @@ class Visu:
         self.prev_w = torch.zeros([101])
         self.x = self.grid_V.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[0]
         self.y = self.grid_V.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[1]
-        self.tr_constraint = self.true_constraint_function.reshape(self.Nx, self.Ny)
+        tr_constraint_neg_inside = self.true_constraint_function.clone()
+        tr_constraint_neg_inside[tr_constraint_neg_inside == 0.0] -= 1.0
+        self.tr_constraint = tr_constraint_neg_inside.reshape(self.Nx, self.Ny)
         self.tr_density = self.true_objective_func.reshape(self.Nx, self.Ny)
         self.x_dim = params["optimizer"]["x_dim"]
         if self.visu_params["show"]:
@@ -123,9 +125,8 @@ class Visu:
             self.x.numpy(),
             self.y.numpy(),
             self.tr_constraint.numpy(),
-            np.array(
-                [self.common_params["constraint"] - 0.01 * k for k in range(200, 2, -1)]
-            ),
+            np.array([-0.1]),
+            # np.array([0.02 - 0.01 * k for k in range(200, 2, -1)]),
             colors=["black"],
             linewidths=14,
             linestyles="solid",
@@ -134,13 +135,23 @@ class Visu:
             self.x.numpy(),
             self.y.numpy(),
             self.tr_constraint.numpy(),
-            np.array([self.common_params["constraint"] + 0.2]),
+            np.array(
+                [
+                    self.common_params["constraint"],
+                    # self.common_params["constraint"] + 0.2,
+                ]
+            ),
             colors=["black"],
             linewidths=2,
             linestyles="--",
         )
         ax.clabel(
-            Cs_q_eps, Cs_q_eps.levels, fmt=r"$q(x)=\epsilon$", inline=True, fontsize=12
+            Cs_q_eps,
+            Cs_q_eps.levels,
+            # fmt=[r"$q(x)=qth$", r"$q(x)=qth+\epsilon$"],
+            fmt=r"$q(x)=qth=0.6$",
+            inline=True,
+            fontsize=12,
         )
         # # rm.append([CS])
         CS2 = ax.contourf(
@@ -352,43 +363,43 @@ class Visu:
         )
         self.lb_grid_numpy = lb.reshape(self.Nx, self.Ny).detach().numpy()
         # lb = self.tr_constraint.numpy()
-        if (
-            self.params["algo"]["type"] == "ret_expander"
-            or self.params["algo"]["type"] == "MPC_expander"
-            or self.params["algo"]["type"] == "MPC_expander_V0"
-        ):
-            # # pick a neighbouring tile that it can guarentee to be safe
-            # self.safe = (self.lb_grid_numpy>=0)*self.lb_grid_numpy
-            # self.tiles = np.floor((((self.lb_grid_numpy>=0)*self.lb_grid_numpy/self.common_params["Lc"]))/self.visu_params["step_size"])
-            # self.safe_loc_x = (self.tiles>=0)*self.x.numpy()
-            # self.safe_loc_y = (self.tiles>=0)*self.y.numpy()
-            # loc_i, loc_j = np.where(self.tiles>=1)
-            # self.lb_grid_numpy_Lc = lb.reshape(self.Nx, self.Ny).detach().numpy().copy()
-            # for i,j in zip(loc_i, loc_j):
-            #     size = int(self.tiles[i,j])
-            #     self.lb_grid_numpy_Lc[i-size:i+size,j-size:j+size] = np.ones_like(self.lb_grid_numpy_Lc[i-size:i+size,j-size:j+size])
-            dist_matrix = torch.cdist(self.grid_V, self.grid_V, p=2)
-            V_lower_Cx_mat = torch.vstack([lb] * lb.shape[0])
-            self.lb_grid_numpy_Lc = (
-                torch.max(V_lower_Cx_mat - self.common_params["Lc"] * dist_matrix, 1)[0]
-                .detach()
-                .numpy()
-                .reshape(self.Nx, self.Ny)
-            )
-            CS2 = ax.contour(
-                self.x.numpy(),
-                self.y.numpy(),
-                self.lb_grid_numpy_Lc,
-                np.array(
-                    [
-                        self.common_params["constraint"],
-                        self.common_params["constraint"] + 0.1,
-                    ]
-                ),
-                alpha=0.5,
-            )
-            # rm.append([CS2.collections[0]])
-            # rm.append([CS2.collections[1]])
+        # if (
+        #     self.params["algo"]["type"] == "ret_expander"
+        #     or self.params["algo"]["type"] == "MPC_expander"
+        #     or self.params["algo"]["type"] == "MPC_expander_V0"
+        # ):
+        #     # # pick a neighbouring tile that it can guarentee to be safe
+        #     # self.safe = (self.lb_grid_numpy>=0)*self.lb_grid_numpy
+        #     # self.tiles = np.floor((((self.lb_grid_numpy>=0)*self.lb_grid_numpy/self.common_params["Lc"]))/self.visu_params["step_size"])
+        #     # self.safe_loc_x = (self.tiles>=0)*self.x.numpy()
+        #     # self.safe_loc_y = (self.tiles>=0)*self.y.numpy()
+        #     # loc_i, loc_j = np.where(self.tiles>=1)
+        #     # self.lb_grid_numpy_Lc = lb.reshape(self.Nx, self.Ny).detach().numpy().copy()
+        #     # for i,j in zip(loc_i, loc_j):
+        #     #     size = int(self.tiles[i,j])
+        #     #     self.lb_grid_numpy_Lc[i-size:i+size,j-size:j+size] = np.ones_like(self.lb_grid_numpy_Lc[i-size:i+size,j-size:j+size])
+        #     dist_matrix = torch.cdist(self.grid_V, self.grid_V, p=2)
+        #     V_lower_Cx_mat = torch.vstack([lb] * lb.shape[0])
+        #     self.lb_grid_numpy_Lc = (
+        #         torch.max(V_lower_Cx_mat - self.common_params["Lc"] * dist_matrix, 1)[0]
+        #         .detach()
+        #         .numpy()
+        #         .reshape(self.Nx, self.Ny)
+        #     )
+        #     CS2 = ax.contour(
+        #         self.x.numpy(),
+        #         self.y.numpy(),
+        #         self.lb_grid_numpy_Lc,
+        #         np.array(
+        #             [
+        #                 self.common_params["constraint"],
+        #                 self.common_params["constraint"] + 0.1,
+        #             ]
+        #         ),
+        #         alpha=0.5,
+        #     )
+        #     # rm.append([CS2.collections[0]])
+        #     # rm.append([CS2.collections[1]])
         CS = ax.contour(
             self.x.numpy(),
             self.y.numpy(),

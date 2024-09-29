@@ -56,6 +56,13 @@
             "program": "${workspaceFolder}/src/utils/mpc_ref_tracker_node.py",
             "console": "integratedTerminal",
             "args": [">", "output_mpc_ref_tracker_node.txt"]
+        },
+        {
+            "name": "video",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/video.py",
+            "console": "integratedTerminal",
         }
     ]
 }
