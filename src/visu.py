@@ -34,6 +34,7 @@ class Visu:
         self.safe_boundary = safe_boundary
         # safety_function(test_x.numpy().reshape(-1, 1))
         self.true_constraint_function = true_constraint_function
+        self.true_objective_func = true_objective_func
         self.opt_goal = opt_goal
         self.Cx_beta = self.agent_param["Cx_beta"]
         self.Fx_beta = self.agent_param["Fx_beta"]
@@ -46,6 +47,7 @@ class Visu:
         self.x = self.grid_V.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[0]
         self.y = self.grid_V.transpose(0, 1).reshape(-1, self.Nx, self.Ny)[1]
         self.tr_constraint = self.true_constraint_function.reshape(self.Nx, self.Ny)
+        self.tr_density = self.true_objective_func.reshape(self.Nx, self.Ny)
         self.x_dim = params["optimizer"]["x_dim"]
         if self.visu_params["show"]:
             self.initialize_plot_handles(path)
@@ -141,23 +143,23 @@ class Visu:
             Cs_q_eps, Cs_q_eps.levels, fmt=r"$q(x)=\epsilon$", inline=True, fontsize=12
         )
         # # rm.append([CS])
-        # CS2 = ax.contourf(
-        #     self.x.numpy(),
-        #     self.y.numpy(),
-        #     self.tr_density.numpy(),
-        #     np.array([0.02 * k for k in range(150)]),
-        #     alpha=0.4,
-        #     antialiased=True,
-        # )
-        # for c in CS2.collections:
-        #     # c.set_edgecolor('face')
-        #     c.set_linewidth(0.00)
+        CS2 = ax.contourf(
+            self.x.numpy(),
+            self.y.numpy(),
+            self.tr_density.numpy(),
+            np.array([0.02 * k for k in range(150)]),
+            alpha=0.4,
+            antialiased=True,
+        )
+        for c in CS2.collections:
+            # c.set_edgecolor('face')
+            c.set_linewidth(0.00)
         # rm.append([CS2])
         # ax.clabel(CS, CS.levels, inline=True,
         #           fmt=self.fmt, fontsize=10)
 
-        # CS2.cmap.set_over("red")
-        # CS2.cmap.set_under("blue")
+        CS2.cmap.set_over("red")
+        CS2.cmap.set_under("blue")
         # self.f_handle[f].colorbar(CS2)
         # rm.append([self.f_handle.colorbar(CS2)])
         return ax, rm
