@@ -696,28 +696,30 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 ckp = time.time()
-                self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
-                # X_cl, U_cl = self.inner_loop_control(X, x_curr)
+                # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
+                X_cl, U_cl = self.inner_loop_control(X, x_curr)
+                X_cl[-1, :] = X[-1, :].copy()
+                U_cl[-1, :] = U[-1, :self.x_dim + 1].copy()
                 print(f"Time for inner-loop control: {time.time() - ckp}")
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
                     .reshape(self.state_dim)
                 )
-        self.visu.record(
-            X,
-            U,
-            self.players[self.pl_idx].get_next_to_go_loc(),
-            self.pl_idx,
-            self.players,
-        )
         # self.visu.record(
-        #     X_cl,
-        #     U_cl,
+        #     X,
+        #     U,
         #     self.players[self.pl_idx].get_next_to_go_loc(),
         #     self.pl_idx,
         #     self.players,
         # )
+        self.visu.record(
+            X_cl,
+            U_cl,
+            self.players[self.pl_idx].get_next_to_go_loc(),
+            self.pl_idx,
+            self.players,
+        )
 
         if self.use_isaac_sim:
             x_curr = self.x_curr
@@ -747,9 +749,9 @@ class SEMPC(Node):
 
     def inner_loop_control(self, X, x_curr):
         self.ref_tracker.set_ref_path(X.tolist())
-        X_cl = np.zeros((self.Hm + 1, self.state_dim + self.x_dim + 1))
-        U_cl = np.zeros((self.Hm, self.x_dim + 1))
-        X_cl[0, :] = self.players[self.pl_idx].state_sim.copy()
+        X_cl = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
+        U_cl = np.zeros((self.H, self.x_dim + 1))
+        X_cl[0, :-1] = self.players[self.pl_idx].state_sim[:-1].copy()
         if self.sempc_solver.debug:
             sagempc_sol_plot = self.env.ax.plot(
                 X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
@@ -775,7 +777,8 @@ class SEMPC(Node):
                 )
             else:
                 self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
-            X_cl[k + 1, :] = X_inner[1, :]
+            X_cl[k + 1, :-1] = X_inner[1, :-1]
+            X_cl[k + 1, -1] = X_cl[k, -1] + U_inner[0, -1]
             U_cl[k, :] = U_inner[0, :]
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(

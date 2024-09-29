@@ -20,7 +20,7 @@ env: # Env parameters mainly used for env generation
   compute_true_Lipschitz: False # Set true to compute true L_q
 
 visu:
-  show: False # Turn on the visualization
+  show: True # Turn on the visualization
   show_current_loc: False # Show current location of the agent
   step_size: 0.04 # Step size for the visualization
   opti_path: True # Show the optimistic path generate by Problem 18/ discrete path in optimistic set

@@ -331,9 +331,7 @@ class SEMPC_solver(object):
         GP_val_next_terminal, _ = player.get_gp_sensitivities(
             X[-1, : self.x_dim].reshape(1, -1), "LB", "Cx"
         )
-        tmp, _ = player.get_gp_sensitivities(
-            X[:, : self.x_dim], "LB", "Cx"
-        )
+        tmp, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         GP_val_next_terminal_2 = tmp[-1]
         print(
             "Hm & final diff: ",
@@ -553,7 +551,7 @@ class SEMPC_solver(object):
                 X, U, alpha = self.backtrack(
                     X_raw, U_raw, x_h, u_h, player, sqp_iter, sim_iter
                 )
-                gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
+                # gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
                 # if alpha != 1.0:
                 #     print(f"After Backtracking... {gp_val_next[-1]}, {alpha}")
                 if self.debug:
@@ -581,13 +579,38 @@ class SEMPC_solver(object):
             self.set_solution(X, U)
 
             residuals = self.ocp_solver.get_residuals()
-            # if self.debug:
-            self.log_unsafe(X, U, player)
+            if self.debug:
+                self.log_unsafe(X, U, player)
             if max_step_size < 0.04:
                 print(f"Break at sqp iter {sqp_iter}, \n\n")
                 self.early_term = True
             else:
                 self.early_term = False
+            if self.early_term or (sqp_iter == (self.max_sqp_iter - 1)):
+                if self.params["visu"]["show"]:
+                    plt.figure(2)
+                    if (
+                        self.params["algo"]["type"] == "ret_expander"
+                        or self.params["algo"]["type"] == "MPC_expander"
+                    ):
+                        plt.plot(X[:, 0], X[:, 1], color="tab:green")  # state
+                        plt.plot(U[:, 3], U[:, 4], color="tab:blue")  # l(x)
+                    else:
+                        plt.plot(X[:, 0], X[:, 1], color="tab:green")
+                    plt.xlim(
+                        self.params["env"]["start"],
+                        self.params["env"]["start"]
+                        + self.params["visu"]["step_size"]
+                        * self.params["env"]["shape"]["x"],
+                    )
+                    plt.ylim(
+                        self.params["env"]["start"],
+                        self.params["env"]["start"]
+                        + self.params["visu"]["step_size"]
+                        * self.params["env"]["shape"]["y"],
+                    )
+                    # plt.axes().set_aspect('equal')
+                    plt.savefig("temp.png")
             if self.debug:
                 self.plot_sol(X, U, sqp_iter, sim_iter)
 
@@ -667,7 +690,7 @@ class SEMPC_solver(object):
             #         print("backtrack_H")
             # print("Backtracking")
             backtracking_printed = True
-            print(f"Backtracking... {gp_val_next[-1]}, {alpha}")
+            # print(f"Backtracking... {gp_val_next[-1]}, {alpha}")
             alpha -= 0.1
             X = alpha * X + (1 - alpha) * x_h
             U = alpha * U + (1 - alpha) * u_h

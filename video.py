@@ -95,8 +95,8 @@ if (
     or params["agent"]["dynamics"] == "bicycle"
 ):
     factor = 1.0
-    l_f = 0.125 * factor
-    l_r = 0.6 * factor
+    l_f = 0.18 * factor
+    l_r = 0.545 * factor
 
     W = 0.5 * factor
 
