@@ -135,7 +135,7 @@ class SEMPC_solver(object):
                         u_h[stage, :] = u_init.copy()
                         half_time = x_init[-1].copy() + u_init[2]
                     else:
-                        dt = (1.0 - half_time) / self.Hm
+                        dt = (self.params["optimizer"]["Tf"] - half_time) / self.Hm
                         x_init = x_h_old[self.H, :].copy()  # reached the final state
                         x_init[-1] = half_time + dt * (stage - (self.H - self.Hm))
                         z_init = x_init[: self.x_dim]
@@ -216,23 +216,23 @@ class SEMPC_solver(object):
             (artists,), _ = pessi_contour.legend_elements()
             artists.set_label("pessimistic contour")
             self.legend_handles.append(artists)
-            mean_contour = self.ax.contour(
-                X1,
-                X2,
-                mean,
-                levels=[self.params["common"]["constraint"]],
-                colors="pink",
-                linewidths=0.5,
-            )
-            self.threeD_tmps.append(mean_contour)
-            (artists,), _ = mean_contour.legend_elements()
-            artists.set_label("mean contour")
-            self.legend_handles.append(artists)
-            if (
-                self.params["algo"]["type"] == "MPC_expander"
-                or self.params["algo"]["type"] == "MPC_expander_V0"
-            ):
-                self.plot_expander(lower_list)
+            # mean_contour = self.ax.contour(
+            #     X1,
+            #     X2,
+            #     mean,
+            #     levels=[self.params["common"]["constraint"]],
+            #     colors="pink",
+            #     linewidths=0.5,
+            # )
+            # self.threeD_tmps.append(mean_contour)
+            # (artists,), _ = mean_contour.legend_elements()
+            # artists.set_label("mean contour")
+            # self.legend_handles.append(artists)
+            # if (
+            #     self.params["algo"]["type"] == "MPC_expander"
+            #     or self.params["algo"]["type"] == "MPC_expander_V0"
+            # ):
+            #     self.plot_expander(lower_list)
 
     def plot_expander(self, lower_list):
         import math
@@ -622,13 +622,6 @@ class SEMPC_solver(object):
         alpha = 1.0
         gp_val_next, _ = player.get_gp_sensitivities(X[:, : self.x_dim], "LB", "Cx")
         LB_cz_val_next, _ = player.get_gp_sensitivities(U[:, -self.x_dim :], "LB", "Cx")
-        Lc_constr_next_lin = self.compute_Lc_constr_next_lin(
-            X[:-1, : self.x_dim],
-            U[:, -self.x_dim :],
-            x_h[:-1, : self.x_dim],
-            u_h[:, -self.x_dim :],
-            player,
-        )
         backtracking_printed = False
         Lc = self.params["common"]["Lc"]
         # while (

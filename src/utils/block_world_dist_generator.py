@@ -9,13 +9,16 @@ sys.path.append(os.path.join(dir_here, ".."))
 from fake_simulation_node import FakeSimulationNode
 
 import rclpy
+
 rclpy.init()
 sim = FakeSimulationNode()
 world = sim.world
 
 # fig, ax = world.plot(show=False)
 min_dist_list = []
-for (i, grid) in enumerate(world.grids_2d()):
+grids = world.grids_2d()
+assert grids.shape[0] == 95 * 95
+for i, grid in enumerate(grids):
     if i % 100 == 0:
         print(i)
     min_dist, _ = world.min_dist_to_obsc(grid)
@@ -45,7 +48,8 @@ if train_gp:
     from gpytorch.mlls import ExactMarginalLogLikelihood
     import torch
     from torch.optim import AdamW
-    resolution=0.6
+
+    resolution = 0.6
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float
     grids_list = world.grids_2d(resolution=resolution)

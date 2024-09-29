@@ -61,14 +61,18 @@ class FakeSimulationNode(Node):
         # self.dt = 0.1
         start = params_0["env"]["start"]
         step_size = params_0["visu"]["step_size"]
+        shape_x = params_0["env"]["shape"]["x"]
+        shape_y = params_0["env"]["shape"]["y"]
         end = [
-            start[0] + params_0["env"]["shape"]["x"] * step_size,
-            start[1] + params_0["env"]["shape"]["y"] * step_size,
+            start[0] + shape_x * step_size,
+            start[1] + shape_y * step_size,
         ]
-        self.world = World(bbox=start + end, resolution=step_size)
+        self.world = World(
+            bbox=start + end, resolution=step_size, shape_x=shape_x, shape_y=shape_y
+        )
         self.world.add_obstacle(
             Rectangle(
-                lower_left=[-18.5, -22.0],
+                lower_left=[-19.0, -22.0],
                 upper_right=[-11.0, -15.5],
                 resolution=self.world.resolution,
             )
@@ -76,7 +80,7 @@ class FakeSimulationNode(Node):
         self.world.add_obstacle(
             Rectangle(
                 lower_left=[-20.8, -14.0],
-                upper_right=[-16.0, -13.0],
+                upper_right=[-18.0, -13.9],
                 resolution=self.world.resolution,
             )
         )

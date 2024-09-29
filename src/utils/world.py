@@ -11,9 +11,10 @@ import torch
 
 
 class World:
-    def __init__(self, bbox, resolution) -> None:
+    def __init__(self, bbox, resolution, shape_x, shape_y) -> None:
         self.bbox = bbox
         self.resolution = resolution
+        self.shape_x, self.shape_y = shape_x, shape_y
 
         self.obstacles = []
         self.occup = set()
@@ -21,9 +22,13 @@ class World:
     def grid_x1_x2(self, resolution=None):
         if resolution is None:
             resolution = self.resolution
-        return np.arange(self.bbox[0], self.bbox[2], resolution), np.arange(
-            self.bbox[1], self.bbox[3], resolution
-        )
+        X1 = np.arange(self.bbox[0], self.bbox[2], resolution)
+        X2 = np.arange(self.bbox[1], self.bbox[3], resolution)
+        if len(X1) == self.shape_x + 1:
+            X1 = X1[:-1]
+        if len(X2) == self.shape_y + 1:
+            X2 = X2[:-1]
+        return X1, X2
 
     def grids_2d(self, resolution=None):
         if resolution is None:
@@ -51,7 +56,7 @@ class World:
         #         s=10,
         #     )
         ax.set_aspect("equal", adjustable="box")
-        ax.grid(True)
+        # ax.grid(True)
         ax.set_xlim([self.bbox[0], self.bbox[2]])
         ax.set_ylim([self.bbox[1], self.bbox[3]])
         if show:

@@ -10,17 +10,17 @@ cov_module: Matern
 env_file_name: env_data.pkl
 generate: true
 goal_loc:
-- -16.0
-- -12.0
+- -17.5
+- -13.1
 i: 8
 n_players: 1
 name: 0
 shape:
-  x: 175
-  y: 175
+  x: 95
+  y: 95
 start:
-- -21.8
-- -17.8
+- -20.8
+- -16.8
 start_angle: 3.14159
 start_loc:
 - -20.0

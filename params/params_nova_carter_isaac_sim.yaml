@@ -1,11 +1,11 @@
 env: # Env parameters mainly used for env generation
-  start: [-21.8, -17.8] # origin of domain
+  start: [-20.8, -16.8] # origin of domain # end: [-17, -13]
   shape:
-    x: 175 # Number of grid points
-    y: 175
-  start_loc: [-20.0, -20.0] # Agent start location, overwritten by params_env.yaml
+    x: 95 # Number of grid points
+    y: 95
+  start_loc: [-20.5, -16.0] # Agent start location, overwritten by params_env.yaml
   start_angle: 3.14159
-  goal_loc: [-10.0, -5.0] # Agent goal location, overwritten by params_env.yaml
+  goal_loc: [-17.5, -13.1] # Agent goal location, overwritten by params_env.yaml
   n_players: 1
   Cx_lengthscale: 1.0 # Lenghtscale to generate the constraint for the environment
   Cx_noise: 0.001 # Noise std use to generate environment samples
@@ -54,7 +54,7 @@ optimizer:
     max_sqp_iter: 10
     tol_nlp: 1.0e-6
   SEMPC: # Parameters for the SageMPC
-    max_sqp_iter: 20  # Maximum number of SQP iterations
+    max_sqp_iter: 5  # Maximum number of SQP iterations
     tol_nlp: 1.0e-4 # Tolerance for the NLP solver
   Tf: 1.0 # sampling time = Tf/H
   order: 1
