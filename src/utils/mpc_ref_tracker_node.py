@@ -1,7 +1,7 @@
 import numpy as np
 import casadi as ca
 from acados_template import AcadosOcp, AcadosModel, AcadosOcpSolver
-from src.utils.model import export_nova_carter_discrete_Lc_rk4
+from src.utils.model import export_nova_carter_discrete_rk4_fixedtime
 
 import rclpy
 from rclpy.node import Node
@@ -68,9 +68,7 @@ class MPCRefTracker:
         self.H = params["optimizer"]["H"]
         self.Hm = params["optimizer"]["Hm"]
         self.ref_path = [
-            params_additional["start_loc"]
-            + [params["env"]["start_angle"]]
-            + [0.0, 0.0, 0.0]
+            params_additional["start_loc"] + [params["env"]["start_angle"]] + [0.0, 0.0]
         ]
         self.w_terminal = 1.0
         self.w_horizons = np.linspace(1.0, self.w_terminal, self.H + 1)
@@ -78,15 +76,10 @@ class MPCRefTracker:
             (
                 params["optimizer"]["x_min"][: self.x_dim],
                 np.zeros(self.x_dim),
-                np.array([0.0]),
             )
         )
         self.ubx_middle = np.concatenate(
-            (
-                params["optimizer"]["x_max"][: self.x_dim],
-                np.zeros(self.x_dim),
-                np.array([params["optimizer"]["Tf"]]),
-            )
+            (params["optimizer"]["x_max"][: self.x_dim], np.zeros(self.x_dim))
         )
         self.lbx_final = self.lbx_middle.copy()
         self.ubx_final = self.ubx_middle.copy()
@@ -94,18 +87,15 @@ class MPCRefTracker:
         self.debug = params["experiment"]["debug"]
 
     def setup_dynamics(self):
-        self.ocp.model = export_nova_carter_discrete_Lc_rk4()
-        self.ocp.model.u = self.ocp.model.u[:-2]
+        self.ocp.model = export_nova_carter_discrete_rk4_fixedtime(
+            params["optimizer"]["Tf"] / params["optimizer"]["H"]
+        )
         self.ocp.model.name = "inner_loop_" + self.ocp.model.name
 
     def setup_constraints(self):
-        self.ocp.constraints.lbx = np.append(
-            np.array(params["optimizer"]["x_min"]), 0.0
-        )
-        self.ocp.constraints.ubx = np.append(
-            np.array(params["optimizer"]["x_max"]), params["optimizer"]["Tf"]
-        )
-        self.ocp.constraints.idxbx = np.array([0, 1, 3, 4, 5])
+        self.ocp.constraints.lbx = np.array(params["optimizer"]["x_min"])
+        self.ocp.constraints.ubx = np.array(params["optimizer"]["x_max"])
+        self.ocp.constraints.idxbx = np.array([0, 1, 3, 4])
 
         self.ocp.constraints.x0 = np.array(self.ref_path[0])
 
@@ -113,47 +103,37 @@ class MPCRefTracker:
             (
                 self.ocp.constraints.lbx.copy()[: self.x_dim],
                 np.zeros(self.x_dim),
-                np.array([params["optimizer"]["Tf"]]),
             )
         )
         self.ocp.constraints.ubx_e = np.concatenate(
             (
                 self.ocp.constraints.ubx.copy()[: self.x_dim],
                 np.zeros(self.x_dim),
-                np.array([params["optimizer"]["Tf"]]),
             )
         )
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
-        self.ocp.constraints.lbu = np.append(
-            np.array(params["optimizer"]["u_min"]), params["optimizer"]["dt"]
-        )
-        self.ocp.constraints.ubu = np.append(
-            np.array(params["optimizer"]["u_max"]), params["optimizer"]["Tf"]
-        )
-        self.ocp.constraints.idxbu = np.arange(self.u_dim + 1)
+        self.ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
+        self.ocp.constraints.ubu = np.array(params["optimizer"]["u_max"])
+        self.ocp.constraints.idxbu = np.arange(self.u_dim)
 
     def setup_cost(self):
-        x_ref = ca.SX.sym("x_ref", self.state_dim + self.x_dim + 1)
-        w_speed = ca.SX.sym("w", 1)
-        w_pos = ca.SX.sym("w_pos", 1)
-        w_horizon = ca.SX.sym("w_horizon", 1)
-        self.ocp.model.p = ca.vertcat(x_ref, w_speed, w_pos, w_horizon)
+        x_ref = ca.SX.sym("x_ref", self.state_dim)
+        self.ocp.model.p = x_ref
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag(
-            [1e4 * w_pos, 1e4 * w_pos, 1.0, 4.0 * w_speed, 10.0 * w_speed, 10.0]
-        )
+        Q = np.diag([1e4, 1e4, 1.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
-        self.ocp.model.cost_expr_ext_cost = w_horizon * (
-            (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
+        self.ocp.model.cost_expr_ext_cost = (
+            (self.ocp.model.x[: self.state_dim] - x_ref).T
+            @ Q
+            @ (self.ocp.model.x[: self.state_dim] - x_ref)
         )
-        # self.ocp.model.cost_expr_ext_cost_e = 5.0 * (
-        #     (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
-        # )
         self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
-            (self.ocp.model.x - x_ref).T @ Q @ (self.ocp.model.x - x_ref)
+            (self.ocp.model.x[: self.state_dim] - x_ref).T
+            @ Q
+            @ (self.ocp.model.x[: self.state_dim] - x_ref)
         )
 
     def setup_solver_options(self):
@@ -172,48 +152,16 @@ class MPCRefTracker:
         )
 
     def solver_set_ref_path(self):
-        self.T_final = self.ref_path[-1][-1]
         for k in range(self.H + 1):
             if k < len(self.ref_path):
-                w_pos = (
-                    self.pos_scale_base
-                    + 100.0
-                    * np.linalg.norm(
-                        np.array(self.ref_path[k][: self.x_dim])
-                        - np.array(self.ref_path[k - 1][: self.x_dim])
-                    )
-                    if k > 0
-                    else self.pos_scale_base
-                )
-                self.ocp_solver.set(
-                    k,
-                    "p",
-                    np.concatenate(
-                        (
-                            np.array(self.ref_path[k]),
-                            np.array([1.0, w_pos, self.w_horizons[k]]),
-                        )
-                    ),
-                )
+                self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
             else:
                 w_pos = self.pos_scale_base
-                self.T_final += params["optimizer"]["dt"]
-                self.ocp_solver.set(
-                    k,
-                    "p",
-                    np.concatenate(
-                        (
-                            np.array(self.ref_path[-1])[:-1],
-                            np.array([self.T_final, 0.0, w_pos, self.w_horizons[k]]),
-                        )
-                    ),
-                )
-            if self.debug:
-                print(f"Stage: {k}, Pos scale: {w_pos}")
+                (self.ocp_solver.set(k, "p", np.array(self.ref_path[-1])))
 
     def get_solution(self):
-        X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
-        U = np.zeros((self.H, self.u_dim + 1))
+        X = np.zeros((self.H + 1, self.state_dim + self.x_dim))
+        U = np.zeros((self.H, self.u_dim))
         for k in range(self.H):
             X[k, :] = self.ocp_solver.get(k, "x")
             U[k, :] = self.ocp_solver.get(k, "u")
@@ -221,20 +169,14 @@ class MPCRefTracker:
         # print(f"X: {X}, U: {U}")
         return X, U
 
-    def ref_path_zero_init_time(self):
-        T0 = self.ref_path[0][-1]
-        for k in range(len(self.ref_path)):
-            self.ref_path[k][-1] -= T0
-
     def solve_for_x0(self, x0):
-        self.ref_path_zero_init_time()
         for i in range(3):
             self.ocp_solver.options_set("rti_phase", 1)
             self.solver_set_ref_path()
             status = self.ocp_solver.solve()
 
-            self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
-            self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
+            self.ocp_solver.set(0, "lbx", x0)
+            self.ocp_solver.set(0, "ubx", x0)
             self.ocp_solver.set(self.Hm, "lbx", self.lbx_middle)
             self.ocp_solver.set(self.Hm, "ubx", self.ubx_middle)
             self.ocp_solver.set(self.H, "lbx", self.lbx_final)

@@ -410,6 +410,33 @@ def export_nova_carter_discrete():
     return model
 
 
+def export_nova_carter_discrete_rk4_fixedtime(dT):
+    model = AcadosModel()
+    model.name = "nova_carter_discrete_Lc"
+
+    x = ca.SX.sym("x", 5)
+    x_dot = ca.SX.sym("x_dot", x.shape[0])
+    u = ca.SX.sym("u", 2)
+    model.x, model.u, model.xdot = x, u, x_dot
+
+    theta, v, omega, a, alpha = x[2], x[3], x[4], u[0], u[1]
+
+    model.f_expl_expr = ca.vertcat(
+        v * ca.cos(theta), v * ca.sin(theta), omega, a, alpha
+    )
+    model.f_impl_expr = x_dot - model.f_expl_expr
+
+    ode = ca.Function("ode", [x, u], [model.f_expl_expr])
+
+    k1 = ode(x, u)
+    k2 = ode(x + 0.5 * dT * k1, u)
+    k3 = ode(x + 0.5 * dT * k2, u)
+    k4 = ode(x + dT * k3, u)
+    model.disc_dyn_expr = x + dT / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+
+    return model
+
+
 ##############################Lipchitz constant#############################################
 def export_unicycle_model_with_discrete_rk4_LC(name):
     model = export_unicycle_model(name)

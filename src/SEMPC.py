@@ -698,8 +698,8 @@ class SEMPC(Node):
                 ckp = time.time()
                 # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
                 X_cl, U_cl = self.inner_loop_control(X, x_curr)
-                X_cl[-1, :] = X[-1, :].copy()
-                U_cl[-1, :] = U[-1, :self.x_dim + 1].copy()
+                X_cl[-1, :] = X[-1, :-1].copy()
+                U_cl[-1, :] = U[-1, : self.x_dim].copy()
                 print(f"Time for inner-loop control: {time.time() - ckp}")
                 x_curr = (
                     self.players[self.pl_idx]
@@ -748,10 +748,10 @@ class SEMPC(Node):
         self.sim_iter += 1
 
     def inner_loop_control(self, X, x_curr):
-        self.ref_tracker.set_ref_path(X.tolist())
-        X_cl = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
-        U_cl = np.zeros((self.H, self.x_dim + 1))
-        X_cl[0, :-1] = self.players[self.pl_idx].state_sim[:-1].copy()
+        self.ref_tracker.set_ref_path(X[:, : self.state_dim].tolist())
+        X_cl = np.zeros((self.H + 1, self.state_dim + self.x_dim))
+        U_cl = np.zeros((self.H, self.x_dim))
+        X_cl[0, :] = self.players[self.pl_idx].state_sim[:-1].copy()
         if self.sempc_solver.debug:
             sagempc_sol_plot = self.env.ax.plot(
                 X[: self.Hm, 0], X[: self.Hm, 1], c="black", marker="x", markersize=5
@@ -764,7 +764,7 @@ class SEMPC(Node):
             # print(f"Time solving CL: {time.time() - before}")
             if self.debug:
                 if k == 0:
-                    print("Ol-Cl diff: ", X_inner - X)
+                    print("Ol-Cl diff: ", X_inner - X[:, :-1])
                 print(
                     f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
                 )
@@ -772,13 +772,17 @@ class SEMPC(Node):
                 self.apply_control_once(
                     np.append(
                         X_inner[1, self.state_dim : self.state_dim + self.x_dim],
-                        U_inner[1, -1],
+                        self.params["optimizer"]["Tf"] / self.params["optimizer"]["H"],
                     )
                 )
             else:
-                self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
-            X_cl[k + 1, :-1] = X_inner[1, :-1]
-            X_cl[k + 1, -1] = X_cl[k, -1] + U_inner[0, -1]
+                self.players[self.pl_idx].rollout(
+                    np.append(
+                        U_inner[0, :],
+                        self.params["optimizer"]["Tf"] / self.params["optimizer"]["H"],
+                    ).reshape(1, -1)
+                )
+            X_cl[k + 1, :] = X_inner[1, :]
             U_cl[k, :] = U_inner[0, :]
             if self.sempc_solver.debug:
                 curr_loc_plot = self.env.ax.scatter(
