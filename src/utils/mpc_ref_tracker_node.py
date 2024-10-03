@@ -141,9 +141,9 @@ class MPCRefTracker:
         self.ocp.model.p = ca.vertcat(x_ref, w_speed, w_pos, w_horizon)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
-        Q = np.diag(
-            [1e4 * w_pos, 1e4 * w_pos, 1.0, 4.0 * w_speed, 10.0 * w_speed, 10.0]
-        )
+        # Q = np.diag(
+        #     [1e4 * w_pos, 1e4 * w_pos, 1.0, 4.0 * w_speed, 10.0 * w_speed, 10.0])
+        Q = np.diag([1e4, 1e4, 1.0, 4.0, 10.0, 10.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = w_horizon * (
@@ -171,7 +171,8 @@ class MPCRefTracker:
             self.ocp, json_file="inner_loop_acados_ocp_sempc.json"
         )
 
-    def solver_set_ref_path(self):
+    def solver_set_ref(self):
+        assert len(self.ref_path) == len(self.ref_input) + 1
         self.T_final = self.ref_path[-1][-1]
         for k in range(self.H + 1):
             if k < len(self.ref_path):
@@ -185,6 +186,20 @@ class MPCRefTracker:
                     if k > 0
                     else self.pos_scale_base
                 )
+                if k >= 2:
+                    self.ocp_solver.set(k, "x", np.array(self.ref_path[k]))
+                    if k < self.H:
+                        if k < len(self.ref_input):
+                            self.ocp_solver.set(k, "u", np.array(self.ref_input[k]))
+                        else:
+                            self.ocp_solver.set(
+                                k,
+                                "u",
+                                np.append(
+                                    np.zeros_like(self.ref_input[-1])[:-1],
+                                    params["optimizer"]["dt"],
+                                ),
+                            )
                 self.ocp_solver.set(
                     k,
                     "p",
@@ -199,6 +214,9 @@ class MPCRefTracker:
                 w_pos = self.pos_scale_base
                 self.T_final += params["optimizer"]["dt"]
                 self.ocp_solver.set(
+                    k, "x", np.append(np.array(self.ref_path[-1])[:-1], self.T_final)
+                )
+                self.ocp_solver.set(
                     k,
                     "p",
                     np.concatenate(
@@ -208,8 +226,30 @@ class MPCRefTracker:
                         )
                     ),
                 )
-            if self.debug:
-                print(f"Stage: {k}, Pos scale: {w_pos}")
+                if k < self.H:
+                    self.ocp_solver.set(
+                        k,
+                        "u",
+                        np.append(
+                            np.zeros_like(self.ref_input[-1])[:-1],
+                            params["optimizer"]["dt"],
+                        ),
+                    )
+
+            # for k in range(2, self.H):
+            #     if k < len(self.ref_input):
+            #         self.ocp_solver.set(k, "u", np.array(self.ref_input[k]))
+            #     else:
+            #         self.ocp_solver.set(
+            #             k,
+            #             "u",
+            #             np.append(
+            #                 np.zeros_like(self.ref_input[-1])[:-1],
+            #                 params["optimizer"]["dt"],
+            #             ),
+            #         )
+            # if self.debug:
+            #     print(f"Stage: {k}, Pos scale: {w_pos}")
 
     def get_solution(self):
         X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
@@ -228,10 +268,21 @@ class MPCRefTracker:
 
     def solve_for_x0(self, x0):
         self.ref_path_zero_init_time()
-        for i in range(3):
+        last_cost = -1.0
+        for i in range(10):
             self.ocp_solver.options_set("rti_phase", 1)
-            self.solver_set_ref_path()
+            self.solver_set_ref()
             status = self.ocp_solver.solve()
+            cost = self.ocp_solver.get_cost()
+            if self.debug:
+                print(
+                    f"SQP iter: {i}, Cost: {cost}, Res: {self.ocp_solver.get_residuals()}"
+                )
+            if i > 0 and (abs(cost - last_cost) / last_cost < 0.3):
+                if self.debug:
+                    print(f"Inner break at iter {i}")
+                break
+            last_cost = cost
 
             self.ocp_solver.set(0, "lbx", np.append(x0, 0.0))
             self.ocp_solver.set(0, "ubx", np.append(x0, 0.0))
@@ -243,13 +294,10 @@ class MPCRefTracker:
             self.ocp_solver.options_set("rti_phase", 2)
 
             status = self.ocp_solver.solve()
-            if self.debug:
-                print(
-                    f"SQP iter: {i}, Cost: {self.ocp_solver.get_cost()}, Res: {self.ocp_solver.get_residuals()}"
-                )
 
         X, U = self.get_solution()
         self.ref_path.pop(0)
+        self.ref_input.pop(0)
 
         return X, U
 
@@ -262,6 +310,9 @@ class MPCRefTracker:
         self.ref_path = ref_path
         if self.debug:
             print(f"Ref path: {np.array(self.ref_path)}")
+
+    def set_ref_input(self, ref_input):
+        self.ref_input = ref_input
 
 
 class MPCRefTrackerNode(Node):
