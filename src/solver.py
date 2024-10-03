@@ -582,7 +582,7 @@ class SEMPC_solver(object):
             if self.debug:
                 self.log_unsafe(X, U, player)
             if max_step_size < 0.04:
-                print(f"Break at sqp iter {sqp_iter}, \n")
+                print(f"Break at sqp iter {sqp_iter}, \n\n")
                 self.early_term = True
             else:
                 self.early_term = False

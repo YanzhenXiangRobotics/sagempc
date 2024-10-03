@@ -88,10 +88,6 @@ class SEMPC(Node):
             os.makedirs(self.fig_dir)
         self.has_legend = False
         self.ref_tracker = MPCRefTracker()
-        self.find_next_goal_time = []
-        self.solve_time = []
-        self.gp_update_time = []
-        self.inner_loop_time = []
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -179,30 +175,29 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                # offset = -0.04
-                offset = 0.0
+                offset = -0.04
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
             X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
-            intersect_pessi_opti_plot = (
-                intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
-            )
-            if self.params["experiment"]["plot_contour"]:
-                tmp_0 = self.env.ax.contour(
-                    X1,
-                    X2,
-                    intersect_pessi_opti_plot,
-                    levels=[self.params["common"]["constraint"]],
-                    colors="green",
-                    linewidths=0.5,
-                )
-                # tmp_0.collections[0].set_label("optimistic contour")
-                (artists,), _ = tmp_0.legend_elements()
-                artists.set_label(
-                    "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
-                )
-                self.env.legend_handles.append(artists)
+            # intersect_pessi_opti_plot = (
+            #     intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
+            # )
+            # if self.params["experiment"]["plot_contour"]:
+            #     tmp_0 = self.env.ax.contour(
+            #         X1,
+            #         X2,
+            #         intersect_pessi_opti_plot,
+            #         levels=[self.params["common"]["constraint"]],
+            #         colors="green",
+            #         linewidths=0.5,
+            #     )
+            #     # tmp_0.collections[0].set_label("optimistic contour")
+            #     (artists,), _ = tmp_0.legend_elements()
+            #     artists.set_label(
+            #         "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
+            #     )
+            #     self.env.legend_handles.append(artists)
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -257,7 +252,7 @@ class SEMPC(Node):
             tmp_2 = self.env.ax.scatter(
                 xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
             )
-            self.sempc_solver.threeD_tmps.append(tmp_0)
+            # self.sempc_solver.threeD_tmps.append(tmp_0)
             self.sempc_solver.plot_tmps.append(tmp_1)
             self.sempc_solver.scatter_tmps.append(tmp_2)
             # self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
@@ -316,12 +311,7 @@ class SEMPC(Node):
             else:
                 ckp = time.time()
                 w = self.set_next_goal()
-                time_find_next_goal = time.time() - ckp
-                self.find_next_goal_time.append(time_find_next_goal)
-                find_next_goal_time = np.array(self.find_next_goal_time)
-                print(
-                    f"Time finding next goal: {time_find_next_goal}, mean: {np.mean(find_next_goal_time)}, std: {np.std(find_next_goal_time)}"
-                )
+                print(f"Time for finding next goal: {time.time() - ckp}")
 
             if self.params["algo"]["objective"] == "GO":
                 running_condition_true = (
@@ -563,8 +553,8 @@ class SEMPC(Node):
             lbx_m[2:] = np.array([0.0, 0.0, 0.0])
             ubx_m = st_ub.copy()
             ubx_m[2:4] = np.array([0.0, 0.0])
-            # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
-            # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
+            self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
+            self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
@@ -654,19 +644,13 @@ class SEMPC(Node):
         """
         ckp = time.time()
         x_curr = self.prepare()
+        print(f"Time for prepare: {time.time() - ckp}")
 
         # set objective as per desired goal
         start_time = time.time()
         X, U = self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
-        time_solve = end_time - start_time
-        self.visu.time_record(time_solve)
-        self.solve_time.append(time_solve)
-        solve_time = np.array(self.solve_time)
-        print(
-            f"Time solving sagempc: {time_solve}, mean: {np.mean(solve_time)}, std: {np.std(solve_time)}"
-        )
-
+        self.visu.time_record(end_time - start_time)
         self.players[self.pl_idx].safe_meas_loc = X[self.Hm][: self.x_dim]
         # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
@@ -712,16 +696,11 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 ckp = time.time()
-                self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
-                X_cl, U_cl = self.inner_loop_control(X, U[:, :self.x_dim + 1], x_curr)
+                # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
+                X_cl, U_cl = self.inner_loop_control(X, x_curr)
                 X_cl[-1, :] = X[-1, :].copy()
-                U_cl[-1, :] = U[-1, : self.x_dim + 1].copy()
-                time_inner_loop = time.time() - ckp
-                self.inner_loop_time.append(time_inner_loop)
-                inner_loop_time = np.array(self.inner_loop_time)
-                print(
-                    f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
-                )
+                U_cl[-1, :] = U[-1, :self.x_dim + 1].copy()
+                print(f"Time for inner-loop control: {time.time() - ckp}")
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
@@ -768,9 +747,8 @@ class SEMPC(Node):
         # apply this input to your environment
         self.sim_iter += 1
 
-    def inner_loop_control(self, X, U, x_curr):
+    def inner_loop_control(self, X, x_curr):
         self.ref_tracker.set_ref_path(X.tolist())
-        self.ref_tracker.set_ref_input(U.tolist())
         X_cl = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
         U_cl = np.zeros((self.H, self.x_dim + 1))
         X_cl[0, :-1] = self.players[self.pl_idx].state_sim[:-1].copy()
@@ -798,8 +776,7 @@ class SEMPC(Node):
                     )
                 )
             else:
-                pass
-                # self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
+                self.players[self.pl_idx].rollout(U_inner[0, :].reshape(1, -1))
             X_cl[k + 1, :-1] = X_inner[1, :-1]
             X_cl[k + 1, -1] = X_cl[k, -1] + U_inner[0, -1]
             U_cl[k, :] = U_inner[0, :]
@@ -895,12 +872,7 @@ class SEMPC(Node):
 
         ckp = time.time()
         self.update_Cx_gp()
-        time_gp_update = time.time() - ckp
-        self.gp_update_time.append(time_gp_update)
-        gp_update_time = np.array(self.gp_update_time)
-        print(
-            f"Time for gp update: {time_gp_update}, mean: {np.mean(gp_update_time)}, std: {np.std(gp_update_time)}"
-        )
+        print(f"Time for gp update: {time.time() - ckp}")
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)

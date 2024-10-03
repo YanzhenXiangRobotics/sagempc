@@ -20,7 +20,7 @@ env: # Env parameters mainly used for env generation
   compute_true_Lipschitz: False # Set true to compute true L_q
 
 visu:
-  show: False # Turn on the visualization
+  show: True # Turn on the visualization
   show_current_loc: False # Show current location of the agent
   step_size: 0.04 # Step size for the visualization
   opti_path: True # Show the optimistic path generate by Problem 18/ discrete path in optimistic set
@@ -40,7 +40,7 @@ agent:
 
 optimizer:
   H: 25 # Horizon
-  Hm: 12 # Sampling horizon, somewhere in the middle of the horizon
+  Hm: 24 # Sampling horizon, somewhere in the middle of the horizon
   # u_min: [-0.1, -0.2] # Constraints on action space, Minimum control input
   # u_max: [0.1, 0.2] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   u_min: [-2.5, -5.0] # Constraints on action space, Minimum control input
