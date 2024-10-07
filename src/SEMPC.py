@@ -88,6 +88,11 @@ class SEMPC(Node):
             os.makedirs(self.fig_dir)
         self.has_legend = False
         self.ref_tracker = MPCRefTracker()
+        self.find_next_goal_time = []
+        self.solve_time = []
+        self.gp_update_time = []
+        self.inner_loop_time = []
+        self.one_iter_time = []
 
     def get_optimistic_path(self, node, goal_node, init_node):
         # If there doesn't exists a safe path then re-evaluate the goal
@@ -175,7 +180,7 @@ class SEMPC(Node):
             # intersect_pessi_opti =  torch.max(V_upper_Cx-self.eps, V_lower_Cx+0.04)
             if self.params["agent"]["dynamics"] == "nova_carter":
                 # offset = self.params["common"]["constraint"] - 0.4
-                offset = -0.04
+                offset = 0.0
             elif self.params["experiment"]["folder"] == "cluttered_envs":
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
@@ -303,6 +308,7 @@ class SEMPC(Node):
         # while not self.players[self.pl_idx].infeasible:
         running_condition_true = True
         self.players[self.pl_idx].feasible = True
+        last_time = time.time()
         while running_condition_true:
             self.not_reached_and_prob_feasible()
 
@@ -311,7 +317,12 @@ class SEMPC(Node):
             else:
                 ckp = time.time()
                 w = self.set_next_goal()
-                print(f"Time for finding next goal: {time.time() - ckp}")
+                time_find_next_goal = time.time() - ckp
+                self.find_next_goal_time.append(time_find_next_goal)
+                find_next_goal_time = np.array(self.find_next_goal_time)
+                print(
+                    f"Time finding next goal: {time_find_next_goal}, mean: {np.mean(find_next_goal_time)}, std: {np.std(find_next_goal_time)}"
+                )
 
             if self.params["algo"]["objective"] == "GO":
                 running_condition_true = (
@@ -325,6 +336,14 @@ class SEMPC(Node):
                 running_condition_true = self.players[self.pl_idx].feasible
             else:
                 raise NameError("Objective is not clear")
+            time_one_iter = time.time() - last_time
+            last_time = time.time()
+            if self.sim_iter > 1:
+                self.one_iter_time.append(time_one_iter)
+                one_iter_time = np.array(self.one_iter_time)
+                print(
+                    f"One iter time: {time_one_iter}, mean: {np.mean(one_iter_time)}, std: {np.std(one_iter_time)}\n"
+                )
         print("Number of samples", self.players[self.pl_idx].Cx_X_train.shape)
 
     def sempc_initialization(self):
@@ -549,12 +568,12 @@ class SEMPC(Node):
             st_lb[-1] = self.params["optimizer"]["Tf"]
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
-            lbx_m = st_lb.copy()
-            lbx_m[2:] = np.array([0.0, 0.0, 0.0])
-            ubx_m = st_ub.copy()
-            ubx_m[2:4] = np.array([0.0, 0.0])
-            self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
-            self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
+            # lbx_m = st_lb.copy()
+            # lbx_m[2:] = np.array([0.0, 0.0, 0.0])
+            # ubx_m = st_ub.copy()
+            # ubx_m[2:4] = np.array([0.0, 0.0])
+            # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
+            # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
@@ -650,7 +669,15 @@ class SEMPC(Node):
         start_time = time.time()
         X, U = self.sempc_solver.solve(self.players[self.pl_idx], self.sim_iter)
         end_time = time.time()
-        self.visu.time_record(end_time - start_time)
+        time_solve = end_time - start_time
+        self.visu.time_record(time_solve)
+        if self.sim_iter > 0:
+            self.solve_time.append(time_solve)
+            solve_time = np.array(self.solve_time)
+            print(
+                f"Time solving sagempc: {time_solve}, mean: {np.mean(solve_time)}, std: {np.std(solve_time)}"
+            )
+        # self.visu.time_record(end_time - start_time)
         self.players[self.pl_idx].safe_meas_loc = X[self.Hm][: self.x_dim]
         # X, U, Sl = self.sempc_solver.get_solution()
         if self.use_isaac_sim:
@@ -698,9 +725,30 @@ class SEMPC(Node):
                 ckp = time.time()
                 # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
                 X_cl, U_cl = self.inner_loop_control(X, x_curr)
-                X_cl[-1, :] = X[-1, :-1].copy()
-                U_cl[-1, :] = U[-1, : self.x_dim].copy()
-                print(f"Time for inner-loop control: {time.time() - ckp}")
+                X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
+                U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
+                X_cl = np.concatenate(
+                    (
+                        X_cl,
+                        np.linspace(
+                            0.0, self.params["optimizer"]["Tf"], self.H + 1
+                        ).reshape(-1, 1),
+                    ),
+                    axis=-1,
+                )
+                U_cl = np.concatenate(
+                    (
+                        U_cl,
+                        self.params["optimizer"]["Tf"] / self.H * np.ones((self.H, 1)),
+                    ),
+                    axis=-1,
+                )
+                time_inner_loop = time.time() - ckp
+                self.inner_loop_time.append(time_inner_loop)
+                inner_loop_time = np.array(self.inner_loop_time)
+                print(
+                    f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
+                )
                 x_curr = (
                     self.players[self.pl_idx]
                     .current_state[: self.state_dim]
@@ -724,8 +772,8 @@ class SEMPC(Node):
         if self.use_isaac_sim:
             x_curr = self.x_curr
         ckp = time.time()
-        self.one_step_planner_plot(X, x_curr)
-        print(f"Time for plotting at each sim iter: {time.time() - ckp}")
+        # self.one_step_planner_plot(X, x_curr)
+        # print(f"Time for plotting at each sim iter: {time.time() - ckp}")
         print(
             bcolors.green + "Reached:",
             x_curr,
@@ -876,7 +924,12 @@ class SEMPC(Node):
 
         ckp = time.time()
         self.update_Cx_gp()
-        print(f"Time for gp update: {time.time() - ckp}")
+        time_gp_update = time.time() - ckp
+        self.gp_update_time.append(time_gp_update)
+        gp_update_time = np.array(self.gp_update_time)
+        print(
+            f"Time for gp update: {time_gp_update}, mean: {np.mean(gp_update_time)}, std: {np.std(gp_update_time)}"
+        )
 
         if self.params["visu"]["show"]:
             self.visu.UpdateIter(self.iter, -1)

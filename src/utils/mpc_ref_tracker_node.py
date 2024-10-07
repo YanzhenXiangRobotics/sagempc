@@ -195,23 +195,18 @@ class MPCRefTracker:
 
         return X, U
 
-    def update_ref_path(self, new_ref_path):
-        self.ref_path += new_ref_path
-        if self.debug:
-            print(f"Ref path: {np.array(self.ref_path)}")
-
     def set_ref_path(self, ref_path):
         self.ref_path = ref_path
         if self.debug:
             print(f"Ref path: {np.array(self.ref_path)}")
 
-
+from main import get_current_pose, estimate_velocity
 class MPCRefTrackerNode(Node):
     def __init__(self):
         super().__init__("mpc_ref_tracker_node")
         self.ctrl = MPCRefTracker()
         self.clock_subscriber = self.create_subscription(
-            Clock, "/clock", self.clock_listener_callback, 10
+            Clock, "/clock_controller", self.clock_listener_callback, 10
         )
         self.ref_path_subscriber = self.create_subscription(
             Float64MultiArray, "/ref_path", self.ref_path_listener_callback, 10
@@ -219,8 +214,7 @@ class MPCRefTrackerNode(Node):
         # self.min_dist_subscriber = self.create_subscription(
         #     LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
         # )
-        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
-        self.complete_publisher = self.create_publisher(Int32, "/complete", 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, "/cmd_vel", 10)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.timer = self.create_timer(1 / 100, self.check_event)
@@ -236,73 +230,24 @@ class MPCRefTrackerNode(Node):
             return self._angle_helper(angle + 2 * math.pi)
         else:
             return angle
-
-    # def min_dist_listener_callback(self, msg):
-    #     try:
-    #         ranges = np.array(msg.ranges)
-    #         # choice = np.round(np.linspace(1, len(ranges)-1, num=36)).astype(int)
-    #         # print(ranges[choice], "\n\n")
-    #         ranges[ranges<=0.0] += 1e3
-    #         min_dist_idx = np.argmin(ranges)
-    #         self.min_dist = ranges[min_dist_idx]
-    #         self.min_dist_angle = (
-    #             -math.pi + msg.angle_increment * min_dist_idx + self.pose_3D[-1]
-    #             # -math.pi + msg.angle_increment * min_dist_idx
-    #         )
-    #         self.min_dist_angle = self._angle_helper(self.min_dist_angle)
-
-    #     except Exception as e:
-    #         print(e)
-
-    def get_curr_pose_clock(self):
-        try:
-            s = MLSocket()
-            s.connect((HOST, PORT))
-            data = s.recv(1024)
-            s.close()
-
-            self.pose_3D = data[: self.ctrl.state_dim]
-            self.sim_time = data[-1]
-
-        except Exception as e:
-            print(e)
-
-    def check_event(self):
-        if (
-            self.init_pose_obtained
-            and (self.sim_time != -1.0)
-            and (self.last_sim_time != -1.0)
-        ):
-            if self.sim_time - self.last_sim_time >= self.ctrl.dt:
-                print("Solving...")
-                self.control_callback()
-                if len(self.ctrl.ref_path) > 1:
-                    self.ctrl.ref_path.pop(0)
-                self.last_sim_time = self.sim_time
-            else:
-                print("Waiting...")
-                zero_vel_cmd = Twist()
-                # self.publisher.publish(zero_vel_cmd)
-
-    def control_callback(self):
-        time_before = time.time()
-        self.get_curr_pose_clock()
-        u = self.ctrl.solve_for_x0(self.pose_3D)
-        time_after = time.time()
+    
+    def clock_listener_callback(self, msg):
+        curr_time = msg.sec + 1e-9 * msg.nano_sec
+        pose = get_current_pose(self.tf_buffer)
+        velocity = estimate_velocity(pose, self.last_pose, curr_time, self.last_time)
+        self.last_pose = pose
+        self.last_time = curr_time
+       
+        X, U = self.ctrl.solve_for_x0(np.concatenate((pose, velocity)))
+        
         cmd_vel = Twist()
-        cmd_vel.linear.x = u[0]
-        cmd_vel.angular.z = u[1]
-        self.publisher.publish(cmd_vel)
+        cmd_vel.linear.x = X[1, self.ctrl.state_dim]
+        cmd_vel.angular.z = X[1, self.ctrl.state_dim + 1]
+        self.cmd_vel_publisher.publish(cmd_vel)
 
     def ref_path_listener_callback(self, msg):
         new_ref_path = np.array(msg.data).reshape(self.ctrl.H + 1, -1).tolist()
-        self.ctrl.update_ref_path(new_ref_path)
-        complete_msg = Int32()
-        if np.array(self.ctrl.ref_path).shape[0] == 1:
-            complete_msg.data = 1
-        else:
-            complete_msg.data = 0
-        self.complete_publisher.publish(complete_msg)
+        self.ctrl.set_ref_path(new_ref_path)
 
 
 if __name__ == "__main__":

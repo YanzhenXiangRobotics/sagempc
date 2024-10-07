@@ -40,7 +40,7 @@ agent:
 
 optimizer:
   H: 25 # Horizon
-  Hm: 24 # Sampling horizon, somewhere in the middle of the horizon
+  Hm: 13 # Sampling horizon, somewhere in the middle of the horizon
   # u_min: [-0.1, -0.2] # Constraints on action space, Minimum control input
   # u_max: [0.1, 0.2] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   u_min: [-2.5, -5.0] # Constraints on action space, Minimum control input
@@ -86,4 +86,4 @@ experiment:
   batch_update: True
   batch_size: 5
   max_sim_iter: 5
-  debug: True
+  debug: False
