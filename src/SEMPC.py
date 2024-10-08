@@ -5,6 +5,7 @@ import os
 import casadi as ca
 import matplotlib.pyplot as plt
 import numpy as np
+np.set_printoptions(precision=3)
 import torch
 import time
 from src.solver import Oracle_solver, SEMPC_solver
@@ -568,12 +569,12 @@ class SEMPC(Node):
             st_lb[-1] = self.params["optimizer"]["Tf"]
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_lb)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_ub)
-            # lbx_m = st_lb.copy()
-            # lbx_m[2:] = np.array([0.0, 0.0, 0.0])
-            # ubx_m = st_ub.copy()
-            # ubx_m[2:4] = np.array([0.0, 0.0])
-            # self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
-            # self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
+            lbx_m = st_lb.copy()
+            lbx_m[2:] = np.array([0.0, 0.0, 0.0])
+            ubx_m = st_ub.copy()
+            ubx_m[2:4] = np.array([0.0, 0.0])
+            self.sempc_solver.ocp_solver.set(self.Hm, "lbx", lbx_m)
+            self.sempc_solver.ocp_solver.set(self.Hm, "ubx", ubx_m)
         else:
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
@@ -723,6 +724,8 @@ class SEMPC(Node):
                 self.get_current_state_measurement()
             else:
                 ckp = time.time()
+                import pprint
+                pprint.pprint(X[: self.Hm, :])
                 # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
                 X_cl, U_cl = self.inner_loop_control(X, x_curr)
                 X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()

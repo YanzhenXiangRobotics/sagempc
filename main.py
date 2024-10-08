@@ -136,40 +136,17 @@ from src.utils.mpc_ref_tracker_node import MPCRefTracker
 import math
 
 
-def angle_helper(angle):
-    if angle >= math.pi:
-        return angle_helper(angle - 2 * math.pi)
-    elif angle < -math.pi:
-        return angle_helper(angle + 2 * math.pi)
-    else:
-        return angle
 
-
-def get_current_pose(tf_buffer):
-    pose_base_link = tf_buffer.lookup_transform(
-        "world", "base_link", time=rclpy.time.Time()
-    )
-    trans = pose_base_link.transform.translation
-    orient = pose_base_link.transform.rotation
-    orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
-    orient_euler = np.array(euler_from_quaternion(orient_quat))
-    pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
-    pose_3D[-1] = angle_helper(pose_3D[-1])
-
-    return pose_3D
-
-
-def estimate_velocity(curr_pose, last_pose, curr_time, last_time):
-    dt = curr_time - last_time
-    lin_vel = np.linalg.norm(curr_pose[:2] - last_pose[:2]) / 2
-    ang_vel = 
 
 class MainNode(Node):
     def __init__(self):
         super().__init__("main_node")
         self.clock_subscriber = self.create_subscription(
-            Clock, "/clock", self.pose_listener_callback, 10
+            Clock, "/clock_planner", self.clock_listener_callback, 10
         )
+    
+    def clock_listener_callback(self, msg):
+        pass
         
 
 rclpy.init()
