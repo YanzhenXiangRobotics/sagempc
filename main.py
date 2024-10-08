@@ -127,35 +127,40 @@ visu = Visu(
 import rclpy
 from rclpy.node import Node
 from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, JointState
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 from tf_transformations import euler_from_quaternion
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 import time
-from src.utils.mpc_ref_tracker_node import MPCRefTracker
+from src.utils.inner_control_node import InnerControl
 import math
-from src.utils.mpc_ref_tracker_node import (
+from src.utils.inner_control_node import (
     get_current_pose,
     compute_velocity_fwk_nova_carter,
 )
 
 
-class MainNode(Node):
+class PlannerNode(Node):
     def __init__(self):
         super().__init__("main_node")
         self.clock_subscriber = self.create_subscription(
             Clock, "/clock_planner", self.clock_listener_callback, 10
         )
+        self.min_dist_subscriber = self.create_subscription(
+            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
+        )
+        self.velocity_subscriber = self.create_subscription(
+            JointState, "/joint_states", self.velocity_listener_callback, 10
+        )
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.ref_path_publisher = self.create_publisher(
-            Float32MultiArray, "/ref_path", self.ref_path_listener_callback, 10
+            Float32MultiArray, "/ref_path", 10
         )
         self.sempc_initialized = False
         self.min_dist_obtained = False
-        
 
     def clock_listener_callback(self, msg):
         try:
@@ -172,9 +177,9 @@ class MainNode(Node):
                         self.sempc.update_Cx_gp(np.append(loc_curr, self.min_dist))
                         self.sempc.set_next_goal(loc_curr)
                         X_ol, _ = self.sempc.one_step_planner(state_curr)
-                        
+
                         ref_path_cmd = Float32MultiArray()
-                        ref_path_cmd.data = X_ol[:, :self.sempc.x_dim]
+                        ref_path_cmd.data = X_ol[:, : self.sempc.pose_dim].flatten().tolist()
                         self.ref_path_publisher.publish(ref_path_cmd)
         except Exception as e:
             print(e)
@@ -190,14 +195,18 @@ class MainNode(Node):
         self.min_dist = ranges[min_dist_idx]
         self.min_dist_obtained = True
 
-rclpy.init()
-se_mpc = SEMPC(params, env, visu)
 
-se_mpc.sempc_main()
-print("avg time", np.mean(visu.iteration_time))
-visu.save_data()
+if __name__ == "__main__":
+    if params["experiment"]["use_isaac_sim"]:
+        rclpy.init()
+        planner = PlannerNode()
+        rclpy.spin(planner)
 
-# X_test = np.zeros((30, 2))
-# X_test[:, 0] = np.linspace(-20.0, -35.0, X_test.shape[0])
-# X_test[:, 1] = np.linspace(-16.0, -31.0, X_test.shape[0])
-# se_mpc.apply_control(X_test)
+        planner.destroy_node()
+        rclpy.shutdown()
+    else:
+        sempc = SEMPC(params, env, visu)
+
+        sempc.sempc_main()
+        print("avg time", np.mean(visu.iteration_time))
+        visu.save_data()

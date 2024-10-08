@@ -32,7 +32,7 @@ from mlsocket import MLSocket
 HOST = "127.0.0.1"
 PORT = 65432
 
-from src.utils.mpc_ref_tracker_node import MPCRefTracker
+from src.utils.inner_control_node import InnerControl
 from src.agent import dynamics
 
 
@@ -83,7 +83,7 @@ class SEMPC:
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
         self.has_legend = False
-        self.ref_tracker = MPCRefTracker()
+        self.ref_tracker = InnerControl()
         self.find_next_goal_time = []
         self.solve_time = []
         self.gp_update_time = []

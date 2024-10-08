@@ -50,12 +50,12 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "mpc_ref_tracker_node",
+            "name": "inner_control_node",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/utils/mpc_ref_tracker_node.py",
+            "program": "${workspaceFolder}/src/utils/inner_control_node.py",
             "console": "integratedTerminal",
-            "args": [">", "output_mpc_ref_tracker_node.txt"]
+            "args": [">", "output_inner_control_node.txt"]
         },
         {
             "name": "video",

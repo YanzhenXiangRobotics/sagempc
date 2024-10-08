@@ -39,8 +39,8 @@ agent:
   cov_module: "Matern" # kernel used by the agent : 'Matern', Sq_exp
 
 optimizer:
-  H: 25 # Horizon
-  Hm: 24 # Sampling horizon, somewhere in the middle of the horizon
+  H: 20 # Horizon
+  Hm: 19 # Sampling horizon, somewhere in the middle of the horizon
   # u_min: [-0.1, -0.2] # Constraints on action space, Minimum control input
   # u_max: [0.1, 0.2] # Constraints on action space, Maximum control input         x,y,v,theta,theta_dot
   u_min: [-2.5, -5.0] # Constraints on action space, Minimum control input
@@ -80,10 +80,14 @@ experiment:
   name: "goMPC" # Random name of the experiment
   generate_regret_plot: True # Set True to generate the regret plot
   folder: "nova_carter_isaac_sim" # Folder to pick up the environment type and save the results
-  use_isaac_sim: False
+  use_isaac_sim: True
   plot_contour: True
   plot_per_sqp_iter: False
   batch_update: True
   batch_size: 5
   max_sim_iter: 5
   debug: False
+
+innerloop:
+  debug_plot: true
+  sanity_check: true
