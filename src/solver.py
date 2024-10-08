@@ -20,7 +20,7 @@ import time
 # it takes in GP function, x_g and rest are parameters
 class SEMPC_solver(object):
     def __init__(
-        self, params, grids_coupled, ax, legend_handles, fig, visu, fig_dir, publisher
+        self, params, grids_coupled, ax, legend_handles, fig, visu, fig_dir
     ) -> None:
         ocp = export_sempc_ocp(params)
         self.name_prefix = (
@@ -50,11 +50,11 @@ class SEMPC_solver(object):
         self.x_dim = params["optimizer"]["x_dim"]
         self.params = params
         if params["agent"]["dynamics"] == "robot":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.pose_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.pose_dim = self.n_order * self.x_dim + 1
         else:
-            self.state_dim = self.n_order * self.x_dim
+            self.pose_dim = self.n_order * self.x_dim
         self.grids_coupled = grids_coupled
         self.visu = visu
         self.ax = ax
@@ -65,9 +65,8 @@ class SEMPC_solver(object):
         self.ax_3D = self.fig_3D.add_subplot(111, projection="3d")
         self.fig_dir = fig_dir
         self.plot_per_sqp_iter = params["experiment"]["plot_per_sqp_iter"]
-        self.publisher = publisher
 
-        self.last_X = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
+        self.last_X = np.zeros((self.H + 1, self.pose_dim + self.x_dim + 1))
         self.last_U = np.zeros((self.H, self.x_dim + 1 + self.x_dim))
         for stage in range(self.H):
             # current stage values
@@ -158,7 +157,7 @@ class SEMPC_solver(object):
                 self.ocp_solver.set(self.H, "x", x_init)
                 x_init[-1] = half_time + dt * self.Hm
                 x_h[self.H, :] = x_init.copy()
-                # x0 = np.zeros(self.state_dim)
+                # x0 = np.zeros(self.pose_dim)
                 # x0[:self.x_dim] = np.ones(self.x_dim)*0.72
                 # x0=np.concatenate([x0, np.array([0.0])])
                 # x_init=x0.copy()
@@ -383,7 +382,7 @@ class SEMPC_solver(object):
                 self.scatter_tmps.pop(0).set_visible(False)
 
     def solve(self, player, sim_iter):
-        x_h = np.zeros((self.H + 1, self.state_dim + self.x_dim + 1))
+        x_h = np.zeros((self.H + 1, self.pose_dim + self.x_dim + 1))
         if (
             self.params["algo"]["type"] == "ret_expander"
             or self.params["algo"]["type"] == "MPC_expander"
@@ -406,7 +405,7 @@ class SEMPC_solver(object):
         w_v_omega[int(self.Hm) - 1] = 1e5
         xg = np.ones((self.H + 1, self.x_dim)) * player.get_next_to_go_loc()
         x_origin = player.origin[: self.x_dim].numpy()
-        x_terminal = np.zeros(self.state_dim)
+        x_terminal = np.zeros(self.pose_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
         for sqp_iter in range(self.max_sqp_iter):
             self.ocp_solver.options_set("rti_phase", 1)
@@ -435,7 +434,7 @@ class SEMPC_solver(object):
                             (
                                 gp_val[stage],
                                 gp_grad[stage],
-                                x_h[stage, : self.state_dim],
+                                x_h[stage, : self.pose_dim],
                                 xg[stage],
                                 w[stage],
                                 x_terminal,
@@ -457,7 +456,7 @@ class SEMPC_solver(object):
                         (
                             gp_val[stage],
                             gp_grad[stage],
-                            x_h[stage, : self.state_dim],
+                            x_h[stage, : self.pose_dim],
                             xg[stage],
                             w[stage],
                             x_terminal,
@@ -480,7 +479,7 @@ class SEMPC_solver(object):
                             (
                                 gp_val[stage],
                                 gp_grad[stage],
-                                x_h[stage, : self.state_dim],
+                                x_h[stage, : self.pose_dim],
                                 xg[stage],
                                 w[stage],
                                 x_terminal,
@@ -500,7 +499,7 @@ class SEMPC_solver(object):
                             (
                                 gp_val[stage],
                                 gp_grad[stage],
-                                x_h[stage, : self.state_dim],
+                                x_h[stage, : self.pose_dim],
                                 xg[stage],
                                 w[stage],
                                 x_terminal,
@@ -805,13 +804,13 @@ class Oracle_solver(object):
         pass
 
     def solve(self, player):
-        x_h = np.zeros((self.H + 1, self.state_dim + 1))
+        x_h = np.zeros((self.H + 1, self.pose_dim + 1))
         u_h = np.zeros((self.H, self.x_dim + 1))
         w = 1e-3 * np.ones(self.H + 1)
         w[int(self.H / 2)] = 10
         xg = np.ones((self.H + 1, self.x_dim)) * player.get_utility_minimizer
         x_origin = player.origin[: self.x_dim].numpy()
-        x_terminal = np.zeros(self.state_dim)
+        x_terminal = np.zeros(self.pose_dim)
         x_terminal[: self.x_dim] = np.ones(self.x_dim) * x_origin
         # xg = player.opti_UCB()*np.ones((self.H+1, self.x_dim))
         for sqp_iter in range(self.max_sqp_iter):
@@ -870,7 +869,7 @@ class Oracle_solver(object):
                         (
                             UB_cx_val[stage],
                             UB_cx_grad[stage],
-                            x_h[stage, : self.state_dim],
+                            x_h[stage, : self.pose_dim],
                             x_terminal,
                             xg[stage],
                             w[stage],

@@ -131,11 +131,15 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 from tf_transformations import euler_from_quaternion
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 import time
 from src.utils.mpc_ref_tracker_node import MPCRefTracker
 import math
-
-
+from src.utils.mpc_ref_tracker_node import (
+    get_current_pose,
+    compute_velocity_fwk_nova_carter,
+)
 
 
 class MainNode(Node):
@@ -144,10 +148,47 @@ class MainNode(Node):
         self.clock_subscriber = self.create_subscription(
             Clock, "/clock_planner", self.clock_listener_callback, 10
         )
-    
-    def clock_listener_callback(self, msg):
-        pass
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.ref_path_publisher = self.create_publisher(
+            Float32MultiArray, "/ref_path", self.ref_path_listener_callback, 10
+        )
+        self.sempc_initialized = False
+        self.min_dist_obtained = False
         
+
+    def clock_listener_callback(self, msg):
+        try:
+            pose_curr = get_current_pose(self.tf_buffer)
+            if self.min_dist_obtained:
+                if not self.sempc_initialized:
+                    self.sempc = SEMPC(params, env, visu)
+                    self.sempc_initialized = True
+                else:
+                    loc_curr = pose_curr[: self.sempc.x_dim]
+                    state_curr = np.concatenate((pose_curr, self.velocity))
+
+                    if self.sempc.running_condition_true_go(loc_curr):
+                        self.sempc.update_Cx_gp(np.append(loc_curr, self.min_dist))
+                        self.sempc.set_next_goal(loc_curr)
+                        X_ol, _ = self.sempc.one_step_planner(state_curr)
+                        
+                        ref_path_cmd = Float32MultiArray()
+                        ref_path_cmd.data = X_ol[:, :self.sempc.x_dim]
+                        self.ref_path_publisher.publish(ref_path_cmd)
+        except Exception as e:
+            print(e)
+
+    def velocity_listener_callback(self, msg):
+        omega_wl, omega_wr = msg.velocity[1], msg.velocity[2]
+        self.velocity = compute_velocity_fwk_nova_carter(omega_wl, omega_wr)
+
+    def min_dist_listener_callback(self, msg):
+        ranges = np.array(msg.ranges)
+        ranges[ranges <= 0.0] += 1e3
+        min_dist_idx = np.argmin(ranges)
+        self.min_dist = ranges[min_dist_idx]
+        self.min_dist_obtained = True
 
 rclpy.init()
 se_mpc = SEMPC(params, env, visu)

@@ -63,7 +63,7 @@ class MPCRefTracker:
 
     def init_params(self):
         self.x_dim, self.u_dim = 2, 2
-        self.state_dim = self.x_dim + 1
+        self.pose_dim = self.x_dim + 1
         self.H = params["optimizer"]["H"]
         self.Hm = params["optimizer"]["Hm"]
         self.ref_path = [
@@ -117,7 +117,7 @@ class MPCRefTracker:
         self.ocp.constraints.idxbu = np.arange(self.u_dim)
 
     def setup_cost(self):
-        x_ref = ca.SX.sym("x_ref", self.state_dim)
+        x_ref = ca.SX.sym("x_ref", self.pose_dim)
         self.ocp.model.p = x_ref
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
@@ -125,14 +125,14 @@ class MPCRefTracker:
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = (
-            (self.ocp.model.x[: self.state_dim] - x_ref).T
+            (self.ocp.model.x[: self.pose_dim] - x_ref).T
             @ Q
-            @ (self.ocp.model.x[: self.state_dim] - x_ref)
+            @ (self.ocp.model.x[: self.pose_dim] - x_ref)
         )
         self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
-            (self.ocp.model.x[: self.state_dim] - x_ref).T
+            (self.ocp.model.x[: self.pose_dim] - x_ref).T
             @ Q
-            @ (self.ocp.model.x[: self.state_dim] - x_ref)
+            @ (self.ocp.model.x[: self.pose_dim] - x_ref)
         )
 
     def setup_solver_options(self):
@@ -159,7 +159,7 @@ class MPCRefTracker:
                 (self.ocp_solver.set(k, "p", np.array(self.ref_path[-1])))
 
     def get_solution(self):
-        X = np.zeros((self.H + 1, self.state_dim + self.x_dim))
+        X = np.zeros((self.H + 1, self.pose_dim + self.x_dim))
         U = np.zeros((self.H, self.u_dim))
         for k in range(self.H):
             X[k, :] = self.ocp_solver.get(k, "x")
@@ -202,11 +202,11 @@ class MPCRefTracker:
 
 
 # from main import get_current_pose, compute_velocity_fwk_nova_carter
-def angle_helper(angle):
+def clip_angle(angle):
     if angle >= math.pi:
-        return angle_helper(angle - 2 * math.pi)
+        return clip_angle(angle - 2 * math.pi)
     elif angle < -math.pi:
-        return angle_helper(angle + 2 * math.pi)
+        return clip_angle(angle + 2 * math.pi)
     else:
         return angle
 
@@ -220,7 +220,7 @@ def get_current_pose(tf_buffer):
     orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
     orient_euler = np.array(euler_from_quaternion(orient_quat))
     pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
-    pose_3D[-1] = angle_helper(pose_3D[-1])
+    pose_3D[-1] = clip_angle(pose_3D[-1])
 
     return pose_3D
 
@@ -234,7 +234,6 @@ def compute_velocity_fwk_nova_carter(omega_wl, omega_wr):
     omega = (v_wr - v_wl) / l
 
     return np.array([v, omega])
-
 
 class MPCRefTrackerNode(Node):
     def __init__(self):
@@ -258,16 +257,8 @@ class MPCRefTrackerNode(Node):
 
         self.init_pose_obtained = False
         self.iter = 0
-        self.max_iter = 30
+        self.max_iter = 48
         self.X_cl = np.zeros((self.max_iter, self.ctrl.x_dim))
-
-    def _angle_helper(self, angle):
-        if angle >= math.pi:
-            return self._angle_helper(angle - 2 * math.pi)
-        elif angle < -math.pi:
-            return self._angle_helper(angle + 2 * math.pi)
-        else:
-            return angle
 
     def clock_listener_callback(self, msg):
         try:
@@ -342,30 +333,30 @@ if __name__ == "__main__":
             [-20.021, -15.933, 2.417, 0.263, -0.525, 0.86],
             [-20.027, -15.927, 2.402, 0.175, -0.35, 0.895],
             [-20.03, -15.924, 2.392, 0.088, -0.175, 0.93],
-            # [-2.004e01, -1.592e01, 2.469e00, 0.000e00, 0.000e00, 0.000e00],
-            # [-2.004e01, -1.592e01, 2.464e00, -1.126e-01, -2.251e-01, 4.503e-02],
-            # [-2.004e01, -1.592e01, 2.449e00, -1.558e-01, -4.532e-01, 1.719e-01],
-            # [-2.003e01, -1.592e01, 2.429e00, -2.065e-01, -6.331e-01, 2.069e-01],
-            # [-2.003e01, -1.593e01, 2.403e00, -1.761e-01, -8.130e-01, 2.419e-01],
-            # [-2.002e01, -1.593e01, 2.372e00, -8.672e-02, -9.378e-01, 2.769e-01],
-            # [-2.002e01, -1.593e01, 2.337e00, 2.789e-03, -1.000e00, 3.119e-01],
-            # [-2.002e01, -1.593e01, 2.301e00, 9.071e-02, -1.000e00, 3.487e-01],
-            # [-2.002e01, -1.593e01, 2.265e00, 8.474e-02, -1.000e00, 3.837e-01],
-            # [-2.003e01, -1.592e01, 2.229e00, 1.568e-01, -1.000e00, 4.187e-01],
-            # [-2.003e01, -1.592e01, 2.193e00, 1.497e-01, -1.000e00, 4.537e-01],
-            # [-2.003e01, -1.591e01, 2.157e00, 2.396e-01, -1.000e00, 4.887e-01],
-            # [-2.004e01, -1.591e01, 2.121e00, 3.280e-01, -1.000e00, 5.237e-01],
-            # [-2.004e01, -1.589e01, 2.085e00, 3.909e-01, -1.000e00, 5.587e-01],
-            # [-2.005e01, -1.588e01, 2.049e00, 4.527e-01, -1.000e00, 5.937e-01],
-            # [-2.006e01, -1.587e01, 2.013e00, 5.000e-01, -1.000e00, 6.287e-01],
-            # [-2.007e01, -1.585e01, 1.977e00, 5.000e-01, -1.000e00, 6.637e-01],
-            # [-2.008e01, -1.584e01, 1.941e00, 5.000e-01, -1.000e00, 6.987e-01],
-            # [-2.010e01, -1.581e01, 1.884e00, 5.000e-01, -1.000e00, 7.550e-01],
-            # [-2.011e01, -1.580e01, 1.850e00, 4.467e-01, -8.996e-01, 7.900e-01],
-            # [-2.011e01, -1.579e01, 1.821e00, 3.572e-01, -7.196e-01, 8.250e-01],
-            # [-2.012e01, -1.578e01, 1.798e00, 2.678e-01, -5.397e-01, 8.600e-01],
-            # [-2.012e01, -1.577e01, 1.782e00, 1.785e-01, -3.598e-01, 8.950e-01],
-            # [-2.012e01, -1.577e01, 1.772e00, 8.920e-02, -1.799e-01, 9.300e-01],
+            [-2.004e01, -1.592e01, 2.469e00, 0.000e00, 0.000e00, 0.000e00],
+            [-2.004e01, -1.592e01, 2.464e00, -1.126e-01, -2.251e-01, 4.503e-02],
+            [-2.004e01, -1.592e01, 2.449e00, -1.558e-01, -4.532e-01, 1.719e-01],
+            [-2.003e01, -1.592e01, 2.429e00, -2.065e-01, -6.331e-01, 2.069e-01],
+            [-2.003e01, -1.593e01, 2.403e00, -1.761e-01, -8.130e-01, 2.419e-01],
+            [-2.002e01, -1.593e01, 2.372e00, -8.672e-02, -9.378e-01, 2.769e-01],
+            [-2.002e01, -1.593e01, 2.337e00, 2.789e-03, -1.000e00, 3.119e-01],
+            [-2.002e01, -1.593e01, 2.301e00, 9.071e-02, -1.000e00, 3.487e-01],
+            [-2.002e01, -1.593e01, 2.265e00, 8.474e-02, -1.000e00, 3.837e-01],
+            [-2.003e01, -1.592e01, 2.229e00, 1.568e-01, -1.000e00, 4.187e-01],
+            [-2.003e01, -1.592e01, 2.193e00, 1.497e-01, -1.000e00, 4.537e-01],
+            [-2.003e01, -1.591e01, 2.157e00, 2.396e-01, -1.000e00, 4.887e-01],
+            [-2.004e01, -1.591e01, 2.121e00, 3.280e-01, -1.000e00, 5.237e-01],
+            [-2.004e01, -1.589e01, 2.085e00, 3.909e-01, -1.000e00, 5.587e-01],
+            [-2.005e01, -1.588e01, 2.049e00, 4.527e-01, -1.000e00, 5.937e-01],
+            [-2.006e01, -1.587e01, 2.013e00, 5.000e-01, -1.000e00, 6.287e-01],
+            [-2.007e01, -1.585e01, 1.977e00, 5.000e-01, -1.000e00, 6.637e-01],
+            [-2.008e01, -1.584e01, 1.941e00, 5.000e-01, -1.000e00, 6.987e-01],
+            [-2.010e01, -1.581e01, 1.884e00, 5.000e-01, -1.000e00, 7.550e-01],
+            [-2.011e01, -1.580e01, 1.850e00, 4.467e-01, -8.996e-01, 7.900e-01],
+            [-2.011e01, -1.579e01, 1.821e00, 3.572e-01, -7.196e-01, 8.250e-01],
+            [-2.012e01, -1.578e01, 1.798e00, 2.678e-01, -5.397e-01, 8.600e-01],
+            [-2.012e01, -1.577e01, 1.782e00, 1.785e-01, -3.598e-01, 8.950e-01],
+            [-2.012e01, -1.577e01, 1.772e00, 8.920e-02, -1.799e-01, 9.300e-01],
         ]
     )
     tracker.ctrl.set_ref_path(ref_path[:, :-3].tolist())

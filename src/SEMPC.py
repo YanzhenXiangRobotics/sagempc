@@ -5,6 +5,7 @@ import os
 import casadi as ca
 import matplotlib.pyplot as plt
 import numpy as np
+
 np.set_printoptions(precision=3)
 import torch
 import time
@@ -35,18 +36,13 @@ from src.utils.mpc_ref_tracker_node import MPCRefTracker
 from src.agent import dynamics
 
 
-class SEMPC(Node):
-    def __init__(self, params, env, visu) -> None:
-        super().__init__("sempc")
+class SEMPC:
+    def __init__(self, params, env, visu, query_state_obs=None) -> None:
         # self.oracle_solver = Oracle_solver(params)
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.debug = params["experiment"]["debug"]
         self.env = env
         self.fig_dir = os.path.join(self.env.env_dir, "figs")
-        self.publisher = self.create_publisher(Twist, "/cmd_vel", 10)
-        self.ref_path_publisher = self.create_publisher(
-            Float64MultiArray, "/ref_path", 10
-        )
         # self.complete_subscriber = self.create_subscription(
         #     Int32, "/complete", self.clock_listener_callback, 10
         # )
@@ -58,7 +54,6 @@ class SEMPC(Node):
             env.fig,
             visu,
             self.fig_dir,
-            self.publisher,
         )
         self.visu = visu
         self.params = params
@@ -77,13 +72,13 @@ class SEMPC(Node):
         self.prev_goal_dist = 100
         self.goal_in_pessi = False
         if params["agent"]["dynamics"] == "robot":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.pose_dim = self.n_order * self.x_dim + 1
         elif params["agent"]["dynamics"] == "nova_carter":
-            self.state_dim = self.n_order * self.x_dim + 1
+            self.pose_dim = self.n_order * self.x_dim + 1
         else:
-            self.state_dim = self.n_orer * self.x_dim
+            self.pose_dim = self.n_order * self.x_dim
         self.obtained_init_state = False
-        self.sempc_initialization()
+        self.sempc_initialization(query_state_obs)
         self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
@@ -138,7 +133,9 @@ class SEMPC(Node):
             opti_path = t1 + t2
         return opti_path, goal_node
 
-    def set_next_goal(self):
+    def set_next_goal(self, x_curr=None):
+        if x_curr is None:
+            x_curr = self.players[self.pl_idx].current_location
         # 2) Set goal based on objective and strategy
         if self.params["algo"]["objective"] == "SE":
             if self.params["algo"]["strategy"] == "SEpessi":
@@ -173,7 +170,7 @@ class SEMPC(Node):
                 self.players[self.pl_idx].origin, self.players[self.pl_idx].grid_V
             )
             curr_node = get_idx_from_grid(
-                torch.from_numpy(self.players[self.pl_idx].current_location),
+                torch.from_numpy(x_curr),
                 self.players[self.pl_idx].grid_V,
             )
             # self.players[self.pl_idx].update_pessimistic_graph(V_lower_Cx, init_node, self.q_th, Lc=0)
@@ -208,7 +205,7 @@ class SEMPC(Node):
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
             curr_node = self.players[self.pl_idx].get_nearest_opti_idx(
-                torch.from_numpy(self.players[self.pl_idx].current_location)
+                torch.from_numpy(x_curr)
             )
             goal_node = get_idx_from_grid(
                 torch.from_numpy(self.players[self.pl_idx].get_utility_minimizer),
@@ -273,18 +270,6 @@ class SEMPC(Node):
         print(bcolors.green + "Goal:", xi_star, " uncertainity:", w, bcolors.ENDC)
         return w
 
-    def get_safe_init(self):
-        init_xy = {}
-        init_xy["Cx_X"] = [torch.from_numpy(self.x_curr[: self.x_dim])]
-        init_xy["Fx_X"] = init_xy["Cx_X"].copy()
-        init_xy["Cx_Y"] = torch.atleast_2d(torch.tensor(self.query_meas[0]))
-        init_xy["Fx_Y"] = torch.atleast_2d(
-            torch.tensor(
-                [np.linalg.norm(self.x_curr[:-1] - np.array(self.x_goal), ord=2)]
-            )
-        )
-        return init_xy
-
     def enlarge_pessi_set(self, pessi_value):
         # Make it more efficient by only using matrix instead of vectors
         max_idx = pessi_value.argmax().item()
@@ -301,6 +286,15 @@ class SEMPC(Node):
                     "Lc"
                 ] * self.params["visu"]["step_size"] * np.abs(i - cur_max_idx)
         return pessi_value
+
+    def running_condition_true_go(self, x_curr=None):
+        minimizer = self.visu.utility_minimizer
+        current_location = (
+            self.players[self.pl_idx].current_location if x_curr is None else x_curr
+        )
+        resolution = self.params["visu"]["step_size"]
+
+        return np.linalg.norm(minimizer - current_location) >= resolution
 
     def sempc_main(self):
         """_summary_ Responsible for initialization, logic for when to collect sample vs explore"""
@@ -326,13 +320,7 @@ class SEMPC(Node):
                 )
 
             if self.params["algo"]["objective"] == "GO":
-                running_condition_true = (
-                    not np.linalg.norm(
-                        self.visu.utility_minimizer
-                        - self.players[self.pl_idx].current_location
-                    )
-                    < self.params["visu"]["step_size"]
-                )
+                running_condition_true = self.running_condition_true_go()
             elif self.params["algo"]["objective"] == "SE":
                 running_condition_true = self.players[self.pl_idx].feasible
             else:
@@ -347,39 +335,29 @@ class SEMPC(Node):
                 )
         print("Number of samples", self.players[self.pl_idx].Cx_X_train.shape)
 
-    def sempc_initialization(self):
-        if self.use_isaac_sim:
-            while not self.obtained_init_state:
-                self.get_current_state_measurement()
-                print("waiting...")
-            print("initialized location", self.get_safe_init())
+    def sempc_initialization(self, query_state_obs=None):
+        if query_state_obs is None:
+            init_loc_obs = self.env.get_safe_init()
         else:
-            print("initialized location", self.env.get_safe_init())
+            query_state_obs = torch.from_numpy(query_state_obs)
+            init_loc_obs = {}
+            init_loc_obs["Cx_X"] = query_state_obs[: self.x_dim]
+            init_loc_obs["Cx_y"] = query_state_obs[-1]
+        print("initialized location observation", init_loc_obs)
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
         # TODO: Remove dependence of player on visu grid
-        if self.use_isaac_sim:
-            self.players = get_players_initialized_isaac_sim(
-                self.get_safe_init(),
-                torch.tensor(self.x_curr)[: self.x_dim],
-                self.params,
-                self.env.VisuGrid,
-            )
-        else:
-            self.players = get_players_initialized(
-                self.env.get_safe_init(), self.params, self.env.VisuGrid
-            )
+        self.players = get_players_initialized(
+            init_loc_obs, self.params, self.env.VisuGrid
+        )
 
-        for it, player in enumerate(self.players):
-            player.update_Cx_gp_with_current_data()
-            init = self.env.get_safe_init()["Cx_X"][it].reshape(-1, 2).numpy()
-            state = np.zeros(self.state_dim + 1)
-            state[: self.x_dim] = init
-            state[self.x_dim] = self.params["env"]["start_angle"]
-            if self.use_isaac_sim:
-                self.get_current_state_measurement()
-            else:
-                player.update_current_state(state)
+        self.players[0].update_Cx_gp_with_current_data()
+        if query_state_obs is None:
+            x_curr = init_loc_obs["Cx_X"][0].numpy()
+            pose_curr = np.append(x_curr, self.params["env"]["start_angle"])
+        else:
+            pose_curr = query_state_obs[:-1]
+        self.players[0].update_current_state(pose_curr)
 
         associate_dict = {}
         associate_dict[0] = []
@@ -387,33 +365,28 @@ class SEMPC(Node):
             associate_dict[0].append(idx)
 
         # 2) Set goal based on strategy
-        self.set_next_goal()
+        self.set_next_goal(
+            query_state_obs[: self.x_dim] if query_state_obs is not None else None
+        )
 
         # initial measurement (make sure l(x_init) >= 0)
         val = -100
         while val <= self.q_th:
-            if self.use_isaac_sim:
-                self.get_current_state_measurement()
-                if self.params["experiment"]["batch_update"]:
-                    query_pts = self.query_pts
-                    query_meas = self.query_meas
-                else:
-                    query_pts = self.query_pts[0]
-                    query_meas = self.query_meas[0]
-                TrainAndUpdateConstraint_isaac_sim(
-                    query_pts,
-                    query_meas,
-                    self.pl_idx,
-                    self.players,
-                    self.params,
-                )
-            else:
+            if query_state_obs is None:
                 TrainAndUpdateConstraint(
                     self.players[self.pl_idx].current_location,
                     self.pl_idx,
                     self.players,
                     self.params,
                     self.env,
+                )
+            else:
+                TrainAndUpdateConstraint_isaac_sim(
+                    query_state_obs[: self.x_dim],
+                    query_state_obs[-1],
+                    self.pl_idx,
+                    self.players,
+                    self.params,
                 )
             val = self.players[self.pl_idx].get_lb_at_curr_loc()
 
@@ -424,106 +397,26 @@ class SEMPC(Node):
         self.data["sum_max_density_sigma"].append(self.max_density_sigma)
         print(self.iter, self.max_density_sigma)
 
-    def get_current_state_measurement(self):
-        try:
-            s = MLSocket()
-            s.connect((HOST, PORT))
-            data = s.recv(1024)
-            s.close()
-
-            self.x_curr = data[: self.state_dim]
-            min_dist_angle = data[self.state_dim]
-            min_dist = data[self.state_dim + 1]
-            self.t_curr = data[-1]
-
-            query_pts_x_start = self.x_curr[0]
-            query_pts_x_end = self.x_curr[0] + min_dist * np.cos(min_dist_angle)
-            # resolution = 0.3 if query_pts_x_start <= query_pts_x_end else -0.3
-            num_pts = self.params["experiment"]["batch_size"]
-            query_pts_x = np.linspace(
-                query_pts_x_start,
-                query_pts_x_end,
-                num_pts,
-            )
-            query_pts_y = np.linspace(
-                self.x_curr[1],
-                self.x_curr[1]
-                + (query_pts_x[-1] - query_pts_x[0]) * np.tan(min_dist_angle),
-                len(query_pts_x),
-            )
-            self.query_pts = np.vstack((query_pts_x, query_pts_y)).T
-            self.query_meas = np.linspace(
-                min_dist,
-                min_dist - (query_pts_x[-1] - query_pts_x[0]) / np.cos(min_dist_angle),
-                len(query_pts_x),
-            )
-            self.obtained_init_state = True
-
-            self.players[self.pl_idx].update_current_state(self.x_curr)
-
-        except Exception as e:
-            print(e)
-
-    def _angle_helper(self, angle):
-        if angle > math.pi:
-            angle -= 2 * math.pi
-        elif angle < -math.pi:
-            angle += 2 * math.pi
-        return angle
-
-    def apply_control_once(self, u):
-        msg = Twist()
-        self.get_current_state_measurement()
-        start = self.t_curr
-        while self.t_curr - start < u[-1]:
-            msg.linear.x = u[0]
-            msg.angular.z = u[1]
-            self.publisher.publish(msg)
-            self.get_current_state_measurement()
-
-    def apply_control(self, path, ctrl, duration):
-        msg = Twist()
-        # for i in range(U.shape[0] - 1):
-        for i in range(self.Hm):
-            self.get_current_state_measurement()
-            start = self.t_curr
-            while self.t_curr - start < duration[i]:
-                msg.linear.x = ctrl[i, 0]
-                msg.angular.z = ctrl[i, 1]
-                self.publisher.publish(msg)
-                self.get_current_state_measurement()
-                # print(
-                #     f"Starting from {start} until {start + U[i, 2]} at {self.t_curr}, applied {U[i, :self.x_dim]}"
-                # )
-            uncertainty = self.players[self.pl_idx].get_width_at_curr_loc()
-            if self.debug:
-                print("uncertainty: ", uncertainty)
-            # if uncertainty > 2.0 * self.params["common"]["epsilon"]:
-            #     break
-        msg = Twist()
-        self.publisher.publish(msg)
-
-    def prepare(self):
+    def prepare(self, state_curr=None):
         # self.visu.UpdateIter(self.iter, -1)
         print(bcolors.OKCYAN + "Solving Constrints" + bcolors.ENDC)
 
         # Write in MPC style to reach the goal. The main loop is outside
-        if self.use_isaac_sim:
-            x_curr = self.x_curr
-        else:
-            x_curr = (
-                self.players[self.pl_idx]
-                .current_state[: self.state_dim]
-                .reshape(self.state_dim)
-            )  # 3D
-        self.sempc_solver.update_x_curr(x_curr)
+        if state_curr is None:
+            state_curr = np.zeros(self.pose_dim + self.x_dim)
+            state_curr[: self.pose_dim] = self.players[
+                self.pl_idx
+            ].current_state.reshape(self.pose_dim)  # 3D
+        self.sempc_solver.update_x_curr(state_curr[: self.pose_dim])
         x_origin = self.players[
             self.pl_idx
         ].origin.numpy()  # origin: related to X_train, thus 2-dims
-        if torch.is_tensor(x_curr):
-            x_curr = x_curr.numpy()
-        st_curr = np.zeros(self.state_dim + self.x_dim + 1)  # 4
-        st_curr[: self.state_dim] = np.ones(self.state_dim) * x_curr
+        if torch.is_tensor(state_curr):
+            state_curr = state_curr.numpy()
+        st_curr = np.zeros(self.pose_dim + self.x_dim + 1)  # 6
+        st_curr[: self.pose_dim + self.x_dim] = (
+            np.ones(self.pose_dim + self.x_dim) * state_curr
+        )
         if self.debug:
             print(f"St curr: {st_curr}")
         self.sempc_solver.ocp_solver.set(0, "lbx", st_curr)
@@ -541,10 +434,10 @@ class SEMPC(Node):
                     : self.x_dim
                 ]
             else:
-                st_lb = np.zeros(self.state_dim + 1)
-                st_ub = np.zeros(self.state_dim + 1)
-                st_lb[: self.state_dim] = np.array(self.params["optimizer"]["x_min"])
-                st_ub[: self.state_dim] = np.array(self.params["optimizer"]["x_max"])
+                st_lb = np.zeros(self.pose_dim + 1)
+                st_ub = np.zeros(self.pose_dim + 1)
+                st_lb[: self.pose_dim] = np.array(self.params["optimizer"]["x_min"])
+                st_ub[: self.pose_dim] = np.array(self.params["optimizer"]["x_max"])
             if self.params["agent"]["dynamics"] == "robot":
                 st_lb[3] = 0.0
                 st_ub[3] = 0.0
@@ -579,48 +472,37 @@ class SEMPC(Node):
             if self.params["agent"]["dynamics"] == "nova_carter":
                 st_origin = np.zeros(self.x_dim + 1)
             else:
-                st_origin = np.zeros(self.state_dim + 1)
+                st_origin = np.zeros(self.pose_dim + 1)
             st_origin[: self.x_dim] = np.ones(self.x_dim) * x_origin
             st_origin[-1] = 1.0
             self.sempc_solver.ocp_solver.set(self.H, "lbx", st_origin)
             self.sempc_solver.ocp_solver.set(self.H, "ubx", st_origin)
             # if self.params["algo"]["type"] == "MPC_expander" or self.params["algo"]["type"] == "ret_expander":
-            #     pt_in_exp_lb = np.ones(self.state_dim+1)*(-1e8)
-            #     pt_in_exp_ub = np.ones(self.state_dim+1)*(1e8)
+            #     pt_in_exp_lb = np.ones(self.pose_dim+1)*(-1e8)
+            #     pt_in_exp_ub = np.ones(self.pose_dim+1)*(1e8)
             #     # pt_in_exp_lb[:self.x_dim] = self.players[self.pl_idx].get_next_to_go_loc() - 0.01
             #     # pt_in_exp_ub[:self.x_dim] = self.players[self.pl_idx].get_next_to_go_loc() + 0.01
             #     self.sempc_solver.ocp_solver.set(self.Hm, "lbx", pt_in_exp_lb)
             #     self.sempc_solver.ocp_solver.set(self.Hm, "ubx", pt_in_exp_ub)
-        return x_curr
+        return state_curr
 
     def one_step_planner_plot(self, X, x_curr):
-        if self.use_isaac_sim:
-            self.env.legend_handles.append(
-                self.env.ax.scatter(
-                    self.x_curr[0],
-                    self.x_curr[1],
-                    color="red",
-                    s=6,
-                    label="actual trajectory",
-                )
+        if self.debug:
+            print(f"Red dot loc: {x_curr}")
+        self.env.legend_handles.append(
+            self.env.ax.scatter(
+                x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
             )
-        else:
-            if self.debug:
-                print(f"Red dot loc: {x_curr}")
-            self.env.legend_handles.append(
-                self.env.ax.scatter(
-                    x_curr[0], x_curr[1], color="red", s=6, label="actual trajectory"
-                )
+        )
+        self.env.legend_handles.append(
+            self.env.ax.plot(
+                X[: self.Hm, 0],
+                X[: self.Hm, 1],
+                color="black",
+                # linewidth=10,
             )
-            self.env.legend_handles.append(
-                self.env.ax.plot(
-                    X[: self.Hm, 0],
-                    X[: self.Hm, 1],
-                    color="black",
-                    # linewidth=10,
-                )
-            )
-            self.sempc_solver.plot_3D(self.players[self.pl_idx])
+        )
+        self.sempc_solver.plot_3D(self.players[self.pl_idx])
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # if not self.has_legend:
         #     # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")
@@ -656,14 +538,15 @@ class SEMPC(Node):
         for _ in range(len_threeD_tmps):
             self.sempc_solver.threeD_tmps.pop(0).remove()
 
-    def one_step_planner(self):
+    def one_step_planner(self, state_curr=None):
         """_summary_: Plans going and coming back all in one trajectory plan
         Input: current location, end location, dyn, etc.
         Process: Solve the NLP and simulate the system until the measurement collection point
         Output: trajectory
         """
         ckp = time.time()
-        x_curr = self.prepare()
+        do_inner_loop = True if state_curr is None else False
+        state_curr = self.prepare(state_curr)
         print(f"Time for prepare: {time.time() - ckp}")
 
         # set objective as per desired goal
@@ -678,39 +561,7 @@ class SEMPC(Node):
             print(
                 f"Time solving sagempc: {time_solve}, mean: {np.mean(solve_time)}, std: {np.std(solve_time)}"
             )
-        # self.visu.time_record(end_time - start_time)
         self.players[self.pl_idx].safe_meas_loc = X[self.Hm][: self.x_dim]
-        # X, U, Sl = self.sempc_solver.get_solution()
-        if self.use_isaac_sim:
-            self.inner_loop_control(X, x_curr)
-        # val = (
-        #     2
-        #     * self.players[self.pl_idx].Cx_beta
-        #     * 2
-        #     * torch.sqrt(
-        #         self.players[self.pl_idx]
-        #         .Cx_model(
-        #             torch.from_numpy(X[self.Hm, : self.x_dim]).reshape(-1, 2).float()
-        #         )
-        #         .variance
-        #     )
-        #     .detach()
-        #     .item()
-        # )
-        # print("slack", Sl, "uncertainity", X[self.Hm], val)#, "z-x",np.linalg.norm(X[:-1,0:2] - U[:,3:5]))
-        # self.visu.record(X, U, X[self.Hm], self.pl_idx, self.players)
-
-        # Environement simulation
-        # x_curr = X[0]
-        # for i in range(self.Hm):
-        #     self.env.integrator.set("x", x_curr)
-        #     self.env.integrator.set("u", U[i])
-        #     self.env.integrator.solve()
-        #     x_curr = self.env.integrator.get("x")
-        #     if self.x_dim == 1:
-        #         x_curr = np.hstack([x_curr[:self.x_dim].item(), -2.0])
-        #     self.players[self.pl_idx].update_current_state(x_curr)
-
         if (
             self.params["algo"]["type"] == "ret"
             or self.params["algo"]["type"] == "ret_expander"
@@ -719,78 +570,71 @@ class SEMPC(Node):
             if self.goal_in_pessi:
                 # if np.linalg.norm(self.visu.utility_minimizer-self.players[self.pl_idx].safe_meas_loc) < 0.025:
                 self.players[self.pl_idx].update_current_state(X[self.Hm])
-        else:
-            if self.use_isaac_sim:
-                self.get_current_state_measurement()
-            else:
-                ckp = time.time()
-                import pprint
-                pprint.pprint(X[: self.Hm, :])
-                # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.state_dim])
-                X_cl, U_cl = self.inner_loop_control(X, x_curr)
-                X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
-                U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
-                X_cl = np.concatenate(
-                    (
-                        X_cl,
-                        np.linspace(
-                            0.0, self.params["optimizer"]["Tf"], self.H + 1
-                        ).reshape(-1, 1),
-                    ),
-                    axis=-1,
-                )
-                U_cl = np.concatenate(
-                    (
-                        U_cl,
-                        self.params["optimizer"]["Tf"] / self.H * np.ones((self.H, 1)),
-                    ),
-                    axis=-1,
-                )
-                time_inner_loop = time.time() - ckp
-                self.inner_loop_time.append(time_inner_loop)
-                inner_loop_time = np.array(self.inner_loop_time)
-                print(
-                    f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
-                )
-                x_curr = (
-                    self.players[self.pl_idx]
-                    .current_state[: self.state_dim]
-                    .reshape(self.state_dim)
-                )
-        # self.visu.record(
-        #     X,
-        #     U,
-        #     self.players[self.pl_idx].get_next_to_go_loc(),
-        #     self.pl_idx,
-        #     self.players,
-        # )
-        self.visu.record(
-            X_cl,
-            U_cl,
-            self.players[self.pl_idx].get_next_to_go_loc(),
-            self.pl_idx,
-            self.players,
-        )
+        elif do_inner_loop:
+            ckp = time.time()
+            # import pprint
+            # pprint.pprint(X[: self.Hm, :])
+            # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.pose_dim])
+            X_cl, U_cl = self.inner_loop_control(X, state_curr[: self.pose_dim])
+            X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
+            U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
+            X_cl = np.concatenate(
+                (
+                    X_cl,
+                    np.linspace(
+                        0.0, self.params["optimizer"]["Tf"], self.H + 1
+                    ).reshape(-1, 1),
+                ),
+                axis=-1,
+            )
+            U_cl = np.concatenate(
+                (
+                    U_cl,
+                    self.params["optimizer"]["Tf"] / self.H * np.ones((self.H, 1)),
+                ),
+                axis=-1,
+            )
+            time_inner_loop = time.time() - ckp
+            self.inner_loop_time.append(time_inner_loop)
+            inner_loop_time = np.array(self.inner_loop_time)
+            print(
+                f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
+            )
+            pose_curr = (
+                self.players[self.pl_idx]
+                .current_state[: self.pose_dim]
+                .reshape(self.pose_dim)
+            )
+            # self.visu.record(
+            #     X,
+            #     U,
+            #     self.players[self.pl_idx].get_next_to_go_loc(),
+            #     self.pl_idx,
+            #     self.players,
+            # )
+            self.visu.record(
+                X_cl,
+                U_cl,
+                self.players[self.pl_idx].get_next_to_go_loc(),
+                self.pl_idx,
+                self.players,
+            )
+            self.one_step_planner_plot(X, state_curr[: self.x_dim])
+            # print(f"Time for plotting at each sim iter: {time.time() - ckp}")
+            print(
+                bcolors.green + "Reached:",
+                pose_curr,
+                X[self.Hm, : self.pose_dim],
+                bcolors.ENDC,
+            )
+            # set current location as the location to be measured
 
-        if self.use_isaac_sim:
-            x_curr = self.x_curr
-        ckp = time.time()
-        # self.one_step_planner_plot(X, x_curr)
-        # print(f"Time for plotting at each sim iter: {time.time() - ckp}")
-        print(
-            bcolors.green + "Reached:",
-            x_curr,
-            X[self.Hm, : self.state_dim],
-            bcolors.ENDC,
-        )
-        # set current location as the location to be measured
-
-        goal_dist = np.linalg.norm(
-            self.players[self.pl_idx].planned_measure_loc
-            - self.players[self.pl_idx].current_location
-        )
-        if np.abs(goal_dist) < 1.0e-2:
-            self.flag_reached_xt_goal = True
+            goal_dist = np.linalg.norm(
+                self.players[self.pl_idx].planned_measure_loc
+                - self.players[self.pl_idx].current_location
+            )
+            if np.abs(goal_dist) < 1.0e-2:
+                self.flag_reached_xt_goal = True
         # if np.abs(self.prev_goal_dist - goal_dist) < 1e-2:
         #     # set infeasibility flag to true and ask for a new goal
         #     self.players[self.pl_idx].infeasible = True
@@ -798,9 +642,11 @@ class SEMPC(Node):
         # apply this input to your environment
         self.sim_iter += 1
 
+        return X, U
+
     def inner_loop_control(self, X, x_curr):
-        self.ref_tracker.set_ref_path(X[:, : self.state_dim].tolist())
-        X_cl = np.zeros((self.H + 1, self.state_dim + self.x_dim))
+        self.ref_tracker.set_ref_path(X[:, : self.pose_dim].tolist())
+        X_cl = np.zeros((self.H + 1, self.pose_dim + self.x_dim))
         U_cl = np.zeros((self.H, self.x_dim))
         X_cl[0, :] = self.players[self.pl_idx].state_sim[:-1].copy()
         if self.sempc_solver.debug:
@@ -819,20 +665,12 @@ class SEMPC(Node):
                 print(
                     f"Sim iter: {self.sim_iter}, Stage: {k}, X inner: {X_inner}, U inner: {U_inner}"
                 )
-            if self.use_isaac_sim:
-                self.apply_control_once(
-                    np.append(
-                        X_inner[1, self.state_dim : self.state_dim + self.x_dim],
-                        self.params["optimizer"]["Tf"] / self.params["optimizer"]["H"],
-                    )
-                )
-            else:
-                self.players[self.pl_idx].rollout(
-                    np.append(
-                        U_inner[0, :],
-                        self.params["optimizer"]["Tf"] / self.params["optimizer"]["H"],
-                    ).reshape(1, -1)
-                )
+            self.players[self.pl_idx].rollout(
+                np.append(
+                    U_inner[0, :],
+                    self.params["optimizer"]["Tf"] / self.params["optimizer"]["H"],
+                ).reshape(1, -1)
+            )
             X_cl[k + 1, :] = X_inner[1, :]
             U_cl[k, :] = U_inner[0, :]
             if self.sempc_solver.debug:
@@ -879,34 +717,27 @@ class SEMPC(Node):
             self.publisher.publish(msg)
         return X_cl, U_cl
 
-    def update_Cx_gp(self):
+    def update_Cx_gp(self, query_loc_obs=None):
         if not self.goal_in_pessi:
             print(
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
-        if self.use_isaac_sim:
-            self.get_current_state_measurement()
-            if self.params["experiment"]["batch_update"]:
-                query_pts = self.query_pts
-                query_meas = self.query_meas
-            else:
-                query_pts = self.query_pts[0]
-                query_meas = self.query_meas[0]
-            TrainAndUpdateConstraint_isaac_sim(
-                query_pts,
-                query_meas,
-                self.pl_idx,
-                self.players,
-                self.params,
-            )
-        else:
+        if query_loc_obs is None:
             TrainAndUpdateConstraint(
                 self.players[self.pl_idx].safe_meas_loc,
                 self.pl_idx,
                 self.players,
                 self.params,
                 self.env,
+            )
+        else:
+            TrainAndUpdateConstraint_isaac_sim(
+                query_loc_obs[: self.x_dim],
+                query_loc_obs[-1],
+                self.pl_idx,
+                self.players,
+                self.params,
             )
         print(
             "Uncertainity at meas_loc",
