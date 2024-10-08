@@ -90,4 +90,4 @@ experiment:
 
 innerloop:
   debug_plot: true
-  sanity_check: true
+  sanity_check: false

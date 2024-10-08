@@ -43,52 +43,42 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -shared inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-"world" passed to lookupTransform argument target_frame does not exist. 
-Iter: 1
-Iter: 2
-Iter: 3
-Iter: 4
-Iter: 5
-Iter: 6
-Iter: 7
-Iter: 8
-Iter: 9
-Iter: 10
-Iter: 11
-Iter: 12
-Iter: 13
-Iter: 14
-Iter: 15
-Iter: 16
-Iter: 17
-Iter: 18
-Iter: 19
-Iter: 20
-Iter: 21
-Iter: 22
-Iter: 23
-Iter: 24
-Iter: 25
-Iter: 26
-Iter: 27
-Iter: 28
-Iter: 29
-Iter: 30
-Iter: 31
-Iter: 32
-Iter: 33
-Iter: 34
-Iter: 35
-Iter: 36
-Iter: 37
-Iter: 38
-Iter: 39
-Iter: 40
-Iter: 41
-Iter: 42
-Iter: 43
-Iter: 44
-Iter: 45
-Iter: 46
-Iter: 47
-Iter: 48
+Ref path updated
+Ref path updated
+
+SQP_RTI: QP solver returned error status 3 QP iteration 8.
+
+SQP_RTI: QP solver returned error status 3 QP iteration 8.
+
+SQP_RTI: QP solver returned error status 3 QP iteration 8.
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+
+SQP_RTI: QP solver returned error status 3 QP iteration 12.
+
+SQP_RTI: QP solver returned error status 3 QP iteration 12.
+
+SQP_RTI: QP solver returned error status 3 QP iteration 12.
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+Ref path updated
+There was an error running python

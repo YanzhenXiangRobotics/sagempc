@@ -11,7 +11,7 @@ from rclpy.node import Node
 from tf_transformations import (
     euler_from_quaternion,
 )
-from std_msgs.msg import Float64, Float64MultiArray, Int32
+from std_msgs.msg import Float64, Float32MultiArray, Int32
 from geometry_msgs.msg import Twist
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
@@ -246,7 +246,6 @@ class InnerControlPlotter(Node):
     def __init__(self):
         self.fig, self.ax = plt.subplots()
         self.X_ol, self.X_cl = [], []
-        self.iter = 0
         self.local_radius = 0.3
         dir_project = os.path.join(os.path.dirname(__file__), "..", "..")
         self.dir_saveplots = os.path.join(dir_project, "inner_loop_isaac_sim")
@@ -254,9 +253,6 @@ class InnerControlPlotter(Node):
             shutil.rmtree(self.dir_saveplots)
         os.makedirs(self.dir_saveplots)
         self.plots_list = []
-
-    def update_iter(self, iter):
-        self.iter = iter
 
     def add_to_openloop(self, X):
         self.X_ol.append(X)
@@ -266,7 +262,7 @@ class InnerControlPlotter(Node):
 
     def plot_openloop(self):
         X_ol = np.array(self.X_ol)
-        if len(X_ol) != 0:
+        if (len(X_ol) != 0):
             (plot,) = self.ax.plot(X_ol[:, 0], X_ol[:, 1], marker="x", color="black")
             self.plots_list.append(plot)
 
@@ -276,7 +272,7 @@ class InnerControlPlotter(Node):
             (plot,) = self.ax.plot(X_cl[:, 0], X_cl[:, 1], marker="o", color="lime")
             self.plots_list.append(plot)
 
-    def save_fig(self):
+    def save_fig(self, iter):
         self.ax.set_xlim(
             [
                 self.X_cl[-1][0] - self.local_radius,
@@ -289,8 +285,8 @@ class InnerControlPlotter(Node):
                 self.X_cl[-1][1] + self.local_radius,
             ]
         )
-        outer_iter = math.floor(self.iter / params["optimizer"]["Hm"])
-        inner_iter = self.iter % params["optimizer"]["Hm"]
+        outer_iter = math.floor(iter / params["optimizer"]["Hm"])
+        inner_iter = iter % params["optimizer"]["Hm"]
         self.fig.savefig(
             os.path.join(self.dir_saveplots, f"{outer_iter}_{inner_iter}.png")
         )
@@ -307,7 +303,7 @@ class InnerControlNode(Node):
             Clock, "/clock_controller", self.clock_listener_callback, 10
         )
         self.ref_path_subscriber = self.create_subscription(
-            Float64MultiArray, "/ref_path", self.ref_path_listener_callback, 10
+            Float32MultiArray, "/ref_path", self.ref_path_listener_callback, 10
         )
         # self.min_dist_subscriber = self.create_subscription(
         #     LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
@@ -319,7 +315,7 @@ class InnerControlNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.iter = 0
+        self.iter = -1
 
         self.init_pose_obtained = False
         self.ref_path_init = False
@@ -344,14 +340,13 @@ class InnerControlNode(Node):
                 cmd_vel.angular.z = X[1, self.ctrl.pose_dim + 1]
             self.cmd_vel_publisher.publish(cmd_vel)
 
-            self.iter += 1
-            if self.debug_plot:
-                print(f"Iter: {self.iter}")
+            if self.debug_plot and (self.iter != -1):
+                # print(f"Iter: {self.iter}")
                 self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
                 self.plotter.plot_closeloop()
                 self.plotter.plot_openloop()
-                self.plotter.save_fig()
-                self.plotter.update_iter(self.iter)
+                self.plotter.save_fig(self.iter)
+                self.iter += 1
 
         except Exception as e:
             print(e)
@@ -362,6 +357,9 @@ class InnerControlNode(Node):
         # print(f"Velocity: {self.velocity}")
 
     def ref_path_listener_callback(self, msg):
+        print("Ref path updated")
+        if self.iter == -1:
+            self.iter = 0
         ref_path = np.array(msg.data).reshape(self.ctrl.H + 1, -1).tolist()
         self.ctrl.set_ref_path(ref_path)
         for ref_path_item in ref_path:

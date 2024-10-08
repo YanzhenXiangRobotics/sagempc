@@ -55,7 +55,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/utils/inner_control_node.py",
             "console": "integratedTerminal",
-            "args": [">", "output_inner_control_node.txt"]
+            // "args": [">", "output_inner_control_node.txt"]
         },
         {
             "name": "video",
