@@ -66,13 +66,12 @@ class InnerControl:
         self.pose_dim = self.x_dim + 1
         self.H = params["innerloop"]["H"]
         self.N = params["innerloop"]["N"]
+        self.dT = 1 / 20.0
         self.ref_path = []
         self.debug = params["experiment"]["debug"]
 
     def setup_dynamics(self):
-        self.ocp.model = export_nova_carter_discrete_rk4_fixedtime(
-            params["optimizer"]["Tf"] / params["optimizer"]["H"]
-        )
+        self.ocp.model = export_nova_carter_discrete_rk4_fixedtime(self.dT)
         self.ocp.model.name = "inner_loop_" + self.ocp.model.name
 
     def setup_constraints(self):
@@ -250,9 +249,9 @@ class InnerControlPlotter(Node):
                 self.X_cl[-1][1] + self.local_radius,
             ]
         )
-        self.fig.savefig(
-            os.path.join(self.dir_saveplots, f"{iter}.png")
-        )
+        outer_iter = math.floor(iter / params["optimizer"]["H"])
+        inner_iter = iter % params["optimizer"]["H"]
+        self.fig.savefig(os.path.join(self.dir_saveplots, f"{outer_iter}_{inner_iter}.png"))
         len_plots_list = len(self.plots_list)
         for _ in range(len_plots_list):
             self.plots_list.pop(0).remove()
@@ -312,7 +311,7 @@ class InnerControlNode(Node):
                     self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
                     self.plotter.plot_closeloop()
                     self.plotter.plot_openloop()
-                    self.plotter.save_fig(math.floor(self.iter / self.ctrl.N ))
+                    self.plotter.save_fig(math.floor(self.iter / self.ctrl.N))
 
         except Exception as e:
             print(e)

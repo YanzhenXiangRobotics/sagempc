@@ -525,8 +525,8 @@ class SEMPC:
                 ]
             )
             # self.env.ax.grid()
-        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
@@ -574,55 +574,57 @@ class SEMPC:
             ckp = time.time()
             # import pprint
             # pprint.pprint(X[: self.Hm, :])
-            # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.pose_dim])
-            if self.params["experiment"]["use_isaac_sim"] == 1:
-                X_cl, U_cl = self.inner_loop_mpc(X, state_curr[: self.pose_dim])
+            if self.params["experiment"]["use_isaac_sim"] == 0:
+                self.players[self.pl_idx].update_current_state(
+                    X[self.Hm, : self.pose_dim]
+                )
             elif self.params["experiment"]["use_isaac_sim"] == 2:
-                X_cl, U_cl = self.inner_loop_nav2(X, state_curr[: self.pose_dim])
-            X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
-            U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
-            X_cl = np.concatenate(
-                (
+                X_cl, U_cl = self.inner_loop_mpc(X, state_curr[: self.pose_dim])
+                X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
+                U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
+                X_cl = np.concatenate(
+                    (
+                        X_cl,
+                        np.linspace(
+                            0.0, self.params["optimizer"]["Tf"], self.H + 1
+                        ).reshape(-1, 1),
+                    ),
+                    axis=-1,
+                )
+                U_cl = np.concatenate(
+                    (
+                        U_cl,
+                        self.params["optimizer"]["Tf"] / self.H * np.ones((self.H, 1)),
+                    ),
+                    axis=-1,
+                )
+                time_inner_loop = time.time() - ckp
+                self.inner_loop_time.append(time_inner_loop)
+                inner_loop_time = np.array(self.inner_loop_time)
+                print(
+                    f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
+                )
+                self.visu.record(
                     X_cl,
-                    np.linspace(
-                        0.0, self.params["optimizer"]["Tf"], self.H + 1
-                    ).reshape(-1, 1),
-                ),
-                axis=-1,
-            )
-            U_cl = np.concatenate(
-                (
                     U_cl,
-                    self.params["optimizer"]["Tf"] / self.H * np.ones((self.H, 1)),
-                ),
-                axis=-1,
-            )
-            time_inner_loop = time.time() - ckp
-            self.inner_loop_time.append(time_inner_loop)
-            inner_loop_time = np.array(self.inner_loop_time)
-            print(
-                f"Time for inner-loop control: {time.time() - ckp}, mean: {np.mean(inner_loop_time)} std: {np.std(inner_loop_time)}"
-            )
-            pose_curr = (
-                self.players[self.pl_idx]
-                .current_state[: self.pose_dim]
-                .reshape(self.pose_dim)
-            )
-            # self.visu.record(
-            #     X,
-            #     U,
-            #     self.players[self.pl_idx].get_next_to_go_loc(),
-            #     self.pl_idx,
-            #     self.players,
-            # )
-            self.visu.record(
-                X_cl,
-                U_cl,
-                self.players[self.pl_idx].get_next_to_go_loc(),
-                self.pl_idx,
-                self.players,
-            )
+                    self.players[self.pl_idx].get_next_to_go_loc(),
+                    self.pl_idx,
+                    self.players,
+                )
+            else:
+                self.visu.record(
+                    X,
+                    U,
+                    self.players[self.pl_idx].get_next_to_go_loc(),
+                    self.pl_idx,
+                    self.players,
+                )
             # print(f"Time for plotting at each sim iter: {time.time() - ckp}")
+            pose_curr = (
+                    self.players[self.pl_idx]
+                    .current_state[: self.pose_dim]
+                    .reshape(self.pose_dim)
+                )
             print(
                 bcolors.green + "Reached:",
                 pose_curr,
