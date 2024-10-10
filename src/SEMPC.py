@@ -183,24 +183,24 @@ class SEMPC:
                 offset = 0.05
             intersect_pessi_opti = V_upper_Cx - self.eps - offset
             X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
-            # intersect_pessi_opti_plot = (
-            #     intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
-            # )
-            # if self.params["experiment"]["plot_contour"]:
-            #     tmp_0 = self.env.ax.contour(
-            #         X1,
-            #         X2,
-            #         intersect_pessi_opti_plot,
-            #         levels=[self.params["common"]["constraint"]],
-            #         colors="green",
-            #         linewidths=0.5,
-            #     )
-            #     # tmp_0.collections[0].set_label("optimistic contour")
-            #     (artists,), _ = tmp_0.legend_elements()
-            #     artists.set_label(
-            #         "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
-            #     )
-            #     self.env.legend_handles.append(artists)
+            intersect_pessi_opti_plot = (
+                intersect_pessi_opti.detach().numpy().reshape(X1.shape[0], X2.shape[1])
+            )
+            if self.params["experiment"]["plot_contour"]:
+                tmp_0 = self.env.ax.contour(
+                    X1,
+                    X2,
+                    intersect_pessi_opti_plot,
+                    levels=[self.params["common"]["constraint"]],
+                    colors="green",
+                    linewidths=0.5,
+                )
+                # tmp_0.collections[0].set_label("optimistic contour")
+                (artists,), _ = tmp_0.legend_elements()
+                artists.set_label(
+                    "optimistic - eps(%.2f) - offset(%.2f) contour" % (self.eps, offset)
+                )
+                self.env.legend_handles.append(artists)
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
@@ -255,7 +255,7 @@ class SEMPC:
             tmp_2 = self.env.ax.scatter(
                 xi_star[0], xi_star[1], marker="x", s=30, c="violet", label="next goal"
             )
-            # self.sempc_solver.threeD_tmps.append(tmp_0)
+            self.sempc_solver.threeD_tmps.append(tmp_0)
             self.sempc_solver.plot_tmps.append(tmp_1)
             self.sempc_solver.scatter_tmps.append(tmp_2)
             # self.env.legend_handles += [tmp_0, tmp_1, tmp_2]
@@ -339,10 +339,10 @@ class SEMPC:
         if query_state_obs is None:
             init_loc_obs = self.env.get_safe_init()
         else:
-            query_state_obs = torch.from_numpy(query_state_obs)
+            query_state_obs_tensor = torch.from_numpy(query_state_obs)
             init_loc_obs = {}
-            init_loc_obs["Cx_X"] = query_state_obs[: self.x_dim]
-            init_loc_obs["Cx_y"] = query_state_obs[-1]
+            init_loc_obs["Cx_X"] = [query_state_obs_tensor[: self.x_dim]]
+            init_loc_obs["Cx_Y"] = torch.atleast_2d(query_state_obs_tensor[-1])
         print("initialized location observation", init_loc_obs)
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
@@ -525,8 +525,8 @@ class SEMPC:
                 ]
             )
             # self.env.ax.grid()
-        # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
-        self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
+        self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
+        # self.env.fig.savefig(os.path.join(self.fig_dir, "sim.png"))
         self.sempc_solver.fig_3D.savefig(os.path.join(self.fig_dir, "sim_3D.png"))
         len_plot_tmps = len(self.sempc_solver.plot_tmps)
         len_scatter_tmps = len(self.sempc_solver.scatter_tmps)
@@ -622,7 +622,6 @@ class SEMPC:
                 self.pl_idx,
                 self.players,
             )
-            self.one_step_planner_plot(X, state_curr[: self.x_dim])
             # print(f"Time for plotting at each sim iter: {time.time() - ckp}")
             print(
                 bcolors.green + "Reached:",
@@ -643,6 +642,7 @@ class SEMPC:
         #     self.players[self.pl_idx].infeasible = True
         # self.prev_goal_dist = goal_dist
         # apply this input to your environment
+        self.one_step_planner_plot(X, state_curr[: self.x_dim])
         self.sim_iter += 1
 
         return X, U
@@ -719,7 +719,7 @@ class SEMPC:
             msg = Twist()
             self.publisher.publish(msg)
         return X_cl, U_cl
-    
+
     def inner_loop_nav2(self, X, x_curr):
         pass
 

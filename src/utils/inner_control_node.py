@@ -328,7 +328,7 @@ class InnerControlNode(Node):
         print("Ref path updated")
         if self.iter == -1:
             self.iter = 0
-        ref_path = np.array(msg.data).reshape(self.ctrl.H + 1, -1).tolist()
+        ref_path = np.array(msg.data).reshape(params["optimizer"]["H"] + 1, -1).tolist()
         self.ctrl.set_ref_path(ref_path)
         for ref_path_item in ref_path:
             self.plotter.add_to_openloop(ref_path_item)

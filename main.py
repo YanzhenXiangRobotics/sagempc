@@ -165,12 +165,17 @@ class PlannerNode(Node):
     def clock_listener_callback(self, msg):
         try:
             pose_curr = get_current_pose(self.tf_buffer)
+            loc_curr = pose_curr[: 2]
             if self.min_dist_obtained:
                 if not self.sempc_initialized:
-                    self.sempc = SEMPC(params, env, visu)
+                    self.sempc = SEMPC(
+                        params,
+                        env,
+                        visu,
+                        query_state_obs=np.append(loc_curr, self.min_dist),
+                    )
                     self.sempc_initialized = True
                 else:
-                    loc_curr = pose_curr[: self.sempc.x_dim]
                     state_curr = np.concatenate((pose_curr, self.velocity))
 
                     if self.sempc.running_condition_true_go(loc_curr):
@@ -179,7 +184,9 @@ class PlannerNode(Node):
                         X_ol, _ = self.sempc.one_step_planner(state_curr)
 
                         ref_path_cmd = Float32MultiArray()
-                        ref_path_cmd.data = X_ol[:, : self.sempc.pose_dim].flatten().tolist()
+                        ref_path_cmd.data = (
+                            X_ol[:, : self.sempc.pose_dim].flatten().tolist()
+                        )
                         self.ref_path_publisher.publish(ref_path_cmd)
         except Exception as e:
             print(e)
@@ -194,6 +201,7 @@ class PlannerNode(Node):
         min_dist_idx = np.argmin(ranges)
         self.min_dist = ranges[min_dist_idx]
         self.min_dist_obtained = True
+        # print(f"Min dist: {self.min_dist}")
 
 
 if __name__ == "__main__":
