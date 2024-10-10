@@ -575,7 +575,10 @@ class SEMPC:
             # import pprint
             # pprint.pprint(X[: self.Hm, :])
             # self.players[self.pl_idx].update_current_state(X[self.Hm, :self.pose_dim])
-            X_cl, U_cl = self.inner_loop_control(X, state_curr[: self.pose_dim])
+            if self.params["experiment"]["use_isaac_sim"] == 1:
+                X_cl, U_cl = self.inner_loop_mpc(X, state_curr[: self.pose_dim])
+            elif self.params["experiment"]["use_isaac_sim"] == 2:
+                X_cl, U_cl = self.inner_loop_nav2(X, state_curr[: self.pose_dim])
             X_cl[self.Hm :, :] = X[self.Hm :, :-1].copy()
             U_cl[self.Hm :, :] = U[self.Hm :, : self.x_dim].copy()
             X_cl = np.concatenate(
@@ -644,7 +647,7 @@ class SEMPC:
 
         return X, U
 
-    def inner_loop_control(self, X, x_curr):
+    def inner_loop_mpc(self, X, x_curr):
         self.ref_tracker.set_ref_path(X[:, : self.pose_dim].tolist())
         X_cl = np.zeros((self.H + 1, self.pose_dim + self.x_dim))
         U_cl = np.zeros((self.H, self.x_dim))
@@ -716,6 +719,9 @@ class SEMPC:
             msg = Twist()
             self.publisher.publish(msg)
         return X_cl, U_cl
+    
+    def inner_loop_nav2(self, X, x_curr):
+        pass
 
     def update_Cx_gp(self, query_loc_obs=None):
         if not self.goal_in_pessi:

@@ -864,3 +864,4 @@ Break at sqp iter 0,
 
 Time taken 0.23027944564819336
 Time solving sagempc: 0.23027944564819336, mean: 0.3658638625848489, std: 0.17183788393121252
+There was an error running python

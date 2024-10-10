@@ -197,7 +197,7 @@ class PlannerNode(Node):
 
 
 if __name__ == "__main__":
-    if params["experiment"]["use_isaac_sim"]:
+    if params["experiment"]["use_isaac_sim"] == 1:
         rclpy.init()
         planner = PlannerNode()
         rclpy.spin(planner)

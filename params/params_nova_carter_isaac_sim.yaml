@@ -80,7 +80,7 @@ experiment:
   name: "goMPC" # Random name of the experiment
   generate_regret_plot: True # Set True to generate the regret plot
   folder: "nova_carter_isaac_sim" # Folder to pick up the environment type and save the results
-  use_isaac_sim: True
+  use_isaac_sim: 2 # 0: unuse; 1: use w/ inner-loop control; 2: use w/ nav2
   plot_contour: True
   plot_per_sqp_iter: False
   batch_update: True
@@ -89,5 +89,7 @@ experiment:
   debug: False
 
 innerloop:
+  H: 3
+  N: 5
   debug_plot: true
-  sanity_check: false
+  sanity_check: true

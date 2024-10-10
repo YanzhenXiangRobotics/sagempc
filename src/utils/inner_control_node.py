@@ -64,23 +64,9 @@ class InnerControl:
     def init_params(self):
         self.x_dim, self.u_dim = 2, 2
         self.pose_dim = self.x_dim + 1
-        self.H = params["optimizer"]["H"]
-        self.Hm = params["optimizer"]["Hm"]
+        self.H = params["innerloop"]["H"]
+        self.N = params["innerloop"]["N"]
         self.ref_path = []
-        self.w_terminal = 1.0
-        self.w_horizons = np.linspace(1.0, self.w_terminal, self.H + 1)
-        self.lbx_middle = np.concatenate(
-            (
-                params["optimizer"]["x_min"][: self.x_dim],
-                np.zeros(self.x_dim),
-            )
-        )
-        self.ubx_middle = np.concatenate(
-            (params["optimizer"]["x_max"][: self.x_dim], np.zeros(self.x_dim))
-        )
-        self.lbx_final = self.lbx_middle.copy()
-        self.ubx_final = self.ubx_middle.copy()
-        self.pos_scale_base = 1e-3
         self.debug = params["experiment"]["debug"]
 
     def setup_dynamics(self):
@@ -100,18 +86,10 @@ class InnerControl:
             + np.zeros(self.x_dim).tolist()
         )
 
-        self.ocp.constraints.lbx_e = np.concatenate(
-            (
-                self.ocp.constraints.lbx.copy()[: self.x_dim],
-                np.zeros(self.x_dim),
-            )
-        )
-        self.ocp.constraints.ubx_e = np.concatenate(
-            (
-                self.ocp.constraints.ubx.copy()[: self.x_dim],
-                np.zeros(self.x_dim),
-            )
-        )
+        self.ocp.constraints.lbx_e = self.ocp.constraints.lbx.copy()
+        self.ocp.constraints.lbx_e[-self.x_dim :] = np.zeros(self.x_dim)
+        self.ocp.constraints.ubx_e = self.ocp.constraints.ubx.copy()
+        self.ocp.constraints.ubx_e[-self.x_dim :] = np.zeros(self.x_dim)
         self.ocp.constraints.idxbx_e = self.ocp.constraints.idxbx.copy()
 
         self.ocp.constraints.lbu = np.array(params["optimizer"]["u_min"])
@@ -131,7 +109,7 @@ class InnerControl:
             @ Q
             @ (self.ocp.model.x[: self.pose_dim] - x_ref)
         )
-        self.ocp.model.cost_expr_ext_cost_e = self.w_terminal * (
+        self.ocp.model.cost_expr_ext_cost_e = (
             (self.ocp.model.x[: self.pose_dim] - x_ref).T
             @ Q
             @ (self.ocp.model.x[: self.pose_dim] - x_ref)
@@ -152,14 +130,6 @@ class InnerControl:
             self.ocp, json_file="inner_loop_acados_ocp_sempc.json"
         )
 
-    def solver_set_ref_path(self):
-        for k in range(self.H + 1):
-            if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
-            else:
-                w_pos = self.pos_scale_base
-                (self.ocp_solver.set(k, "p", np.array(self.ref_path[-1])))
-
     def get_solution(self):
         X = np.zeros((self.H + 1, self.pose_dim + self.x_dim))
         U = np.zeros((self.H, self.u_dim))
@@ -173,15 +143,12 @@ class InnerControl:
     def solve_for_x0(self, x0):
         for i in range(3):
             self.ocp_solver.options_set("rti_phase", 1)
-            self.solver_set_ref_path()
+            for k in range(self.H + 1):
+                self.ocp_solver.set(k, "p", np.array(self.ref_path[0]))
             status = self.ocp_solver.solve()
 
             self.ocp_solver.set(0, "lbx", x0)
             self.ocp_solver.set(0, "ubx", x0)
-            self.ocp_solver.set(self.Hm, "lbx", self.lbx_middle)
-            self.ocp_solver.set(self.Hm, "ubx", self.ubx_middle)
-            self.ocp_solver.set(self.H, "lbx", self.lbx_final)
-            self.ocp_solver.set(self.H, "ubx", self.ubx_final)
 
             self.ocp_solver.options_set("rti_phase", 2)
 
@@ -192,8 +159,6 @@ class InnerControl:
                 )
 
         X, U = self.get_solution()
-        if len(self.ref_path) > 1:
-            self.ref_path.pop(0)
 
         return X, U
 
@@ -262,7 +227,7 @@ class InnerControlPlotter(Node):
 
     def plot_openloop(self):
         X_ol = np.array(self.X_ol)
-        if (len(X_ol) != 0):
+        if len(X_ol) != 0:
             (plot,) = self.ax.plot(X_ol[:, 0], X_ol[:, 1], marker="x", color="black")
             self.plots_list.append(plot)
 
@@ -332,21 +297,24 @@ class InnerControlNode(Node):
                 self.ctrl.ref_path.append(pose[: self.ctrl.pose_dim])
                 self.ref_path_init = True
 
-            X, _ = self.ctrl.solve_for_x0(np.concatenate((pose, self.velocity)))
+            if (self.iter % self.ctrl.N == 0) and (len(self.ctrl.ref_path) > 1):
+                self.ctrl.ref_path.pop(0)
 
+            X, _ = self.ctrl.solve_for_x0(np.concatenate((pose, self.velocity)))
             cmd_vel = Twist()
             if len(self.ctrl.ref_path) >= 1:
                 cmd_vel.linear.x = X[1, self.ctrl.pose_dim]
                 cmd_vel.angular.z = X[1, self.ctrl.pose_dim + 1]
             self.cmd_vel_publisher.publish(cmd_vel)
 
-            if self.debug_plot and (self.iter != -1):
-                # print(f"Iter: {self.iter}")
-                self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
-                self.plotter.plot_closeloop()
-                self.plotter.plot_openloop()
-                self.plotter.save_fig(self.iter)
+            if self.iter != -1:
                 self.iter += 1
+                if (self.debug_plot) and (self.iter % self.ctrl.N == 0):
+                    # print(f"Iter: {self.iter}")
+                    self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
+                    self.plotter.plot_closeloop()
+                    self.plotter.plot_openloop()
+                    self.plotter.save_fig(self.iter)
 
         except Exception as e:
             print(e)
@@ -438,9 +406,10 @@ if __name__ == "__main__":
                 [-2.012e01, -1.577e01, 1.772e00, 8.920e-02, -1.799e-01, 9.300e-01],
             ]
         )
-        max_iter = 48
+        max_iter = 48 * controller.ctrl.N
         # controller.X_cl = np.zeros((max_iter, controller.ctrl.x_dim))
         controller.ctrl.set_ref_path(ref_path[:, :-3].tolist())
+        controller.iter = 0
 
         for ref_path_item in ref_path[:, :-3].tolist():
             controller.plotter.add_to_openloop(ref_path_item)
