@@ -250,10 +250,8 @@ class InnerControlPlotter(Node):
                 self.X_cl[-1][1] + self.local_radius,
             ]
         )
-        outer_iter = math.floor(iter / params["optimizer"]["Hm"])
-        inner_iter = iter % params["optimizer"]["Hm"]
         self.fig.savefig(
-            os.path.join(self.dir_saveplots, f"{outer_iter}_{inner_iter}.png")
+            os.path.join(self.dir_saveplots, f"{iter}.png")
         )
         len_plots_list = len(self.plots_list)
         for _ in range(len_plots_list):
@@ -314,7 +312,7 @@ class InnerControlNode(Node):
                     self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
                     self.plotter.plot_closeloop()
                     self.plotter.plot_openloop()
-                    self.plotter.save_fig(self.iter)
+                    self.plotter.save_fig(math.floor(self.iter / self.ctrl.N ))
 
         except Exception as e:
             print(e)
