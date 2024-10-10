@@ -250,8 +250,10 @@ class InnerControlPlotter(Node):
                 self.X_cl[-1][1] + self.local_radius,
             ]
         )
+        outer_iter = math.floor(iter / params["optimizer"]["H"])
+        inner_iter = iter % params["optimizer"]["H"]
         self.fig.savefig(
-            os.path.join(self.dir_saveplots, f"{iter}.png")
+            os.path.join(self.dir_saveplots, f"{outer_iter}_{inner_iter}.png")
         )
         len_plots_list = len(self.plots_list)
         for _ in range(len_plots_list):
