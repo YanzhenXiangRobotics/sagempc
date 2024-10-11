@@ -746,6 +746,15 @@ class SEMPC:
                 self.players,
                 self.params,
             )
+            self.sempc_solver.scatter_tmps.append(
+                self.env.ax.scatter(
+                    query_loc_obs[:, 0],
+                    query_loc_obs[:, 1],
+                    marker="x",
+                    color="purple",
+                    s=6,
+                )
+            )
         print(
             "Uncertainity at meas_loc",
             self.players[self.pl_idx].get_width_at_curr_loc(),
