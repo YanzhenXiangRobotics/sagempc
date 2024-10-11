@@ -5,6 +5,7 @@ If conda is desired please source setup_conda_env.sh in your python 3.10 conda e
 {'env': {'start': [-20.8, -16.8], 'shape': {'x': 95, 'y': 95}, 'start_loc': [-20.5, -16.0], 'start_angle': 3.14159, 'goal_loc': [-17.5, -13.1], 'n_players': 1, 'Cx_lengthscale': 1.0, 'Cx_noise': 0.001, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 1.5, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 0.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 20, 'Hm': 19, 'u_min': [-2.5, -5.0], 'u_max': [2.5, 5.0], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 5, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'dt': 0.035, 'w': 5000}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': 1, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': False}, 'innerloop': {'H': 3, 'N': 5, 'debug_plot': True, 'sanity_check': False}}
 Namespace(param='params_nova_carter_isaac_sim', env=0, i=8)
 "world" passed to lookupTransform argument target_frame does not exist. 
+"world" passed to lookupTransform argument target_frame does not exist. 
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
 got cost_type_0: EXTERNAL, hessian_approx: 'GAUSS_NEWTON.'
@@ -50,12 +51,12 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-10-11-10:35:52.681686.json
-initialized location observation {'Cx_X': [tensor([-20.0102, -15.9999], dtype=torch.float64)], 'Cx_Y': tensor([[1.0074]], dtype=torch.float64)}
-tensor(0.8627, dtype=torch.float64)
+stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-10-11-10:54:36.651294.json
+initialized location observation {'Cx_X': [tensor([-20.2345, -15.9985], dtype=torch.float64)], 'Cx_Y': tensor([[1.1643]], dtype=torch.float64)}
+tensor(1.0038, dtype=torch.float64)
 Nodes in optimistic graph: 9025
-init_node 1920 goal_node 7882
-[32mGoal: [-20.   -15.64]  uncertainity: 100 [0m
+init_node 1350 goal_node 7882
+[32mGoal: [-19.84 -15.44]  uncertainity: 100 [0m
 -1 10
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -98,135 +99,331 @@ cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/in
 cc -shared inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
 -L -l
 acados was compiled without OpenMP.
-Time planner:  6.953539133071899
-Uncertainity at meas_loc [0.042]
-Uncertainity at meas_loc [0.037]
-Time updating GP:  0.05663180351257324
-tensor(0.8499, dtype=torch.float64)
-Nodes in optimistic graph: 7832
-init_node 1920 goal_node 7882
-[32mGoal: [-19.64 -15.76]  uncertainity: 100 [0m
+Time planner:  6.878715515136719
+Uncertainity at meas_loc [0.06]
+Uncertainity at meas_loc [0.068]
+Time updating GP:  0.0875399112701416
+tensor(0.9907)
+Nodes in optimistic graph: 8969
+init_node 1350 goal_node 7882
+[32mGoal: [-19.84 -15.44]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.00033283233642578125
-Time taken 0.724951982498169
-Time planner:  3.1497223377227783
-Uncertainity at meas_loc [0.037]
-Uncertainity at meas_loc [0.035]
-Time updating GP:  0.07124090194702148
-tensor(0.8380, dtype=torch.float64)
-Nodes in optimistic graph: 7086
-init_node 1920 goal_node 7882
-[32mGoal: [-19.68 -15.64]  uncertainity: 100 [0m
+Time for prepare: 0.00031876564025878906
+Break at sqp iter 0, 
+
+
+Time taken 0.2811710834503174
+Time planner:  2.978468179702759
+Uncertainity at meas_loc [0.068]
+Uncertainity at meas_loc [1.195]
+Time updating GP:  0.06946992874145508
+tensor(1.4021)
+Nodes in optimistic graph: 8871
+init_node 1350 goal_node 7882
+[32mGoal: [-20.  -15.6]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.00027179718017578125
-Time taken 0.7292945384979248
-Time solving sagempc: 0.7292945384979248, mean: 0.7292945384979248, std: 0.0
-Time planner:  3.1637725830078125
-Uncertainity at meas_loc [0.035]
-Uncertainity at meas_loc [0.033]
-Time updating GP:  0.12790322303771973
-tensor(0.8178, dtype=torch.float64)
-Nodes in optimistic graph: 6820
-init_node 1920 goal_node 7882
-[32mGoal: [-19.6  -15.56]  uncertainity: 100 [0m
+Time for prepare: 0.0004069805145263672
+Time taken 0.5103168487548828
+Time solving sagempc: 0.5103168487548828, mean: 0.5103168487548828, std: 0.0
+Time planner:  3.1980702877044678
+Uncertainity at meas_loc [1.195]
+Uncertainity at meas_loc [1.259]
+Time updating GP:  0.05372047424316406
+tensor(1.4498)
+Nodes in optimistic graph: 8859
+init_node 1350 goal_node 7882
+[32mGoal: [-19.96 -15.56]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0002703666687011719
+Time for prepare: 0.0002474784851074219
+Time taken 0.6653296947479248
+Time solving sagempc: 0.6653296947479248, mean: 0.5878232717514038, std: 0.077506422996521
+Time planner:  3.3790953159332275
+Uncertainity at meas_loc [1.259]
+Uncertainity at meas_loc [1.561]
+Time updating GP:  0.05556440353393555
+tensor(1.6133)
+Nodes in optimistic graph: 8849
+init_node 1350 goal_node 7882
+[32mGoal: [-19.8 -15.4]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00027108192443847656
+Time taken 0.6507010459899902
+Time solving sagempc: 0.6507010459899902, mean: 0.6087825298309326, std: 0.06988140956147788
+Time planner:  3.883150339126587
+Uncertainity at meas_loc [1.561]
+Uncertainity at meas_loc [1.798]
+Time updating GP:  0.04688429832458496
+tensor(1.7501)
+Nodes in optimistic graph: 8843
+init_node 1350 goal_node 7882
+[32mGoal: [-19.72 -15.32]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002658367156982422
+Time taken 0.5824806690216064
+Time solving sagempc: 0.5824806690216064, mean: 0.6022070646286011, std: 0.06158139962363213
+Time planner:  3.039865493774414
+Uncertainity at meas_loc [1.798]
+Uncertainity at meas_loc [2.11]
+Time updating GP:  0.05194401741027832
+tensor(1.8760)
+Nodes in optimistic graph: 8813
+init_node 1350 goal_node 7882
+[32mGoal: [-19.72 -15.32]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002913475036621094
+Time taken 0.43487000465393066
+Time solving sagempc: 0.43487000465393066, mean: 0.568739652633667, std: 0.08668382597831624
+Time planner:  2.917280435562134
+Uncertainity at meas_loc [2.11]
+Uncertainity at meas_loc [2.22]
+Time updating GP:  0.044954776763916016
+tensor(1.8852)
+Nodes in optimistic graph: 8801
+init_node 1350 goal_node 7882
+[32mGoal: [-19.68 -15.28]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00023293495178222656
+Time taken 0.5700321197509766
+Time solving sagempc: 0.5700321197509766, mean: 0.5689550638198853, std: 0.07913261073515511
+Time planner:  2.9744036197662354
+Uncertainity at meas_loc [2.22]
+Uncertainity at meas_loc [2.261]
+Time updating GP:  0.05266618728637695
+tensor(1.9383)
+Nodes in optimistic graph: 8768
+init_node 1350 goal_node 7882
+[32mGoal: [-19.68 -15.28]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00023674964904785156
+Time taken 0.5355584621429443
+Time solving sagempc: 0.5355584621429443, mean: 0.5641841207231794, std: 0.07418877486127025
+Time planner:  2.940556764602661
+Uncertainity at meas_loc [2.261]
+Uncertainity at meas_loc [2.324]
+Time updating GP:  0.06091189384460449
+tensor(1.9747)
+Nodes in optimistic graph: 8752
+init_node 1350 goal_node 7882
+[32mGoal: [-19.64 -15.24]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003376007080078125
+Time taken 0.4874100685119629
+Time solving sagempc: 0.4874100685119629, mean: 0.5545873641967773, std: 0.07389629000686367
+Time planner:  3.1319363117218018
+Uncertainity at meas_loc [2.324]
+Uncertainity at meas_loc [2.27]
+Time updating GP:  0.05590105056762695
+tensor(1.9882)
+Nodes in optimistic graph: 8693
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002124309539794922
+Time taken 0.4429891109466553
+Time solving sagempc: 0.4429891109466553, mean: 0.5421875582800971, std: 0.07799976272169347
+Time planner:  2.8995158672332764
+Uncertainity at meas_loc [2.27]
+Uncertainity at meas_loc [2.181]
+Time updating GP:  0.05257225036621094
+tensor(1.9357)
+Nodes in optimistic graph: 8673
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00024700164794921875
+Time taken 0.42384886741638184
+Time solving sagempc: 0.42384886741638184, mean: 0.5303536891937256, std: 0.08207271656376953
+Time planner:  2.9437623023986816
+Uncertainity at meas_loc [2.181]
+Uncertainity at meas_loc [2.351]
+Time updating GP:  0.09846997261047363
+tensor(2.0711)
+Nodes in optimistic graph: 8648
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003578662872314453
+Break at sqp iter 4, 
+
+
+Time taken 0.6933572292327881
+Time solving sagempc: 0.6933572292327881, mean: 0.5451721928336404, std: 0.09121104077679458
+Time planner:  3.552009105682373
+Uncertainity at meas_loc [2.351]
+Uncertainity at meas_loc [2.09]
+Time updating GP:  0.06352066993713379
+tensor(1.9439)
+Nodes in optimistic graph: 8607
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002410411834716797
+Time taken 0.44545745849609375
+Time solving sagempc: 0.44545745849609375, mean: 0.5368626316388448, std: 0.09157348420460559
+Time planner:  3.0219924449920654
+Uncertainity at meas_loc [2.09]
+Uncertainity at meas_loc [2.298]
+Time updating GP:  0.05309462547302246
+tensor(2.0590)
+Nodes in optimistic graph: 8590
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00025534629821777344
+Break at sqp iter 4, 
+
+
+Time taken 0.6036362648010254
+Time solving sagempc: 0.6036362648010254, mean: 0.5419990649590125, std: 0.08976215404477306
+Time planner:  3.036478281021118
+Uncertainity at meas_loc [2.298]
+Uncertainity at meas_loc [2.105]
+Time updating GP:  0.10049176216125488
+tensor(1.9587)
+Nodes in optimistic graph: 8582
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002586841583251953
+Time taken 0.5927724838256836
+Time solving sagempc: 0.5927724838256836, mean: 0.5456257377352033, std: 0.08747978434689146
+Time planner:  3.455627202987671
+Uncertainity at meas_loc [2.105]
+Uncertainity at meas_loc [2.368]
+Time updating GP:  0.05510663986206055
+tensor(2.1273)
+Nodes in optimistic graph: 8569
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6 -15.2]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00021529197692871094
+Break at sqp iter 4, 
+
+
+Time taken 0.516474723815918
+Time solving sagempc: 0.516474723815918, mean: 0.543682336807251, std: 0.08482574565005674
+Time planner:  3.0226454734802246
+Uncertainity at meas_loc [2.368]
+Uncertainity at meas_loc [1.964]
+Time updating GP:  0.05326485633850098
+tensor(1.9332)
+Nodes in optimistic graph: 8541
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6  -15.16]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003046989440917969
+Time taken 1.2852821350097656
+Time solving sagempc: 1.2852821350097656, mean: 0.5900323241949081, std: 0.19740950874339813
+Time planner:  3.9112765789031982
+Uncertainity at meas_loc [1.964]
+Uncertainity at meas_loc [2.37]
+Time updating GP:  0.05295228958129883
+tensor(2.1470)
+Nodes in optimistic graph: 8538
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6  -15.16]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003333091735839844
+Time taken 0.6869580745697021
+Time solving sagempc: 0.6869580745697021, mean: 0.5957338389228372, std: 0.19286847145283417
+Time planner:  3.252760648727417
+Uncertainity at meas_loc [2.37]
+Uncertainity at meas_loc [2.092]
+Time updating GP:  0.04502582550048828
+tensor(2.0144)
+Nodes in optimistic graph: 8531
+init_node 1350 goal_node 7882
+[32mGoal: [-19.64 -15.16]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003349781036376953
 Break at sqp iter 3, 
 
 
-Time taken 1.2818617820739746
-Time solving sagempc: 1.2818617820739746, mean: 1.0055781602859497, std: 0.2762836217880249
-Time planner:  3.995638608932495
-Uncertainity at meas_loc [0.033]
-Uncertainity at meas_loc [0.033]
-Time updating GP:  0.22251152992248535
-tensor(0.8180, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.72 -15.68]  uncertainity: 100 [0m
+Time taken 0.49347543716430664
+Time solving sagempc: 0.49347543716430664, mean: 0.5900528166029189, std: 0.18889239327029198
+Time planner:  3.005275011062622
+Uncertainity at meas_loc [2.092]
+Uncertainity at meas_loc [1.889]
+Time updating GP:  0.10164403915405273
+tensor(1.8971)
+Nodes in optimistic graph: 8518
+init_node 1350 goal_node 7882
+[32mGoal: [-19.6  -15.16]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0003139972686767578
-Time taken 0.93650221824646
-Time solving sagempc: 0.93650221824646, mean: 0.9825528462727865, std: 0.2279226987738353
-Time planner:  3.760106086730957
-Uncertainity at meas_loc [0.033]
-Uncertainity at meas_loc [0.157]
-Time updating GP:  0.3856089115142822
-tensor(1.0779, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.8 -15.8]  uncertainity: 100 [0m
+Time for prepare: 0.0002503395080566406
+Time taken 0.7198102474212646
+Time solving sagempc: 0.7198102474212646, mean: 0.5968821550670423, std: 0.18612345728406637
+Time planner:  3.6092276573181152
+Uncertainity at meas_loc [1.889]
+Uncertainity at meas_loc [1.891]
+Time updating GP:  0.045725107192993164
+tensor(1.9209)
+Nodes in optimistic graph: 8506
+init_node 1350 goal_node 7882
+[32mGoal: [-19.56 -15.12]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0003695487976074219
-Break at sqp iter 0, 
-
-
-Time taken 0.5009527206420898
-Time solving sagempc: 0.5009527206420898, mean: 0.8621528148651123, std: 0.2871412024617298
-Time planner:  25.324307680130005
-Uncertainity at meas_loc [0.157]
-Uncertainity at meas_loc [0.157]
-Time updating GP:  0.5492112636566162
-tensor(1.1061, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.8 -15.8]  uncertainity: 100 [0m
+Time for prepare: 0.00023794174194335938
+Time taken 0.33014702796936035
+Time solving sagempc: 0.33014702796936035, mean: 0.5835453987121582, std: 0.19049765514338038
+Time planner:  2.9307186603546143
+Uncertainity at meas_loc [1.891]
+Uncertainity at meas_loc [2.127]
+Time updating GP:  0.06117987632751465
+tensor(2.0677)
+Nodes in optimistic graph: 8490
+init_node 1350 goal_node 7882
+[32mGoal: [-19.56 -15.12]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0002665519714355469
-Break at sqp iter 0, 
-
-
-Time taken 0.5195786952972412
-Time solving sagempc: 0.5195786952972412, mean: 0.7936379909515381, std: 0.2910965140714791
-Time planner:  30.09974217414856
-Uncertainity at meas_loc [0.157]
-Uncertainity at meas_loc [0.182]
-Time updating GP:  0.5960330963134766
-tensor(1.2480, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.8 -15.8]  uncertainity: 100 [0m
+Time for prepare: 0.00025177001953125
+Time taken 0.5282728672027588
+Time solving sagempc: 0.5282728672027588, mean: 0.5809133734021869, std: 0.1862789391183356
+Time planner:  2.909451723098755
+Uncertainity at meas_loc [2.127]
+Uncertainity at meas_loc [1.844]
+Time updating GP:  0.08623552322387695
+tensor(1.9214)
+Nodes in optimistic graph: 8474
+init_node 1350 goal_node 7882
+[32mGoal: [-19.56 -15.08]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.000347137451171875
-Break at sqp iter 0, 
-
-
-Time taken 0.5015010833740234
-Time solving sagempc: 0.5015010833740234, mean: 0.7449485063552856, std: 0.28717180683065413
-Time planner:  38.51263165473938
-Uncertainity at meas_loc [0.182]
-Uncertainity at meas_loc [0.171]
-Time updating GP:  0.8501360416412354
-tensor(1.3129, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.8 -15.8]  uncertainity: 100 [0m
+Time for prepare: 0.0003612041473388672
+Time taken 1.0353167057037354
+Time solving sagempc: 1.0353167057037354, mean: 0.6015680703249845, std: 0.20513781749189738
+Time planner:  4.082888126373291
+Uncertainity at meas_loc [1.844]
+Uncertainity at meas_loc [2.111]
+Time updating GP:  0.053557395935058594
+tensor(2.0769)
+Nodes in optimistic graph: 8470
+init_node 1350 goal_node 7882
+[32mGoal: [-19.56 -15.08]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0005664825439453125
-Break at sqp iter 0, 
-
-
-Time taken 0.6391229629516602
-Time solving sagempc: 0.6391229629516602, mean: 0.7298305715833392, std: 0.2684359625163583
-Time planner:  57.93501091003418
-Uncertainity at meas_loc [0.171]
-Uncertainity at meas_loc [0.17]
-Time updating GP:  1.0641705989837646
-tensor(1.3129, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
-[32mGoal: [-19.8 -15.8]  uncertainity: 100 [0m
+Time for prepare: 0.000301361083984375
+Time taken 0.4666309356689453
+Time solving sagempc: 0.4666309356689453, mean: 0.5957012383834176, std: 0.20250710223239693
+Time planner:  3.0313034057617188
+Uncertainity at meas_loc [2.111]
+Uncertainity at meas_loc [1.7]
+Time updating GP:  0.055938720703125
+tensor(1.8682)
+Nodes in optimistic graph: 8437
+init_node 1350 goal_node 7882
+[32mGoal: [-19.52 -15.04]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 1.4787871837615967
-Break at sqp iter 0, 
-
-
-Time taken 2.9820785522460938
-Time solving sagempc: 2.9820785522460938, mean: 1.0113615691661835, std: 0.7860461506333541
-Time planner:  90.17954778671265
-Uncertainity at meas_loc [0.17]
-Uncertainity at meas_loc [0.177]
-Time updating GP:  1.208787441253662
-tensor(1.3537, dtype=torch.float64)
-Nodes in optimistic graph: 6786
-init_node 1920 goal_node 7882
+Time for prepare: 0.0003151893615722656
+Time taken 0.5152270793914795
+Time solving sagempc: 0.5152270793914795, mean: 0.5923481484254202, std: 0.19889446129647942
+Time planner:  3.274872064590454
+Uncertainity at meas_loc [1.7]
+Uncertainity at meas_loc [2.096]
+Time updating GP:  0.07189011573791504
+tensor(2.1247)
+Nodes in optimistic graph: 8419
+init_node 1350 goal_node 7882
+[32mGoal: [-19.52 -15.04]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002446174621582031
+Time taken 0.4397430419921875
+Time solving sagempc: 0.4397430419921875, mean: 0.5862439441680908, std: 0.19715708938763732
+Time planner:  2.9739866256713867
+There was an error running python

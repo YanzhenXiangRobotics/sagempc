@@ -78,7 +78,7 @@ def TrainAndUpdateConstraint_isaac_sim(
         query_meas = torch.from_numpy(np.atleast_1d(query_meas)).float().reshape(-1, 1)
     train["Cx_Y"] = query_meas
 
-    players[agent_key].update_Cx_gp(train["Cx_X"], train["Cx_Y"])
+    players[agent_key].update_Cx_gp_local(train["Cx_X"], train["Cx_Y"])
     for i in range(params["env"]["n_players"]):
         if i is not agent_key:
             players[i].communicate_constraint([train["Cx_X"]], [train["Cx_Y"]])

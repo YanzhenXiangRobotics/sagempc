@@ -198,7 +198,7 @@ class PlannerNode(Node):
                     )
                     self.ref_path_publisher.publish(ref_path_cmd)
         print("Time planner: ", time.time() - before)
-        
+
     def velocity_listener_callback(self, msg):
         omega_wl, omega_wr = msg.velocity[1], msg.velocity[2]
         self.velocity = compute_velocity_fwk_nova_carter(omega_wl, omega_wr)
@@ -221,15 +221,16 @@ class PlannerNode(Node):
         ranges_subsampled = ranges_subsampled[valid_indices]
         angles_subsampled = angles_subsampled[valid_indices]
 
-        self.loc_obs = np.zeros(
+        self.loc_obs = np.empty(
             (ranges_subsampled.shape[0], params["common"]["dim"] + 1)
         )
-        self.loc_obs[:, 0] = self.pose_curr[0] + ranges_subsampled * np.cos(
+        self.loc_obs[:, 0] = self.pose_curr[0] + 0.5 * ranges_subsampled * np.cos(
             angles_subsampled
         )
-        self.loc_obs[:, 1] = self.pose_curr[1] + ranges_subsampled * np.sin(
+        self.loc_obs[:, 1] = self.pose_curr[1] + 0.5 * ranges_subsampled * np.sin(
             angles_subsampled
         )
+        self.loc_obs[:, -1] = 0.5 * ranges_subsampled
 
         ranges_copy = ranges.copy()
         ranges_copy[ranges_copy <= 0.0] += 1e3
