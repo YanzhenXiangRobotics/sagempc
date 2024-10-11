@@ -358,6 +358,14 @@ class Agent(object):
         self.__update_Cx()
         return self.Cx_model
 
+    def update_Cx_gp_local(self, X, Y):
+        self.Cx_model = SingleTaskGP(X.reshape(-1, self.env_dim), Y.reshape(-1, 1))
+
+        self.Cx_model.covar_module.base_kernel.lengthscale = self.Cx_lengthscale
+        self.Cx_model.likelihood.noise = self.Cx_noise
+
+        return self.Cx_model
+
     def update_Cx_gp_with_current_data(self):
         self.__update_Cx()
         return self.Cx_model

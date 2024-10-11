@@ -148,8 +148,8 @@ class PlannerNode(Node):
         self.clock_subscriber = self.create_subscription(
             Clock, "/clock_planner", self.clock_listener_callback, 10
         )
-        self.min_dist_subscriber = self.create_subscription(
-            LaserScan, "/front_3d_lidar/scan", self.min_dist_listener_callback, 10
+        self.LiDAR_subscriber = self.create_subscription(
+            LaserScan, "/front_3d_lidar/scan", self.LiDAR_listener_callback, 10
         )
         self.velocity_subscriber = self.create_subscription(
             JointState, "/joint_states", self.velocity_listener_callback, 10
@@ -160,48 +160,90 @@ class PlannerNode(Node):
             Float32MultiArray, "/ref_path", 10
         )
         self.sempc_initialized = False
-        self.min_dist_obtained = False
+        self.LiDAR_meas_obtained = False
+        self.pose_curr = np.append(
+            np.array(params["env"]["start_loc"]), params["env"]["start_angle"]
+        )
+
+    def update_pose_curr(self):
+        pose_curr = get_current_pose(self.tf_buffer)
+        if pose_curr is not None:
+            self.pose_curr = pose_curr
 
     def clock_listener_callback(self, msg):
-        try:
-            pose_curr = get_current_pose(self.tf_buffer)
-            loc_curr = pose_curr[: 2]
-            if self.min_dist_obtained:
-                if not self.sempc_initialized:
-                    self.sempc = SEMPC(
-                        params,
-                        env,
-                        visu,
-                        query_state_obs=np.append(loc_curr, self.min_dist),
+        before = time.time()
+        if self.LiDAR_meas_obtained:
+            if not self.sempc_initialized:
+                self.sempc = SEMPC(
+                    params,
+                    env,
+                    visu,
+                    query_state_obs=np.append(
+                        self.pose_curr[: params["common"]["dim"]], self.min_dist
+                    ),
+                )
+                self.sempc_initialized = True
+            else:
+                loc_curr = self.pose_curr[: self.sempc.x_dim]
+                state_curr = np.concatenate((self.pose_curr, self.velocity))
+
+                if self.sempc.running_condition_true_go(loc_curr):
+                    self.sempc.update_Cx_gp(self.loc_obs)
+                    self.sempc.set_next_goal(loc_curr)
+                    X_ol, _ = self.sempc.one_step_planner(state_curr)
+
+                    ref_path_cmd = Float32MultiArray()
+                    ref_path_cmd.data = (
+                        X_ol[:, : self.sempc.pose_dim].flatten().tolist()
                     )
-                    self.sempc_initialized = True
-                else:
-                    state_curr = np.concatenate((pose_curr, self.velocity))
-
-                    if self.sempc.running_condition_true_go(loc_curr):
-                        self.sempc.update_Cx_gp(np.append(loc_curr, self.min_dist))
-                        self.sempc.set_next_goal(loc_curr)
-                        X_ol, _ = self.sempc.one_step_planner(state_curr)
-
-                        ref_path_cmd = Float32MultiArray()
-                        ref_path_cmd.data = (
-                            X_ol[:, : self.sempc.pose_dim].flatten().tolist()
-                        )
-                        self.ref_path_publisher.publish(ref_path_cmd)
-        except Exception as e:
-            print(e)
-
+                    self.ref_path_publisher.publish(ref_path_cmd)
+        print("Time planner: ", time.time() - before)
+        
     def velocity_listener_callback(self, msg):
         omega_wl, omega_wr = msg.velocity[1], msg.velocity[2]
         self.velocity = compute_velocity_fwk_nova_carter(omega_wl, omega_wr)
 
-    def min_dist_listener_callback(self, msg):
+    def LiDAR_listener_callback(self, msg):
         ranges = np.array(msg.ranges)
-        ranges[ranges <= 0.0] += 1e3
-        min_dist_idx = np.argmin(ranges)
+
+        self.update_pose_curr()
+        subsample_num = 200
+        subsample_indices = np.round(
+            np.linspace(1, len(ranges) - 1, num=subsample_num)
+        ).astype(int)
+
+        ranges_subsampled = ranges[subsample_indices]
+        angles_subsampled = (
+            self.pose_curr[-1] + msg.angle_increment * subsample_indices - math.pi
+        )
+
+        valid_indices = ranges_subsampled > 0.0
+        ranges_subsampled = ranges_subsampled[valid_indices]
+        angles_subsampled = angles_subsampled[valid_indices]
+
+        self.loc_obs = np.zeros(
+            (ranges_subsampled.shape[0], params["common"]["dim"] + 1)
+        )
+        self.loc_obs[:, 0] = self.pose_curr[0] + ranges_subsampled * np.cos(
+            angles_subsampled
+        )
+        self.loc_obs[:, 1] = self.pose_curr[1] + ranges_subsampled * np.sin(
+            angles_subsampled
+        )
+
+        ranges_copy = ranges.copy()
+        ranges_copy[ranges_copy <= 0.0] += 1e3
+        min_dist_idx = np.argmin(ranges_copy)
         self.min_dist = ranges[min_dist_idx]
-        self.min_dist_obtained = True
-        # print(f"Min dist: {self.min_dist}")
+
+        self.loc_obs = np.append(
+            self.loc_obs,
+            np.append(self.pose_curr[: params["common"]["dim"]], self.min_dist).reshape(
+                1, -1
+            ),
+            axis=0,
+        )
+        self.LiDAR_meas_obtained = True
 
 
 if __name__ == "__main__":

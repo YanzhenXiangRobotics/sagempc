@@ -724,6 +724,7 @@ class SEMPC:
         pass
 
     def update_Cx_gp(self, query_loc_obs=None):
+        before = time.time()
         if not self.goal_in_pessi:
             print(
                 "Uncertainity at meas_loc",
@@ -739,8 +740,8 @@ class SEMPC:
             )
         else:
             TrainAndUpdateConstraint_isaac_sim(
-                query_loc_obs[: self.x_dim],
-                query_loc_obs[-1],
+                query_loc_obs[:, : self.x_dim],
+                query_loc_obs[:, -1],
                 self.pl_idx,
                 self.players,
                 self.params,
@@ -749,6 +750,7 @@ class SEMPC:
             "Uncertainity at meas_loc",
             self.players[self.pl_idx].get_width_at_curr_loc(),
         )
+        print("Time updating GP: ", time.time() - before)
 
     def not_reached_and_prob_feasible(self):
         """_summary_ The agent safely explores and either reach goal or remove it from safe set

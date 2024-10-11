@@ -179,17 +179,20 @@ def clip_angle(angle):
 
 
 def get_current_pose(tf_buffer):
-    pose_base_link = tf_buffer.lookup_transform(
-        "world", "base_link", time=rclpy.time.Time()
-    )
-    trans = pose_base_link.transform.translation
-    orient = pose_base_link.transform.rotation
-    orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
-    orient_euler = np.array(euler_from_quaternion(orient_quat))
-    pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
-    pose_3D[-1] = clip_angle(pose_3D[-1])
-
-    return pose_3D
+    try:
+        pose_base_link = tf_buffer.lookup_transform(
+            "world", "base_link", time=rclpy.time.Time()
+        )
+        trans = pose_base_link.transform.translation
+        orient = pose_base_link.transform.rotation
+        orient_quat = np.array([orient.x, orient.y, orient.z, orient.w])
+        orient_euler = np.array(euler_from_quaternion(orient_quat))
+        pose_3D = np.array([trans.x, trans.y, orient_euler[-1]])
+        pose_3D[-1] = clip_angle(pose_3D[-1])
+        return pose_3D
+    except Exception as e:
+        print(e)
+        return None
 
 
 def compute_velocity_fwk_nova_carter(omega_wl, omega_wr):
@@ -302,11 +305,11 @@ class InnerControlNode(Node):
 
             X, _ = self.ctrl.solve_for_x0(np.concatenate((pose, self.velocity)))
             cmd_vel = Twist()
-            if len(self.ctrl.ref_path) >= 1:
+            if self.iter != -1:
                 cmd_vel.linear.x = X[1, self.ctrl.pose_dim]
                 cmd_vel.angular.z = X[1, self.ctrl.pose_dim + 1]
             self.cmd_vel_publisher.publish(cmd_vel)
-
+            
             if self.iter != -1:
                 self.iter += 1
                 if (self.debug_plot) and (self.iter % self.ctrl.N == 0):
