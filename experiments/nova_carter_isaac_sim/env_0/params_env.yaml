@@ -1,5 +1,5 @@
 Cx_beta: 1.5
-Cx_lengthscale: 1.0
+Cx_lengthscale: 7.0
 Cx_noise: 0.001
 Fx_beta: 1.5
 Fx_lengthscale: 3.0
@@ -24,4 +24,4 @@ start:
 start_angle: 3.14159
 start_loc:
 - -20.0
-- -16.0
+- -14.699999809265137

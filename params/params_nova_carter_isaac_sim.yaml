@@ -7,7 +7,7 @@ env: # Env parameters mainly used for env generation
   start_angle: 3.14159
   goal_loc: [-17.5, -13.1] # Agent goal location, overwritten by params_env.yaml
   n_players: 1
-  Cx_lengthscale: 1.0 # Lenghtscale to generate the constraint for the environment
+  Cx_lengthscale: 7.0 # Lenghtscale to generate the constraint for the environment
   Cx_noise: 0.001 # Noise std use to generate environment samples
   Fx_lengthscale: 3.0 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.001

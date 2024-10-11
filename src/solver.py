@@ -215,18 +215,18 @@ class SEMPC_solver(object):
             (artists,), _ = pessi_contour.legend_elements()
             artists.set_label("pessimistic contour")
             self.legend_handles.append(artists)
-            # mean_contour = self.ax.contour(
-            #     X1,
-            #     X2,
-            #     mean,
-            #     levels=[self.params["common"]["constraint"]],
-            #     colors="pink",
-            #     linewidths=0.5,
-            # )
-            # self.threeD_tmps.append(mean_contour)
-            # (artists,), _ = mean_contour.legend_elements()
-            # artists.set_label("mean contour")
-            # self.legend_handles.append(artists)
+            mean_contour = self.ax.contour(
+                X1,
+                X2,
+                mean,
+                levels=[self.params["common"]["constraint"]],
+                colors="pink",
+                linewidths=0.5,
+            )
+            self.threeD_tmps.append(mean_contour)
+            (artists,), _ = mean_contour.legend_elements()
+            artists.set_label("mean contour")
+            self.legend_handles.append(artists)
             # if (
             #     self.params["algo"]["type"] == "MPC_expander"
             #     or self.params["algo"]["type"] == "MPC_expander_V0"

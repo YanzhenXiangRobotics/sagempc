@@ -81,7 +81,7 @@ class InnerControl:
         self.ocp.constraints.idxbx = np.array([0, 1, 3, 4])
 
         self.ocp.constraints.x0 = np.array(
-            params["env"]["start_loc"]
+            params_additional["start_loc"]
             + [params["env"]["start_angle"]]
             + np.zeros(self.x_dim).tolist()
         )

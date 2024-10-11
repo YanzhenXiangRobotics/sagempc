@@ -164,6 +164,7 @@ class PlannerNode(Node):
         self.pose_curr = np.append(
             np.array(params["env"]["start_loc"]), params["env"]["start_angle"]
         )
+        self.curr_loc_min_dists = []
 
     def update_pose_curr(self):
         pose_curr = get_current_pose(self.tf_buffer)
@@ -184,8 +185,17 @@ class PlannerNode(Node):
                 )
                 self.sempc_initialized = True
             else:
+                print("Pose: ", self.pose_curr, "\n\n\n")
                 loc_curr = self.pose_curr[: self.sempc.x_dim]
                 state_curr = np.concatenate((self.pose_curr, self.velocity))
+                
+                self.curr_loc_min_dists.append(
+                    np.append(self.pose_curr[: params["common"]["dim"]], self.min_dist)
+                )
+
+                self.loc_obs = np.concatenate(
+                    (self.loc_obs, np.array(self.curr_loc_min_dists)), axis=0
+                )
 
                 if self.sempc.running_condition_true_go(loc_curr):
                     self.sempc.update_Cx_gp(self.loc_obs)
@@ -236,13 +246,6 @@ class PlannerNode(Node):
         min_dist_idx = np.argmin(ranges_copy)
         self.min_dist = ranges[min_dist_idx]
 
-        self.loc_obs = np.append(
-            self.loc_obs,
-            np.append(self.pose_curr[: params["common"]["dim"]], self.min_dist).reshape(
-                1, -1
-            ),
-            axis=0,
-        )
         self.LiDAR_meas_obtained = True
 
 
