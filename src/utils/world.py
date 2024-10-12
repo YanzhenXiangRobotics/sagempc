@@ -30,7 +30,7 @@ class World:
             X2 = X2[:-1]
         return X1, X2
 
-    def grids_2d(self, resolution=None):
+    def grids_list(self, resolution=None):
         if resolution is None:
             resolution = self.resolution
         X1, X2 = self.grid_x1_x2(resolution)

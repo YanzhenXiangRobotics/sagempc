@@ -4,6 +4,7 @@ import casadi as ca
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from acados_template import AcadosOcpSolver, AcadosSimSolver
 
 import sys, os
@@ -200,9 +201,8 @@ class SEMPC_solver(object):
             lower_list = pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
             lower = lower_list.reshape((X1.shape[0], X2.shape[1]))
             mean = pred.mean.reshape((X1.shape[0], X2.shape[1]))
-            self.threeD_tmps.append(
-                self.ax_3D.plot_surface(X1, X2, lower, color="orange", alpha=0.5)
-            )
+            fig = go.Figure(data=[go.Surface(z=lower, x=X1, y=X2)])
+            fig.write_html(os.path.join(self.fig_dir, "sim_3D.html"))
             pessi_contour = self.ax.contour(
                 X1,
                 X2,

@@ -7,11 +7,11 @@ env: # Env parameters mainly used for env generation
   start_angle: 3.14159
   goal_loc: [-17.5, -13.1] # Agent goal location, overwritten by params_env.yaml
   n_players: 1
-  Cx_lengthscale: 7.0 # Lenghtscale to generate the constraint for the environment
-  Cx_noise: 0.001 # Noise std use to generate environment samples
+  Cx_lengthscale: 20.0 # Lenghtscale to generate the constraint for the environment
+  Cx_noise: 0.0000001 # Noise std use to generate environment samples
   Fx_lengthscale: 3.0 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.001
-  Cx_beta: 1.5 # Scaling of beta. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
+  Cx_beta: 0.1 # Scaling of beta. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3
   Fx_beta: 1.5
   generate: True # Set True, False, walls, None: use some fixed save path
   block_env: True
@@ -29,7 +29,7 @@ visu:
 
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
-  Cx_lengthscale: 0.7 # Lenghtscale used by the agent for belief of the environment
+  Cx_lengthscale: 1.7 # Lenghtscale used by the agent for belief of the environment
   Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
   Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.01
@@ -86,7 +86,7 @@ experiment:
   batch_update: True
   batch_size: 5
   max_sim_iter: 5
-  debug: False
+  debug: True
 
 innerloop:
   H: 3

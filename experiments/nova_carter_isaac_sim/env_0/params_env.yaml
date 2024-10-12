@@ -1,6 +1,6 @@
-Cx_beta: 1.5
-Cx_lengthscale: 7.0
-Cx_noise: 0.001
+Cx_beta: 0.1
+Cx_lengthscale: 20.0
+Cx_noise: 1.0e-07
 Fx_beta: 1.5
 Fx_lengthscale: 3.0
 Fx_noise: 0.001
