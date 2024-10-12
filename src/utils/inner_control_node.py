@@ -295,6 +295,7 @@ class InnerControlNode(Node):
     def clock_listener_callback(self, msg):
         try:
             pose = get_current_pose(self.tf_buffer)
+            print(pose)
             # self.X_cl[self.iter, :] = pose[: self.ctrl.x_dim]
             if not self.ref_path_init:
                 self.ctrl.ref_path.append(pose[: self.ctrl.pose_dim])

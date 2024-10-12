@@ -35,6 +35,7 @@ PORT = 65432
 from src.utils.inner_control_node import InnerControl
 from src.agent import dynamics
 
+import shutil
 
 class SEMPC:
     def __init__(self, params, env, visu, query_state_obs=None) -> None:
@@ -46,6 +47,8 @@ class SEMPC:
         # self.complete_subscriber = self.create_subscription(
         #     Int32, "/complete", self.clock_listener_callback, 10
         # )
+        if os.path.exists(self.fig_dir):
+            shutil.rmtree(self.fig_dir)
         self.sempc_solver = SEMPC_solver(
             params,
             env.VisuGrid,
