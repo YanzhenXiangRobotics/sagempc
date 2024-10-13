@@ -140,11 +140,19 @@ class InnerControl:
         # print(f"X: {X}, U: {U}")
         return X, U
 
+    def solver_set_ref_path(self):
+        for k in range(self.H + 1):
+            if k < len(self.ref_path):
+                self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
+            else:
+                self.ocp_solver.set(k, "p", np.array(self.ref_path[-1]))
+
     def solve_for_x0(self, x0):
         for i in range(3):
             self.ocp_solver.options_set("rti_phase", 1)
-            for k in range(self.H + 1):
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[0]))
+            # for k in range(self.H + 1):
+            #     self.ocp_solver.set(k, "p", np.array(self.ref_path[0]))
+            self.solver_set_ref_path()
             status = self.ocp_solver.solve()
 
             self.ocp_solver.set(0, "lbx", x0)
@@ -159,6 +167,12 @@ class InnerControl:
                 )
 
         X, U = self.get_solution()
+        if np.any(abs(X[:, self.pose_dim]) > params["optimizer"]["x_max"][2]):
+            i = np.where(abs(X[:, self.pose_dim]) > params["optimizer"]["x_max"][2])[0]
+            print("Vel out of bounds: ", X[i, self.pose_dim])
+        if np.any(abs(X[:, -1]) > params["optimizer"]["x_max"][3]):
+            i = np.where(abs(X[:, -1]) > params["optimizer"]["x_max"][3])[0]
+            print("Ang vel out of bounds: ", X[i, -1])
 
         return X, U
 
@@ -203,6 +217,11 @@ def compute_velocity_fwk_nova_carter(omega_wl, omega_wr):
     v = 0.5 * (v_wl + v_wr)
     omega = (v_wr - v_wl) / l
 
+    v = np.clip(v, params["optimizer"]["x_min"][2], params["optimizer"]["x_max"][2])
+    omega = np.clip(
+        omega, params["optimizer"]["x_min"][3], params["optimizer"]["x_max"][3]
+    )
+
     return np.array([v, omega])
 
 
@@ -211,15 +230,24 @@ import shutil
 
 
 class InnerControlPlotter(Node):
-    def __init__(self):
+    def __init__(self, pose_dim):
+        self.pose_dim = pose_dim
         self.fig, self.ax = plt.subplots()
+        self.fig_vel, self.ax_vel = plt.subplots()
+        self.fig_ang_vel, self.ax_ang_vel = plt.subplots()
         self.X_ol, self.X_cl = [], []
+        self.reset_vel_records()
         self.local_radius = 0.3
         dir_project = os.path.join(os.path.dirname(__file__), "..", "..")
-        self.dir_saveplots = os.path.join(dir_project, "inner_loop_isaac_sim")
-        if os.path.exists(self.dir_saveplots):
-            shutil.rmtree(self.dir_saveplots)
-        os.makedirs(self.dir_saveplots)
+        self.dir_saveplots = [
+            os.path.join(dir_project, "inner_loop_isaac_sim"),
+            os.path.join(dir_project, "vel"),
+            os.path.join(dir_project, "ang_vel"),
+        ]
+        for dir in self.dir_saveplots:
+            if os.path.exists(dir):
+                shutil.rmtree(dir)
+            os.makedirs(dir)
         self.plots_list = []
 
     def add_to_openloop(self, X):
@@ -228,19 +256,72 @@ class InnerControlPlotter(Node):
     def add_to_closeloop(self, X):
         self.X_cl.append(X)
 
-    def plot_openloop(self):
-        X_ol = np.array(self.X_ol)
-        if len(X_ol) != 0:
-            (plot,) = self.ax.plot(X_ol[:, 0], X_ol[:, 1], marker="x", color="black")
+    def add_to_openloop_vel(self, vel):
+        self.vel_ol.append(vel)
+
+    def add_to_closeloop_vel(self, vel):
+        self.vel_cl.append(vel)
+
+    def plot(self, X1, ax, marker, color, X2=None):
+        if len(X1) != 0:
+            if X2 is None:
+                (plot,) = ax.plot(X1, marker=marker, color=color)
+            else:
+                (plot,) = ax.plot(X1, X2, marker=marker, color=color)
             self.plots_list.append(plot)
+
+    def plot_openloop(self):
+        self.plot(
+            np.array(self.X_ol)[:, 0],
+            self.ax,
+            marker="o",
+            color="blue",
+            X2=np.array(self.X_ol)[:, 1],
+        )
 
     def plot_closeloop(self):
-        X_cl = np.array(self.X_cl)
-        if len(X_cl) != 0:
-            (plot,) = self.ax.plot(X_cl[:, 0], X_cl[:, 1], marker="o", color="lime")
-            self.plots_list.append(plot)
+        self.plot(
+            np.array(self.X_cl)[:, 0],
+            self.ax,
+            marker="x",
+            color="black",
+            X2=np.array(self.X_cl)[:, 1],
+        )
 
-    def save_fig(self, iter):
+    def plot_openloop_vel(self):
+        vel_ol = np.array(self.vel_ol)
+        # vel_ol[:, 0] = np.clip(
+        #     vel_ol[:, 0],
+        #     params["optimizer"]["x_min"][2],
+        #     params["optimizer"]["x_max"][2],
+        # )
+        # vel_ol[:, 1] = np.clip(
+        #     vel_ol[:, 1],
+        #     params["optimizer"]["x_min"][3],
+        #     params["optimizer"]["x_max"][3],
+        # )
+        self.plot(vel_ol[:, 0], self.ax_vel, marker="o", color="blue")
+        self.plot(vel_ol[:, 1], self.ax_ang_vel, marker="o", color="blue")
+
+    def plot_closeloop_vel(self):
+        vel_cl = np.array(self.vel_cl)
+        # vel_cl[:, 0] = np.clip(
+        #     vel_cl[:, 0],
+        #     params["optimizer"]["x_min"][2],
+        #     params["optimizer"]["x_max"][2],
+        # )
+        # vel_cl[:, 1] = np.clip(
+        #     vel_cl[:, 1],
+        #     params["optimizer"]["x_min"][3],
+        #     params["optimizer"]["x_max"][3],
+        # )
+        self.plot(vel_cl[:, 0], self.ax_vel, marker="x", color="black")
+        self.plot(vel_cl[:, 1], self.ax_ang_vel, marker="x", color="black")
+
+    def reset_vel_records(self):
+        self.vel_ol, self.vel_cl = [], []
+
+    def save_fig(self, iter, ref_len):
         self.ax.set_xlim(
             [
                 self.X_cl[-1][0] - self.local_radius,
@@ -256,7 +337,19 @@ class InnerControlPlotter(Node):
         outer_iter = math.floor(iter / params["optimizer"]["H"])
         inner_iter = iter % params["optimizer"]["H"]
         self.fig.savefig(
-            os.path.join(self.dir_saveplots, f"{outer_iter}_{inner_iter}.png")
+            os.path.join(
+                self.dir_saveplots[0], f"{outer_iter}_{inner_iter}_{ref_len}.png"
+            )
+        )
+        self.fig_vel.savefig(
+            os.path.join(
+                self.dir_saveplots[1], f"{outer_iter}_{inner_iter}_{ref_len}.png"
+            )
+        )
+        self.fig_ang_vel.savefig(
+            os.path.join(
+                self.dir_saveplots[2], f"{outer_iter}_{inner_iter}_{ref_len}.png"
+            )
         )
         len_plots_list = len(self.plots_list)
         for _ in range(len_plots_list):
@@ -265,7 +358,7 @@ class InnerControlPlotter(Node):
 
 class InnerControlNode(Node):
     def __init__(self):
-        super().__init__("mpc_ref_tracker_node")
+        super().__init__("inner_control_node")
         self.ctrl = InnerControl()
         self.clock_subscriber = self.create_subscription(
             Clock, "/clock_controller", self.clock_listener_callback, 10
@@ -287,16 +380,15 @@ class InnerControlNode(Node):
 
         self.init_pose_obtained = False
         self.ref_path_init = False
+        self.cmd_vel_obtained = False
 
         self.debug_plot = params["innerloop"]["debug_plot"]
         if self.debug_plot:
-            self.plotter = InnerControlPlotter()
+            self.plotter = InnerControlPlotter(self.ctrl.pose_dim)
 
     def clock_listener_callback(self, msg):
         try:
             pose = get_current_pose(self.tf_buffer)
-            print(pose)
-            # self.X_cl[self.iter, :] = pose[: self.ctrl.x_dim]
             if not self.ref_path_init:
                 self.ctrl.ref_path.append(pose[: self.ctrl.pose_dim])
                 self.ref_path_init = True
@@ -305,20 +397,26 @@ class InnerControlNode(Node):
                 self.ctrl.ref_path.pop(0)
 
             X, _ = self.ctrl.solve_for_x0(np.concatenate((pose, self.velocity)))
+            self.cmd_vel_val = X[1, self.ctrl.pose_dim :]
+            self.cmd_vel_obtained = True
             cmd_vel = Twist()
-            if self.iter != -1:
-                cmd_vel.linear.x = X[1, self.ctrl.pose_dim]
-                cmd_vel.angular.z = X[1, self.ctrl.pose_dim + 1]
+            # if (self.iter != -1) and (len(self.ctrl.ref_path) > 1):
+            if (self.iter != -1):
+                cmd_vel.linear.x = self.cmd_vel_val[0]
+                cmd_vel.angular.z = self.cmd_vel_val[1]
             self.cmd_vel_publisher.publish(cmd_vel)
-            
+
             if self.iter != -1:
                 self.iter += 1
                 if (self.debug_plot) and (self.iter % self.ctrl.N == 0):
                     # print(f"Iter: {self.iter}")
                     self.plotter.add_to_closeloop(pose[: self.ctrl.x_dim].tolist())
-                    self.plotter.plot_closeloop()
                     self.plotter.plot_openloop()
-                    self.plotter.save_fig(math.floor(self.iter / self.ctrl.N ))
+                    self.plotter.plot_closeloop()
+
+                    self.plotter.save_fig(
+                        math.floor(self.iter / self.ctrl.N), len(self.ctrl.ref_path)
+                    )
 
         except Exception as e:
             print(e)
@@ -326,7 +424,11 @@ class InnerControlNode(Node):
     def velocity_listener_callback(self, msg):
         omega_wl, omega_wr = msg.velocity[1], msg.velocity[2]
         self.velocity = compute_velocity_fwk_nova_carter(omega_wl, omega_wr)
-        # print(f"Velocity: {self.velocity}")
+        if self.debug_plot and self.cmd_vel_obtained:
+            self.plotter.add_to_openloop_vel(self.cmd_vel_val.tolist())
+            self.plotter.add_to_closeloop_vel(self.velocity.tolist())
+            self.plotter.plot_openloop_vel()
+            self.plotter.plot_closeloop_vel()
 
     def ref_path_listener_callback(self, msg):
         print("Ref path updated")
@@ -336,6 +438,8 @@ class InnerControlNode(Node):
         self.ctrl.set_ref_path(ref_path)
         for ref_path_item in ref_path:
             self.plotter.add_to_openloop(ref_path_item)
+        if self.debug_plot:
+            self.plotter.reset_vel_records()
 
     def plot(self, ref_path):
         ref_path_appended = np.zeros_like(self.X_cl)
