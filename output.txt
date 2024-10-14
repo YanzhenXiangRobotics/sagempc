@@ -1,44 +1,9 @@
 Warning: running in conda env, please deactivate before executing this script
 If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
-rm -f libacados_ocp_solver_nova_carter_discrete_Lc.so
-rm -f nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o acados_solver_nova_carter_discrete_Lc.o acados_solver_nova_carter_discrete_Lc.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
-cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
--L -l
-rm -f libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so
-rm -f inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o acados_solver_inner_loop_nova_carter_discrete_Lc.o acados_solver_inner_loop_nova_carter_discrete_Lc.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.c
-cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
-cc -shared inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
--L -l
-{'env': {'start': [-20.8, -16.8], 'shape': {'x': 95, 'y': 95}, 'start_loc': [-20.5, -16.0], 'start_angle': 3.14159, 'goal_loc': [-17.5, -13.1], 'n_players': 1, 'Cx_lengthscale': 20.0, 'Cx_noise': 1e-07, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 0.1, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 1.7, 'Cx_noise': 0.0001, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 20, 'Hm': 19, 'u_min': [-1.0, -2.0], 'u_max': [1.0, 2.0], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 5, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'dt': 0.035, 'w': 5000}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': 1, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': False}, 'innerloop': {'H': 20, 'N': 1, 'debug_plot': True, 'sanity_check': False}}
+Warning: running in conda env, please deactivate before executing this script
+If conda is desired please source setup_conda_env.sh in your python 3.10 conda env and run python normally
+{'env': {'start': [-20.8, -16.8], 'shape': {'x': 95, 'y': 95}, 'start_loc': [-20.5, -16.0], 'start_angle': 3.14159, 'goal_loc': [-17.5, -13.1], 'n_players': 1, 'Cx_lengthscale': 20.0, 'Cx_noise': 1e-07, 'Fx_lengthscale': 3.0, 'Fx_noise': 0.001, 'Cx_beta': 0.1, 'Fx_beta': 1.5, 'generate': True, 'block_env': True, 'env_file_name': 'env_data.pkl', 'cov_module': 'Matern', 'compute_true_Lipschitz': False, 'i': 8, 'name': 0}, 'visu': {'show': False, 'show_current_loc': False, 'step_size': 0.04, 'opti_path': True, 'show_path': True, 'show_opti_set': False}, 'agent': {'dynamics': 'nova_carter', 'Cx_lengthscale': 1.7, 'Fx_lengthscale': 1.5, 'Fx_noise': 0.01, 'Cx_beta': 1.5, 'Fx_beta': 2.0, 'mean_shift_val': 2, 'cov_module': 'Matern'}, 'optimizer': {'H': 30, 'Hm': 29, 'u_min': [-1.0, -2.0], 'u_max': [1.0, 2.0], 'x_min': [-21.8, -21.8, -0.5, -1.0], 'x_max': [2.0, 2.0, 0.5, 1.0], 'linear_solver': 'ma57', 'oracle': {'max_sqp_iter': 10, 'tol_nlp': 1e-06}, 'SEMPC': {'max_sqp_iter': 5, 'tol_nlp': 0.0001}, 'Tf': 1.0, 'order': 1, 'x_dim': 2, 'dt': 0.03, 'w': 5000}, 'common': {'dim': 2, 'constraint': 0.6, 'epsilon': 0.2, 'Lc': 1.0, 'expander_offset': 0.1, 'Lc_lin_tol': 0.001, 'backtrack': True}, 'algo': {'objective': 'GO', 'type': 'MPC_expander_V0', 'init': 'past_iterate'}, 'experiment': {'name': 'goMPC', 'generate_regret_plot': True, 'folder': 'nova_carter_isaac_sim', 'use_isaac_sim': 1, 'plot_contour': True, 'plot_per_sqp_iter': False, 'batch_update': True, 'batch_size': 5, 'max_sim_iter': 5, 'debug': False}, 'innerloop': {'H': 30, 'N': 1, 'debug_plot': True, 'sanity_check': False}}
 Namespace(param='params_nova_carter_isaac_sim', env=0, i=8)
-"world" passed to lookupTransform argument target_frame does not exist. 
 "world" passed to lookupTransform argument target_frame does not exist. 
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -64,13 +29,33 @@ If you continue, acados will proceed computing the exact hessian for the cost te
 Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).
 OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).
 
+rm -f libacados_ocp_solver_nova_carter_discrete_Lc.so
+rm -f nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o acados_solver_nova_carter_discrete_Lc.o acados_solver_nova_carter_discrete_Lc.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
+cc -shared nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_fun.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun_jac_uxt_zt.o nova_carter_discrete_Lc_constraints/nova_carter_discrete_Lc_constr_h_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o nova_carter_discrete_Lc_cost/nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_nova_carter_discrete_Lc.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun.o nova_carter_discrete_Lc_model/nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
+-L -l
 acados was compiled without OpenMP.
-stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-10-13-14:40:15.350084.json
-initialized location observation {'Cx_X': [tensor([-20.0262, -14.7000], dtype=torch.float64)], 'Cx_Y': tensor([[0.6983]], dtype=torch.float64)}
-tensor(0.7031, dtype=torch.float64)
+stored current iterate in  /home/xyz/ETH/sagempc/MPC_expander_V0_env_0_i_8_ocp_initialization2024-10-14-16:35:43.983515.json
+initialized location observation {'Cx_X': [tensor([-20.0056, -14.7000], dtype=torch.float64)], 'Cx_Y': tensor([[0.6991]], dtype=torch.float64), 'Cx_noise': tensor([[0.0035]], dtype=torch.float64)}
+tensor(0.7012, dtype=torch.float64)
 Nodes in optimistic graph: 9025
-init_node 1858 goal_node 7882
-[32mGoal: [-19.96 -14.68]  uncertainity: 100 [0m
+init_node 1953 goal_node 7882
+[32mGoal: [-19.92 -14.68]  uncertainity: 100 [0m
 -1 10
 
 WARNING: Gauss-Newton Hessian approximation with EXTERNAL cost type not possible!
@@ -96,58 +81,174 @@ If you continue, acados will proceed computing the exact hessian for the cost te
 Note: There is also the option to use the external cost module with a numerical hessian approximation (see `ext_cost_num_hess`).
 OR the option to provide a symbolic custom hessian approximation (see `cost_expr_ext_cost_custom_hess`).
 
+rm -f libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so
+rm -f inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o acados_solver_inner_loop_nova_carter_discrete_Lc.o acados_solver_inner_loop_nova_carter_discrete_Lc.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.c
+cc -fPIC -std=c99   -O2 -I/home/xyz/ETH/acados/include -I/home/xyz/ETH/acados/include/acados -I/home/xyz/ETH/acados/include/blasfeo/include -I/home/xyz/ETH/acados/include/hpipm/include  -c -o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.c
+cc -shared inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_0_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_fun_jac_hess.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac.o inner_loop_nova_carter_discrete_Lc_cost/inner_loop_nova_carter_discrete_Lc_cost_ext_cost_e_fun_jac_hess.o acados_solver_inner_loop_nova_carter_discrete_Lc.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun.o inner_loop_nova_carter_discrete_Lc_model/inner_loop_nova_carter_discrete_Lc_dyn_disc_phi_fun_jac.o -o libacados_ocp_solver_inner_loop_nova_carter_discrete_Lc.so -L/home/xyz/ETH/acados/lib -lacados -lhpipm -lblasfeo -lm \
+-L -l
 acados was compiled without OpenMP.
-Time planner:  4.421891689300537
-Pose:  [-20.031 -14.7     3.141] 
-
-
-
-Uncertainity at meas_loc [0.06]
-Uncertainity at meas_loc [0.061]
-Time updating GP:  0.029742002487182617
-tensor(0.6756)
-Nodes in optimistic graph: 2409
-init_node 1858 goal_node 7882
-[32mGoal: [-19.92 -14.68]  uncertainity: 100 [0m
+Time planner:  9.981521844863892
+Uncertainity at meas_loc [0.085]
+Uncertainity at meas_loc [0.085]
+Time updating GP:  0.06592988967895508
+tensor(0.6788)
+Nodes in optimistic graph: 1376
+init_node 1953 goal_node 7882
+init_node 1953 curr_node 1953 goal_node 8992
+[32mGoal: [-18.8  -14.68]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.00027489662170410156
-Time taken 0.41264796257019043
-Time planner:  0.7909533977508545
-Pose:  [-20.037 -14.7     3.141] 
+Time for prepare: 0.00037550926208496094
+Break at sqp iter 3, 
 
 
-
-Uncertainity at meas_loc [0.061]
-Uncertainity at meas_loc [0.044]
-Time updating GP:  0.02830815315246582
-tensor(0.6687)
-Nodes in optimistic graph: 2408
-init_node 1858 goal_node 7882
-[32mGoal: [-19.88 -14.68]  uncertainity: 100 [0m
+Time taken 0.8843498229980469
+Time planner:  2.294032335281372
+Uncertainity at meas_loc [0.085]
+Uncertainity at meas_loc [0.073]
+Time updating GP:  0.055077552795410156
+tensor(0.6792)
+Nodes in optimistic graph: 1293
+init_node 1953 goal_node 8992
+init_node 1953 curr_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0001850128173828125
+Time for prepare: 0.0003218650817871094
 Break at sqp iter 1, 
 
 
-Time taken 0.2509772777557373
-Time solving sagempc: 0.2509772777557373, mean: 0.2509772777557373, std: 0.0
-Time planner:  0.5577991008758545
-Pose:  [-20.042 -14.7     3.141] 
-
-
-
-Uncertainity at meas_loc [0.044]
-Uncertainity at meas_loc [0.039]
-Time updating GP:  0.030413389205932617
-tensor(0.6655)
-Nodes in optimistic graph: 2378
-init_node 1858 goal_node 7882
-[32mGoal: [-19.88 -14.68]  uncertainity: 100 [0m
+Time taken 0.4722566604614258
+Time solving sagempc: 0.4722566604614258, mean: 0.4722566604614258, std: 0.0
+Time planner:  1.4577248096466064
+Uncertainity at meas_loc [0.069]
+Time updating GP:  0.028693199157714844
+tensor(0.6794)
+Nodes in optimistic graph: 1293
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
 [96mSolving Constrints[0m
-Time for prepare: 0.0001742839813232422
+Time for prepare: 0.0003139972686767578
 Break at sqp iter 1, 
 
 
-Time taken 0.21835088729858398
-Time solving sagempc: 0.21835088729858398, mean: 0.23466408252716064, std: 0.01631319522857666
-Time planner:  0.53053879737854
+Time taken 0.5160796642303467
+Time solving sagempc: 0.5160796642303467, mean: 0.49416816234588623, std: 0.02191150188446045
+Time planner:  1.5064117908477783
+Uncertainity at meas_loc [0.067]
+Time updating GP:  0.03395247459411621
+tensor(0.6795)
+Nodes in optimistic graph: 1260
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002689361572265625
+Break at sqp iter 1, 
+
+
+Time taken 0.3742811679840088
+Time solving sagempc: 0.3742811679840088, mean: 0.45420583089192706, std: 0.05927943837195149
+Time planner:  1.2726666927337646
+Uncertainity at meas_loc [0.066]
+Time updating GP:  0.03993344306945801
+tensor(0.6798)
+Nodes in optimistic graph: 1260
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002522468566894531
+Break at sqp iter 1, 
+
+
+Time taken 0.37134408950805664
+Time solving sagempc: 0.37134408950805664, mean: 0.4334903955459595, std: 0.06263327107048927
+Time planner:  1.2948522567749023
+Uncertainity at meas_loc [0.065]
+Time updating GP:  0.034415245056152344
+tensor(0.6800)
+Nodes in optimistic graph: 1260
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0002765655517578125
+Break at sqp iter 1, 
+
+
+Time taken 0.3724219799041748
+Time solving sagempc: 0.3724219799041748, mean: 0.42127671241760256, std: 0.061114953474834234
+Time planner:  1.3923771381378174
+Uncertainity at meas_loc [0.064]
+Time updating GP:  0.03391718864440918
+tensor(0.6801)
+Nodes in optimistic graph: 1246
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.0003829002380371094
+Break at sqp iter 1, 
+
+
+Time taken 0.4194009304046631
+Time solving sagempc: 0.4194009304046631, mean: 0.4209640820821126, std: 0.05579444390342678
+Time planner:  1.335813283920288
+Uncertainity at meas_loc [0.064]
+Time updating GP:  0.039903879165649414
+tensor(0.6804)
+Nodes in optimistic graph: 1246
+init_node 1953 goal_node 7089
+[32mGoal: [-17.84 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00029921531677246094
+Break at sqp iter 1, 
+
+
+Time taken 0.38275861740112305
+Time solving sagempc: 0.38275861740112305, mean: 0.415506158556257, std: 0.053357627450397044
+Time planner:  1.3226008415222168
+Uncertainity at meas_loc [0.063]
+Time updating GP:  0.027175188064575195
+tensor(0.6806)
+Nodes in optimistic graph: 1240
+init_node 1953 goal_node 7089
+init_node 1953 curr_node 1953 goal_node 6994
+[32mGoal: [-17.88 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00045990943908691406
+Break at sqp iter 1, 
+
+
+Time taken 0.4079728126525879
+Time solving sagempc: 0.4079728126525879, mean: 0.41456449031829834, std: 0.049973633345356275
+Time planner:  1.347214937210083
+Uncertainity at meas_loc [0.063]
+Time updating GP:  0.03707575798034668
+tensor(0.6808)
+Nodes in optimistic graph: 1240
+init_node 1953 goal_node 6994
+[32mGoal: [-17.88 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00041675567626953125
+Break at sqp iter 1, 
+
+
+Time taken 0.39125657081604004
+Time solving sagempc: 0.39125657081604004, mean: 0.4119747214847141, std: 0.04768159349722321
+Time planner:  1.4241690635681152
+Uncertainity at meas_loc [0.063]
+Time updating GP:  0.03724026679992676
+tensor(0.6811)
+Nodes in optimistic graph: 1240
+init_node 1953 goal_node 6994
+[32mGoal: [-17.88 -14.44]  uncertainity: 100 [0m
+[96mSolving Constrints[0m
+Time for prepare: 0.00047898292541503906
+There was an error running python

@@ -38,7 +38,7 @@ from src.agent import dynamics
 import shutil
 
 class SEMPC:
-    def __init__(self, params, env, visu, query_state_obs=None) -> None:
+    def __init__(self, params, env, visu, query_state_obs_noise=None) -> None:
         # self.oracle_solver = Oracle_solver(params)
         self.use_isaac_sim = params["experiment"]["use_isaac_sim"]
         self.debug = params["experiment"]["debug"]
@@ -81,7 +81,7 @@ class SEMPC:
         else:
             self.pose_dim = self.n_order * self.x_dim
         self.obtained_init_state = False
-        self.sempc_initialization(query_state_obs)
+        self.sempc_initialization(query_state_obs_noise)
         self.sim_iter = 0
         if not os.path.exists(self.fig_dir):
             os.makedirs(self.fig_dir)
@@ -338,28 +338,29 @@ class SEMPC:
                 )
         print("Number of samples", self.players[self.pl_idx].Cx_X_train.shape)
 
-    def sempc_initialization(self, query_state_obs=None):
-        if query_state_obs is None:
-            init_loc_obs = self.env.get_safe_init()
+    def sempc_initialization(self, query_state_obs_noise=None):
+        if query_state_obs_noise is None:
+            init_loc_obs_noise = self.env.get_safe_init()
         else:
-            query_state_obs_tensor = torch.from_numpy(query_state_obs)
-            init_loc_obs = {}
-            init_loc_obs["Cx_X"] = [query_state_obs_tensor[: self.x_dim]]
-            init_loc_obs["Cx_Y"] = torch.atleast_2d(query_state_obs_tensor[-1])
-        print("initialized location observation", init_loc_obs)
+            query_state_obs_noise_tensor = torch.from_numpy(query_state_obs_noise)
+            init_loc_obs_noise = {}
+            init_loc_obs_noise["Cx_X"] = [query_state_obs_noise_tensor[: self.x_dim]]
+            init_loc_obs_noise["Cx_Y"] = torch.atleast_2d(query_state_obs_noise_tensor[self.x_dim])
+            init_loc_obs_noise["Cx_noise"] = torch.atleast_2d(query_state_obs_noise_tensor[-1])
+        print("initialized location observation", init_loc_obs_noise)
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
         # TODO: Remove dependence of player on visu grid
         self.players = get_players_initialized(
-            init_loc_obs, self.params, self.env.VisuGrid
+            init_loc_obs_noise, self.params, self.env.VisuGrid
         )
 
         self.players[0].update_Cx_gp_with_current_data()
-        if query_state_obs is None:
-            x_curr = init_loc_obs["Cx_X"][0].numpy()
+        if query_state_obs_noise_tensor is None:
+            x_curr = init_loc_obs_noise["Cx_X"][0].numpy()
             pose_curr = np.append(x_curr, self.params["env"]["start_angle"])
         else:
-            pose_curr = query_state_obs[:-1]
+            pose_curr = query_state_obs_noise_tensor[: self.x_dim + 1]
         self.players[0].update_current_state(pose_curr)
 
         associate_dict = {}
@@ -369,13 +370,14 @@ class SEMPC:
 
         # 2) Set goal based on strategy
         self.set_next_goal(
-            query_state_obs[: self.x_dim] if query_state_obs is not None else None
+            query_state_obs_noise[: self.x_dim] \
+            if query_state_obs_noise is not None else None
         )
 
         # initial measurement (make sure l(x_init) >= 0)
         val = -100
         while val <= self.q_th:
-            if query_state_obs is None:
+            if query_state_obs_noise_tensor is None:
                 TrainAndUpdateConstraint(
                     self.players[self.pl_idx].current_location,
                     self.pl_idx,
@@ -385,8 +387,9 @@ class SEMPC:
                 )
             else:
                 TrainAndUpdateConstraint_isaac_sim(
-                    query_state_obs[: self.x_dim],
-                    query_state_obs[-1],
+                    query_state_obs_noise[: self.x_dim],
+                    query_state_obs_noise[self.x_dim],
+                    query_state_obs_noise[-1],
                     self.pl_idx,
                     self.players,
                     self.params,
@@ -725,14 +728,14 @@ class SEMPC:
     def inner_loop_nav2(self, X, x_curr):
         pass
 
-    def update_Cx_gp(self, query_loc_obs=None):
+    def update_Cx_gp(self, query_loc_obs_noise=None):
         before = time.time()
         if not self.goal_in_pessi:
             print(
                 "Uncertainity at meas_loc",
                 self.players[self.pl_idx].get_width_at_curr_loc(),
             )
-        if query_loc_obs is None:
+        if query_loc_obs_noise is None:
             TrainAndUpdateConstraint(
                 self.players[self.pl_idx].safe_meas_loc,
                 self.pl_idx,
@@ -742,16 +745,17 @@ class SEMPC:
             )
         else:
             TrainAndUpdateConstraint_isaac_sim(
-                query_loc_obs[:, : self.x_dim],
-                query_loc_obs[:, -1],
+                query_loc_obs_noise[:, : self.x_dim],
+                query_loc_obs_noise[:, self.x_dim],
+                query_loc_obs_noise[:, -1],
                 self.pl_idx,
                 self.players,
                 self.params,
             )
             self.sempc_solver.scatter_tmps.append(
                 self.env.ax.scatter(
-                    query_loc_obs[:, 0],
-                    query_loc_obs[:, 1],
+                    query_loc_obs_noise[:, 0],
+                    query_loc_obs_noise[:, 1],
                     marker="x",
                     color="purple",
                     s=6,

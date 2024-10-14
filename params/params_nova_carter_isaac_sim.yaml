@@ -30,7 +30,7 @@ visu:
 agent:
   dynamics: "nova_carter" # Robot dynamics, possible options: "unicycle", "bicycle", "NH_intergrator" , "int"
   Cx_lengthscale: 1.7 # Lenghtscale used by the agent for belief of the environment
-  Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
+  # Cx_noise: 0.0001 # Noise std used by the agent for belief of the environment
   Fx_lengthscale: 1.5 # Same as Cx_lengthscale, if objective is also from a GP sample
   Fx_noise: 0.01
   Cx_beta: 1.5 # 1.5                               # Scaling of beta used by agent. Defualt in gpytorch is 2. 1.5 represents 2x1.5 = 3

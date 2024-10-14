@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import torch
 import yaml
 from acados_template import AcadosOcpSolver, AcadosSimSolver
-from botorch.models import SingleTaskGP
 from gpytorch.kernels import (
     LinearKernel,
     MaternKernel,
@@ -39,7 +38,6 @@ class ContiWorld:
         self.Fx_lengthscale = env_params["Fx_lengthscale"]
         self.Fx_noise = env_params["Fx_noise"]
         self.Cx_lengthscale = env_params["Cx_lengthscale"]
-        self.Cx_noise = env_params["Cx_noise"]
         self.n_players = env_params["n_players"]
         self.block_env = env_params["block_env"]
         self.VisuGrid = grid(

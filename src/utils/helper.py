@@ -64,7 +64,7 @@ def TrainAndUpdateConstraint(query_pt, agent_key, players, params, env):
 
 
 def TrainAndUpdateConstraint_isaac_sim(
-    query_pt, query_meas, agent_key, players, params
+    query_pt, query_meas, query_noise, agent_key, players, params
 ):
     # print(f"Update at {query_pt} with {query_meas}")
     # print("query_pts: ", query_pt)
@@ -75,10 +75,12 @@ def TrainAndUpdateConstraint_isaac_sim(
     train = {}
     train["Cx_X"] = query_pt.reshape(-1, params["common"]["dim"])
     if not torch.is_tensor(query_meas):
-        query_meas = torch.from_numpy(np.atleast_1d(query_meas)).float().reshape(-1, 1)
+        query_meas = torch.from_numpy(np.atleast_1d(query_meas)).float()
     train["Cx_Y"] = query_meas
+    if not torch.is_tensor(query_noise):
+        query_noise = torch.from_numpy(np.atleast_1d(query_noise)).float()
 
-    players[agent_key].update_Cx_gp_local(train["Cx_X"], train["Cx_Y"])
+    players[agent_key].update_Cx_gp_local(train["Cx_X"], train["Cx_Y"], query_noise)
     for i in range(params["env"]["n_players"]):
         if i is not agent_key:
             players[i].communicate_constraint([train["Cx_X"]], [train["Cx_Y"]])

@@ -8,7 +8,7 @@ def get_players_initialized(train, params, grid_V):
         # instantiate players object
         players.append(
             Agent(
-                i, train["Cx_X"][i], train["Cx_Y"][i], params, grid_V
+                i, train["Cx_X"][i], train["Cx_Y"][i], train["Cx_noise"], params, grid_V
             )
         )
         # player i will get to know about the samples collected by other agents using communicate function

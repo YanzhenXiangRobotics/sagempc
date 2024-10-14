@@ -165,6 +165,7 @@ class PlannerNode(Node):
             np.array(params["env"]["start_loc"]), params["env"]["start_angle"]
         )
         self.curr_loc_min_dists = []
+        self.noise_scaling_factor = 5e-3
 
     def update_pose_curr(self):
         pose_curr = get_current_pose(self.tf_buffer)
@@ -179,26 +180,47 @@ class PlannerNode(Node):
                     params,
                     env,
                     visu,
-                    query_state_obs=np.append(
-                        self.pose_curr[: params["common"]["dim"]], self.min_dist
+                    query_state_obs_noise=np.concatenate(
+                        (
+                            self.pose_curr[: params["common"]["dim"]],
+                            np.array(
+                                [
+                                    self.min_dist,
+                                    self.noise_scaling_factor * self.min_dist,
+                                ]
+                            ),
+                        )
                     ),
                 )
                 self.sempc_initialized = True
             else:
-                print("Pose: ", self.pose_curr, "\n\n\n")
                 loc_curr = self.pose_curr[: self.sempc.x_dim]
                 state_curr = np.concatenate((self.pose_curr, self.velocity))
-                
+
                 self.curr_loc_min_dists.append(
-                    np.append(self.pose_curr[: params["common"]["dim"]], self.min_dist)
+                    np.concatenate(
+                        (
+                            self.pose_curr[: params["common"]["dim"]],
+                            np.array(
+                                [
+                                    self.min_dist,
+                                    self.noise_scaling_factor * self.min_dist,
+                                ]
+                            ),
+                        )
+                    )
                 )
 
-                self.loc_obs = np.concatenate(
-                    (self.loc_obs, np.array(self.curr_loc_min_dists)), axis=0
+                self.obs_arr = np.concatenate(
+                    (
+                        self.obs_arr,
+                        np.array(self.curr_loc_min_dists),
+                    ),
+                    axis=0,
                 )
 
                 if self.sempc.running_condition_true_go(loc_curr):
-                    self.sempc.update_Cx_gp(self.loc_obs)
+                    self.sempc.update_Cx_gp(self.obs_arr)
                     self.sempc.set_next_goal(loc_curr)
                     X_ol, _ = self.sempc.one_step_planner(state_curr)
 
@@ -231,15 +253,16 @@ class PlannerNode(Node):
         ranges_subsampled = ranges_subsampled[valid_indices]
         angles_subsampled = angles_subsampled[valid_indices]
 
-        self.loc_obs = np.zeros(
-            (ranges_subsampled.shape[0], params["common"]["dim"] + 1)
+        self.obs_arr = np.zeros(
+            (ranges_subsampled.shape[0], params["common"]["dim"] + 2)
         )
-        self.loc_obs[:, 0] = self.pose_curr[0] + ranges_subsampled * np.cos(
+        self.obs_arr[:, 0] = self.pose_curr[0] + ranges_subsampled * np.cos(
             angles_subsampled
         )
-        self.loc_obs[:, 1] = self.pose_curr[1] + ranges_subsampled * np.sin(
+        self.obs_arr[:, 1] = self.pose_curr[1] + ranges_subsampled * np.sin(
             angles_subsampled
         )
+        self.obs_arr[:, -1] = self.noise_scaling_factor * ranges_subsampled
 
         ranges_copy = ranges.copy()
         ranges_copy[ranges_copy <= 0.0] += 1e3

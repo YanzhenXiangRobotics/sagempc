@@ -6,7 +6,8 @@ import gpytorch
 import networkx as nx
 import numpy as np
 import torch
-from botorch.models import SingleTaskGP
+from gpytorch.models import ExactGP
+from gpytorch.means import ConstantMean
 from gpytorch.kernels import (
     LinearKernel,
     MaternKernel,
@@ -15,6 +16,8 @@ from gpytorch.kernels import (
     RBFKernel,
     ScaleKernel,
 )
+from gpytorch.distributions import MultivariateNormal
+from gpytorch.likelihoods import GaussianLikelihood, FixedNoiseGaussianLikelihood
 from src.central_graph import (
     CentralGraph,
     diag_grid_world_graph,
@@ -23,6 +26,16 @@ from src.central_graph import (
 )
 from src.solver import GoalOPT
 
+class ExactGPModel(ExactGP):
+    def __init__(self, train_x, train_y, likelihood):
+        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        self.mean_module = ConstantMean()
+        self.covar_module = ScaleKernel(RBFKernel())
+
+    def forward(self, x):
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return MultivariateNormal(mean_x, covar_x)
 
 def get_idx_from_grid(position, grid_V):
     idx = torch.sum(torch.abs(position - grid_V), 1).argmin()
@@ -58,7 +71,7 @@ def dynamics(x, u):
 
 class Agent(object):
     def __init__(
-        self, my_key, X_train, Cx_Y_train, params, grid_V, origin=None
+        self, my_key, X_train, Cx_Y_train, Cx_noise_train, params, grid_V, origin=None
     ) -> None:
         self.my_key = my_key
         self.max_density_sigma = 10
@@ -67,6 +80,8 @@ class Agent(object):
         self.Fx_X_train = X_train.reshape(-1, self.env_dim)
         self.Cx_X_train = X_train.reshape(-1, self.env_dim)
         self.Cx_Y_train = Cx_Y_train.reshape(-1, 1)
+        self.Cx_noise_train = Cx_noise_train.reshape(-1, 1)
+        
         self.mean_shift_val = params["agent"]["mean_shift_val"]
         self.converged = False
         self.opti = grid_V
@@ -82,7 +97,6 @@ class Agent(object):
         self.Fx_lengthscale = params["agent"]["Fx_lengthscale"]
         self.Fx_noise = params["agent"]["Fx_noise"]
         self.Cx_lengthscale = params["agent"]["Cx_lengthscale"]
-        self.Cx_noise = params["agent"]["Cx_noise"]
         self.constraint = params["common"]["constraint"]
         self.epsilon = params["common"]["epsilon"]
         self.Nx = params["env"]["shape"]["x"]
@@ -118,7 +132,6 @@ class Agent(object):
         self.pessimistic_graph = nx.empty_graph(n=0, create_using=nx.DiGraph())
         self.centralized_safe_graph = diag_grid_world_graph((self.Nx, self.Ny))
 
-        self.Cx_model = self.__update_Cx()
         self.planned_disk_center = self.Fx_X_train
         self.all_safe_nodes = self.base_graph.nodes
         self.all_unsafe_nodes = []
@@ -180,16 +193,14 @@ class Agent(object):
         return self.funct(X).sum()
 
     def funct(self, X):
+        self.Cx_model.eval()
+        self.Cx_likelihood.eval()
+        observed_pred = self.Cx_likelihood(self.Cx_model(X.float()))
+        mean, std = observed_pred.mean, torch.sqrt(observed_pred.variance)
         if self.st_bound == "LB" and self.st_gp == "Cx":
-            self.Cx_model.eval()
-            return self.Cx_model(X.float()).mean - self.Cx_beta * 2 * torch.sqrt(
-                self.Cx_model(X.float()).variance
-            )
+            return mean - self.Cx_beta * 2 * std
         if self.st_bound == "UB" and self.st_gp == "Cx":
-            self.Cx_model.eval()
-            return self.Cx_model(X.float()).mean + self.Cx_beta * 2 * torch.sqrt(
-                self.Cx_model(X.float()).variance
-            )
+            return mean + self.Cx_beta * 2 * std
 
     def get_lb_at_curr_loc(self):
         self.st_bound = "LB"
@@ -357,12 +368,18 @@ class Agent(object):
         self.__update_Cx_set(newX, newY)
         self.__update_Cx()
         return self.Cx_model
+    
+    def generate_noise(self, Y):
+        return 5e-3 * Y
 
-    def update_Cx_gp_local(self, X, Y):
-        self.Cx_model = SingleTaskGP(X.reshape(-1, self.env_dim), Y.reshape(-1, 1))
+    def update_Cx_gp_local(self, X, Y, noises):
+        assert noises.size() == Y.size()
+        # self.Cx_likelihood = FixedNoiseGaussianLikelihood(noise=noises)
+        self.Cx_likelihood = GaussianLikelihood()
+        self.Cx_model = ExactGPModel(X.reshape(-1, self.env_dim), Y, self.Cx_likelihood)
 
         self.Cx_model.covar_module.base_kernel.lengthscale = self.Cx_lengthscale
-        self.Cx_model.likelihood.noise = self.Cx_noise
+        self.Cx_model.likelihood.noise = 0.0001
 
         return self.Cx_model
 
@@ -377,10 +394,15 @@ class Agent(object):
         self.Cx_Y_train = torch.cat([self.Cx_Y_train, newY]).reshape(-1, 1)
 
     def __update_Cx(self):
-        self.Cx_model = SingleTaskGP(self.Cx_X_train, self.Cx_Y_train)
+        Cx_Y_train = torch.atleast_1d(self.Cx_Y_train.squeeze())
+        Cx_noise_train = torch.atleast_1d(self.Cx_noise_train.squeeze())
+        assert Cx_noise_train.size() == Cx_Y_train.size()
+        # self.Cx_likelihood = FixedNoiseGaussianLikelihood(Cx_noise_train)
+        self.Cx_likelihood = GaussianLikelihood()
+        self.Cx_model = ExactGPModel(self.Cx_X_train, Cx_Y_train, self.Cx_likelihood)
         # 1.2482120543718338
         self.Cx_model.covar_module.base_kernel.lengthscale = self.Cx_lengthscale
-        self.Cx_model.likelihood.noise = self.Cx_noise
+        self.Cx_model.likelihood.noise = 0.0001
         # mll = ExactMarginalLogLikelihood(
         #     self.Cx_model.likelihood, self.Cx_model)
         # fit_gpytorch_model(mll)
@@ -517,9 +539,11 @@ class Agent(object):
 
     # def get_F_of_x_for_fix_pts(self, X_fix):
     def get_Cx_bounds(self, grid_V):
-        V_lower_Cx, V_upper_Cx = self.Cx_model.posterior(grid_V).mvn.confidence_region()
-        V_lower_Cx = V_lower_Cx.detach()
-        V_upper_Cx = V_upper_Cx.detach()
+        self.Cx_model.eval()
+        self.Cx_likelihood.eval()
+        V_lower_Cx, V_upper_Cx = self.Cx_likelihood(self.Cx_model(grid_V)).confidence_region()
+        V_lower_Cx = V_lower_Cx.detach().squeeze()
+        V_upper_Cx = V_upper_Cx.detach().squeeze()
         V_lower_Cx, V_upper_Cx = scale_with_beta(V_lower_Cx, V_upper_Cx, self.Cx_beta)
         # front_shift_idx = int((grid_V[0] - self.V_prev[0])/0.12 + 0.01)
         # rear_shift_idx = int((self.V_prev[-1]-grid_V[-1])/0.12 + 0.01)
