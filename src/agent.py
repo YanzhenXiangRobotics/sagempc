@@ -425,6 +425,7 @@ class Agent(object):
         self.union_graph = union_graph
 
     def update_optimistic_graph(self, upper_bound, init_node, thresh, curr_node, Lc):
+        self.optimistic_graph = diag_grid_world_graph((self.Nx, self.Ny))
         self.optimistic_graph = expansion_operator(
             self.optimistic_graph, upper_bound, init_node, thresh, curr_node, Lc
         )

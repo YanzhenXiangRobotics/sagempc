@@ -208,13 +208,13 @@ class SEMPC:
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
-            nodes = np.array(list(self.players[self.pl_idx].optimistic_graph.nodes))[::10]
-            plot_graph_nodes(
-                self.env.ax,
-                self.sempc_solver.scatter_tmps,
-                nodes,
-                self.players[self.pl_idx].grid_V
-            )
+            # nodes = np.array(list(self.players[self.pl_idx].optimistic_graph.nodes))[::10]
+            # plot_graph_nodes(
+            #     self.env.ax,
+            #     self.sempc_solver.scatter_tmps,
+            #     nodes,
+            #     self.players[self.pl_idx].grid_V
+            # )
             curr_node = self.players[self.pl_idx].get_nearest_opti_idx(
                 torch.from_numpy(x_curr)
             )
