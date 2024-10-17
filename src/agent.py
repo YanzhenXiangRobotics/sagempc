@@ -26,6 +26,8 @@ from src.central_graph import (
 )
 from src.solver import GoalOPT
 
+import matplotlib.pyplot as plt
+
 class ExactGPModel(ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
@@ -41,6 +43,11 @@ def get_idx_from_grid(position, grid_V):
     idx = torch.sum(torch.abs(position - grid_V), 1).argmin()
     return idx
 
+def plot_graph_nodes(ax, scatters_tmp, indices, grid_V):
+    for i in indices:
+        print(i)
+        scatters_tmp.append(ax.scatter(grid_V[i, 0], grid_V[i, 1], color="yellow"))
+    
 
 def dynamics(x, u):
     v, omega, theta, dT, a, alpha = x[3], x[4], x[2], u[-1], u[0], u[1]

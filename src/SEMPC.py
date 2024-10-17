@@ -21,7 +21,7 @@ from src.utils.initializer import (
 from src.utils.termcolor import bcolors
 
 import math
-from src.agent import get_idx_from_grid
+from src.agent import get_idx_from_grid, plot_graph_nodes
 
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -36,6 +36,7 @@ from src.utils.inner_control_node import InnerControl
 from src.agent import dynamics
 
 import shutil
+
 
 class SEMPC:
     def __init__(self, params, env, visu, query_state_obs_noise=None) -> None:
@@ -207,8 +208,18 @@ class SEMPC:
             self.players[self.pl_idx].update_optimistic_graph(
                 intersect_pessi_opti, init_node, self.q_th, curr_node, Lc=0
             )
+            nodes = np.array(list(self.players[self.pl_idx].optimistic_graph.nodes))[::10]
+            plot_graph_nodes(
+                self.env.ax,
+                self.sempc_solver.scatter_tmps,
+                nodes,
+                self.players[self.pl_idx].grid_V
+            )
             curr_node = self.players[self.pl_idx].get_nearest_opti_idx(
                 torch.from_numpy(x_curr)
+            )
+            self.players[self.pl_idx].get_utility_minimizer = np.array(
+                self.params["env"]["goal_loc"]
             )
             goal_node = get_idx_from_grid(
                 torch.from_numpy(self.players[self.pl_idx].get_utility_minimizer),
@@ -345,8 +356,12 @@ class SEMPC:
             query_state_obs_noise_tensor = torch.from_numpy(query_state_obs_noise)
             init_loc_obs_noise = {}
             init_loc_obs_noise["Cx_X"] = [query_state_obs_noise_tensor[: self.x_dim]]
-            init_loc_obs_noise["Cx_Y"] = torch.atleast_2d(query_state_obs_noise_tensor[self.x_dim])
-            init_loc_obs_noise["Cx_noise"] = torch.atleast_2d(query_state_obs_noise_tensor[-1])
+            init_loc_obs_noise["Cx_Y"] = torch.atleast_2d(
+                query_state_obs_noise_tensor[self.x_dim]
+            )
+            init_loc_obs_noise["Cx_noise"] = torch.atleast_2d(
+                query_state_obs_noise_tensor[-1]
+            )
         print("initialized location observation", init_loc_obs_noise)
         """_summary_ Everything before the looping for gp-measurements"""
         # 1) Initialize players to safe location in the environment
@@ -370,8 +385,9 @@ class SEMPC:
 
         # 2) Set goal based on strategy
         self.set_next_goal(
-            query_state_obs_noise[: self.x_dim] \
-            if query_state_obs_noise is not None else None
+            query_state_obs_noise[: self.x_dim]
+            if query_state_obs_noise is not None
+            else None
         )
 
         # initial measurement (make sure l(x_init) >= 0)
