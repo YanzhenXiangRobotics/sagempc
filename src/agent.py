@@ -374,12 +374,12 @@ class Agent(object):
 
     def update_Cx_gp_local(self, X, Y, noises):
         assert noises.size() == Y.size()
-        # self.Cx_likelihood = FixedNoiseGaussianLikelihood(noise=noises)
-        self.Cx_likelihood = GaussianLikelihood()
+        self.Cx_likelihood = FixedNoiseGaussianLikelihood(noise=noises)
+        # self.Cx_likelihood = GaussianLikelihood()
         self.Cx_model = ExactGPModel(X.reshape(-1, self.env_dim), Y, self.Cx_likelihood)
 
         self.Cx_model.covar_module.base_kernel.lengthscale = self.Cx_lengthscale
-        self.Cx_model.likelihood.noise = 0.0001
+        # self.Cx_model.likelihood.noise = 0.0001
 
         return self.Cx_model
 
@@ -397,12 +397,12 @@ class Agent(object):
         Cx_Y_train = torch.atleast_1d(self.Cx_Y_train.squeeze())
         Cx_noise_train = torch.atleast_1d(self.Cx_noise_train.squeeze())
         assert Cx_noise_train.size() == Cx_Y_train.size()
-        # self.Cx_likelihood = FixedNoiseGaussianLikelihood(Cx_noise_train)
-        self.Cx_likelihood = GaussianLikelihood()
+        self.Cx_likelihood = FixedNoiseGaussianLikelihood(Cx_noise_train)
+        # self.Cx_likelihood = GaussianLikelihood()
         self.Cx_model = ExactGPModel(self.Cx_X_train, Cx_Y_train, self.Cx_likelihood)
         # 1.2482120543718338
         self.Cx_model.covar_module.base_kernel.lengthscale = self.Cx_lengthscale
-        self.Cx_model.likelihood.noise = 0.0001
+        # self.Cx_model.likelihood.noise = 0.0001
         # mll = ExactMarginalLogLikelihood(
         #     self.Cx_model.likelihood, self.Cx_model)
         # fit_gpytorch_model(mll)

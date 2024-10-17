@@ -194,15 +194,20 @@ class SEMPC_solver(object):
             x_init[: self.x_dim] = split_path[stage]
             self.ocp_solver.set(stage, "x", x_init)
 
-    def plot_3D(self, player):
+    def plot_3D(self, player, iter):
         X1, X2 = self.visu.x.numpy(), self.visu.y.numpy()
         with torch.no_grad():
-            pred = player.Cx_model(self.grids_coupled)
-            lower_list = pred.mean - player.Cx_beta * 2 * torch.sqrt(pred.variance)
+            pred = player.Cx_likelihood(player.Cx_model(self.grids_coupled))
+            half_width = player.Cx_beta * 2 * torch.sqrt(pred.variance)
+            lower_list = pred.mean - half_width
+            upper_list = pred.mean + half_width
             lower = lower_list.reshape((X1.shape[0], X2.shape[1]))
             mean = pred.mean.reshape((X1.shape[0], X2.shape[1]))
+            upper = upper_list.reshape((X1.shape[0], X2.shape[1]))
             fig = go.Figure(data=[go.Surface(z=lower, x=X1, y=X2)])
             fig.write_html(os.path.join(self.fig_dir, "sim_3D.html"))
+            fig_upper = go.Figure(data=[go.Surface(z=upper, x=X1, y=X2)])
+            fig_upper.write_html(os.path.join(self.fig_dir, f"sim_3D_upper_{iter}.html"))
             pessi_contour = self.ax.contour(
                 X1,
                 X2,

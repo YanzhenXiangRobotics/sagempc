@@ -144,3 +144,9 @@ Nova_Carter_ROS.usd
 MPC_V0_env_*
 MPC_expander_env_*
 MPC_expander_V0_env_*
+
+inner_loop_isaac_sim/
+inner_loop/
+vel/
+ang_vel/
+sqp_sols/

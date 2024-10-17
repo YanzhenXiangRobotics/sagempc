@@ -165,7 +165,8 @@ class PlannerNode(Node):
             np.array(params["env"]["start_loc"]), params["env"]["start_angle"]
         )
         self.curr_loc_min_dists = []
-        self.noise_scaling_factor = 5e-3
+        # self.noise_scaling_factor = 5e-3
+        self.noise_scaling_factor = 1e-4
 
     def update_pose_curr(self):
         pose_curr = get_current_pose(self.tf_buffer)

@@ -389,7 +389,8 @@ class SEMPC:
                 TrainAndUpdateConstraint_isaac_sim(
                     query_state_obs_noise[: self.x_dim],
                     query_state_obs_noise[self.x_dim],
-                    query_state_obs_noise[-1],
+                    # query_state_obs_noise[-1],
+                    0.0001,
                     self.pl_idx,
                     self.players,
                     self.params,
@@ -508,7 +509,7 @@ class SEMPC:
                 # linewidth=10,
             )
         )
-        self.sempc_solver.plot_3D(self.players[self.pl_idx])
+        self.sempc_solver.plot_3D(self.players[self.pl_idx], self.sim_iter)
         # self.env.fig.savefig(os.path.join(self.fig_dir, f"sim_{self.sim_iter}.png"))
         # if not self.has_legend:
         #     # self.env.ax.legend(handles=self.env.legend_handles, loc="upper right")

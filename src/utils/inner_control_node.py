@@ -98,17 +98,19 @@ class InnerControl:
 
     def setup_cost(self):
         x_ref = ca.SX.sym("x_ref", self.pose_dim)
-        self.ocp.model.p = x_ref
+        vel_penalty = ca.SX.sym("vel_penalty", 1)
+        self.ocp.model.p = ca.vertcat(x_ref, vel_penalty)
         self.ocp.parameter_values = np.zeros((self.ocp.model.p.shape[0],))
 
         Q = np.diag([1e4, 1e4, 1.0])
+        R = np.diag([1e4, 1.0])
         self.ocp.cost.cost_type = "EXTERNAL"
         self.ocp.cost.cost_type_e = "EXTERNAL"
         self.ocp.model.cost_expr_ext_cost = (
             (self.ocp.model.x[: self.pose_dim] - x_ref).T
             @ Q
             @ (self.ocp.model.x[: self.pose_dim] - x_ref)
-        )
+        ) + vel_penalty * self.ocp.model.u.T @ R @ self.ocp.model.u
         self.ocp.model.cost_expr_ext_cost_e = (
             (self.ocp.model.x[: self.pose_dim] - x_ref).T
             @ Q
@@ -143,9 +145,14 @@ class InnerControl:
     def solver_set_ref_path(self):
         for k in range(self.H + 1):
             if k < len(self.ref_path):
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[k]))
+                params_inner_mpc = np.append(
+                    self.ref_path[k], 1e-3 * (self.H - len(self.ref_path))
+                )
             else:
-                self.ocp_solver.set(k, "p", np.array(self.ref_path[-1]))
+                params_inner_mpc = np.append(
+                    self.ref_path[-1], 1e-3 * (self.H - len(self.ref_path))
+                )
+            self.ocp_solver.set(k, "p", params_inner_mpc)
 
     def solve_for_x0(self, x0):
         for i in range(3):
@@ -401,7 +408,7 @@ class InnerControlNode(Node):
             self.cmd_vel_obtained = True
             cmd_vel = Twist()
             # if (self.iter != -1) and (len(self.ctrl.ref_path) > 1):
-            if (self.iter != -1):
+            if self.iter != -1:
                 cmd_vel.linear.x = self.cmd_vel_val[0]
                 cmd_vel.angular.z = self.cmd_vel_val[1]
             self.cmd_vel_publisher.publish(cmd_vel)
